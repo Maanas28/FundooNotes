@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:id="@+id/group1">
+
+    </group>
+    <!-- Notes Section -->
+    <group android:id="@+id/group2" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_notes"
+            android:title="Notes"
+            android:icon="@drawable/bulb" />
+        <item
+            android:id="@+id/nav_reminders"
+            android:title="Reminders"
+            android:icon="@drawable/reminder" />
+    </group>
+
+    <!-- Labels Section -->
+    <group android:checkableBehavior="single" android:id="@+id/group3">
+        <item
+            android:id="@+id/nav_create_labels"
+            android:title="Create/Edit Labels"
+            android:icon="@drawable/edit" />
+    </group>
+
+    <!-- Other Sections -->
+    <group android:id="@+id/group4" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_archive"
+            android:title="Archive"
+            android:icon="@drawable/archive" />
+        <item
+            android:id="@+id/nav_trash"
+            android:title="Bin"
+            android:icon="@drawable/bin" />
+    </group>
+
+    <!-- Settings & Help -->
+    <group android:checkableBehavior="single">
+    <item
+        android:id="@+id/nav_settings"
+        android:title="Settings"
+        android:icon="@drawable/settings" />
+    <item
+        android:id="@+id/app_feedback"
+        android:title="Send App Feedback"
+        android:icon="@drawable/app_feedback" />
+    <item
+        android:id="@+id/help"
+        android:title="Help"
+        android:icon="@drawable/help" />
+    </group>
+</menu>
