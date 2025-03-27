@@ -3,13 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".UI.presentation.fragments.ArchiveFragment">
+    tools:context=".UI.features.archive.ArchiveFragment">
 
     <!-- Container to load SearchBarFragment -->
     <androidx.fragment.app.FragmentContainerView
         android:layout_marginTop="10dp"
         android:id="@+id/searchBarContainerArchive"
-        android:name="com.example.fundoonotes.UI.presentation.fragments.SearchBarFragment"
+        android:name="com.example.fundoonotes.UI.features.notes.ui.SearchBarFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </FrameLayout>

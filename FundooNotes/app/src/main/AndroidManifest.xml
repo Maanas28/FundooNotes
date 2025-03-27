@@ -14,10 +14,10 @@
         android:windowSoftInputMode="adjustNothing"
         tools:targetApi="31">
         <activity
-            android:name=".UI.presentation.activites.RegisterActivity"
+            android:name=".UI.features.auth.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".UI.presentation.activites.LoginActivity"
+            android:name=".UI.features.auth.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

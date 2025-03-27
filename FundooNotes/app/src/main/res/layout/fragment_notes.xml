@@ -36,7 +36,7 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/searchBar"
-                android:name="com.example.fundoonotes.UI.presentation.fragments.NotesScreenSearchBar"
+                android:name="com.example.fundoonotes.UI.features.notes.ui.NotesScreenSearchBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toTopOf="parent"
