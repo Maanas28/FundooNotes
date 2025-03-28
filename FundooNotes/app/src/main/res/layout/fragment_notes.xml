@@ -43,9 +43,11 @@
                 />
 
 
-            <include
-                android:id="@+id/selectionBar"
-                layout="@layout/view_selection_bar"
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/selectionBarContainer"
+                android:name="com.example.fundoonotes.UI.features.notes.ui.SelectionBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
         </FrameLayout>
 

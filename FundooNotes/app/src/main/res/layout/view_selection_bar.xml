@@ -12,7 +12,7 @@
 
     <!-- Back button -->
     <ImageButton
-        android:id="@+id/btnCloseSelection"
+        android:id="@+id/btnCloseSelectionSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:scaleType="centerInside"
@@ -33,7 +33,7 @@
 
     <!-- Action buttons (icons only for now) -->
     <ImageButton
-        android:id="@+id/btnPinSelected"
+        android:id="@+id/btnPinSelectedSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="26dp"
@@ -44,7 +44,7 @@
         android:contentDescription="Pin" />
 
     <ImageButton
-        android:id="@+id/btnColorSelected"
+        android:id="@+id/btnColorSelectedSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="26dp"
@@ -55,7 +55,7 @@
         android:contentDescription="Color" />
 
     <ImageButton
-        android:id="@+id/btnForwardSelected"
+        android:id="@+id/btnForwardSelectedSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="26dp"
@@ -66,7 +66,7 @@
         android:contentDescription="Label" />
 
     <ImageButton
-        android:id="@+id/btnDownloadSelected"
+        android:id="@+id/btnArchiveSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="26dp"
@@ -77,7 +77,7 @@
         android:contentDescription="Download" />
 
     <ImageButton
-        android:id="@+id/btnMoreSelected"
+        android:id="@+id/btnMoreSelectedSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         app:tint="#1064B2"

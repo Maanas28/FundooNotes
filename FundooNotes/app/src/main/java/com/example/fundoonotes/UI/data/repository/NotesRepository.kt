@@ -21,9 +21,6 @@ class NotesRepository {
             .whereEqualTo("archived", false)
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
-                if (snapshot != null) {
-                    Log.d("Firestore", "Fetched ${snapshot.size()} notes from Firestore")
-                }
                 if (error != null || snapshot == null) {
                     _notes.value = emptyList()
                     return@addSnapshotListener
@@ -55,9 +52,14 @@ class NotesRepository {
 
         firestore.collection("notes")
             .add(noteToAdd)
-            .addOnSuccessListener {
-                Log.d("FirestoreSave", "Saved successfully")
-                onSuccess()
+            .addOnSuccessListener { documentRef ->
+                val id = documentRef.id
+                documentRef.update("id", id)
+                    .addOnSuccessListener {
+                        Log.d("FirestoreSave", "Saved successfully with ID $id")
+                        onSuccess()
+                    }
+                    .addOnFailureListener { onFailure(it) }
             }
             .addOnFailureListener {
                 Log.e("FirestoreSave", "Failed to save", it)
@@ -67,12 +69,18 @@ class NotesRepository {
 
 
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+
         firestore.collection("notes")
             .document(note.id)
             .update("archived", true)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                onFailure(it)
+            }
     }
+
 
 
     fun unarchiveNote(noteId: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {

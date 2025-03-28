@@ -8,7 +8,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.features.archive.ArchiveFragment
-import com.example.fundoonotes.UI.features.auth.LoginActivity
+import com.example.fundoonotes.UI.features.auth.ui.LoginActivity
 import com.example.fundoonotes.UI.features.feeedback.FeedbackFragment
 import com.example.fundoonotes.UI.features.help.HelpFragment
 import com.example.fundoonotes.UI.features.labels.LabelsFragment
