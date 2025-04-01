@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "161253127806",
+    "project_id": "fundoo-kotlin",
+    "storage_bucket": "fundoo-kotlin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161253127806:android:a364fbdc2720c879f90a2f",
+        "android_client_info": {
+          "package_name": "com.example.fundoonotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "161253127806-n4ufq7mtkaq48mud3uul2oh6i4cs33p1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVm2nX9T_RvZOqLit33VrNOOcwo7bZxKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161253127806-n4ufq7mtkaq48mud3uul2oh6i4cs33p1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

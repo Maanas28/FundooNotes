@@ -1,0 +1,88 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/selectionBar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:orientation="horizontal"
+    android:paddingLeft="5dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:gravity="center_vertical">
+
+    <!-- Back button -->
+    <ImageButton
+        android:id="@+id/btnCloseSelectionSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:scaleType="centerInside"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/back_icon"
+        android:contentDescription="Close selection" />
+
+    <!-- Selected count -->
+    <TextView
+        android:id="@+id/tvSelectedCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:layout_marginStart="60dp"
+        android:layout_marginEnd="40dp"/>
+
+    <!-- Action buttons (icons only for now) -->
+    <ImageButton
+        android:id="@+id/btnPinSelectedSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="26dp"
+        app:tint="#1064B2"
+        android:scaleType="centerInside"
+        android:src="@drawable/pin"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Pin" />
+
+    <ImageButton
+        android:id="@+id/btnColorSelectedSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="26dp"
+        app:tint="#1064B2"
+        android:scaleType="centerInside"
+        android:src="@drawable/color_pallete"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Color" />
+
+    <ImageButton
+        android:id="@+id/btnForwardSelectedSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="26dp"
+        app:tint="#1064B2"
+        android:scaleType="centerInside"
+        android:src="@drawable/label"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Label" />
+
+    <ImageButton
+        android:id="@+id/btnArchiveSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="26dp"
+        app:tint="#1064B2"
+       android:scaleType="centerInside"
+        android:src="@drawable/archive"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Download" />
+
+    <ImageButton
+        android:id="@+id/btnMoreSelectedSelectionBar"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:tint="#1064B2"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="More options"
+        android:scaleType="centerInside"
+        android:src="@drawable/more_vert" />
+</LinearLayout>
