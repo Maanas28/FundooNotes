@@ -11,5 +11,6 @@ data class Note(
     val archived: Boolean = false,
     val deleted : Boolean = false,
     val inBin : Boolean = false,
-    val hasReminder : Boolean = false
+    val hasReminder : Boolean = false,
+    val reminderTime: Long? = null,
 )

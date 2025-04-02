@@ -3,10 +3,14 @@ package com.example.fundoonotes.UI.components
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class NotesAdapter(
     private var notes: List<Note>,
@@ -18,6 +22,9 @@ class NotesAdapter(
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title = itemView.findViewById<TextView>(R.id.noteTitle)
         val content = itemView.findViewById<TextView>(R.id.noteContent)
+        val noteReminder: LinearLayout = itemView.findViewById(R.id.noteReminderLayout)
+        val noteReminderText: TextView = itemView.findViewById(R.id.noteReminderText)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -46,6 +53,15 @@ class NotesAdapter(
             onNoteLongClick(note)
             true
         }
+
+        if (note.hasReminder && note.reminderTime != null) {
+            val formatter = SimpleDateFormat("d MMM yyyy, hh:mm a", Locale.getDefault())
+            holder.noteReminder.visibility = View.VISIBLE
+            holder.noteReminderText.text = formatter.format(Date(note.reminderTime))
+        } else {
+            holder.noteReminder.visibility = View.GONE
+        }
+
     }
 
     override fun getItemCount() = notes.size

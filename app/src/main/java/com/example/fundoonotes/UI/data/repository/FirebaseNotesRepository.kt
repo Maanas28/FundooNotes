@@ -142,10 +142,17 @@ class FirebaseNotesRepository : NotesRepository {
     }
 
     override fun setReminder(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        firestore.collection("notes")
-            .document(note.id)
-            .update("hasReminder", true)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+        note.reminderTime?.let { time ->
+            firestore.collection("notes")
+                .document(note.id)
+                .update(
+                    mapOf(
+                        "hasReminder" to true,
+                        "reminderTime" to time,
+                    )
+                )
+                .addOnSuccessListener { onSuccess() }
+                .addOnFailureListener { onFailure(it) }
+        } ?: onFailure(Exception("Reminder time is null"))
     }
 }

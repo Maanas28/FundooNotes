@@ -1,10 +1,13 @@
 package com.example.fundoonotes.UI.features.notes.viewmodel
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.repository.NotesRepository
 import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
 import com.example.fundoonotes.UI.util.NotesGridContext
+import com.example.fundoonotes.UI.util.ReminderScheduler
 import kotlinx.coroutines.flow.*
 
 class NotesViewModel (
@@ -46,13 +49,40 @@ class NotesViewModel (
         }
     }
 
+    fun scheduleLocalReminder(
+        note: Note,
+        context: Context,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        if (note.reminderTime != null) {
+            ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
+            setReminder(note.copy(hasReminder = true), onSuccess, onFailure)
+        } else {
+            onFailure(IllegalArgumentException("Reminder time cannot be null"))
+        }
+    }
+
+
     fun fetchNotes() = repository.fetchNotes()
     fun fetchArchivedNotes() = repository.fetchArchivedNotes()
     fun fetchBinNotes() = repository.fetchBinNotes()
     fun fetchReminderNotes() = repository.fetchReminderNotes()
 
-    fun saveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
-        repository.addNote(note, onSuccess, onFailure)
+    fun saveNote(
+        note: Note,
+        context: Context,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        repository.addNote(note, {
+            if (note.reminderTime != null) {
+                ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
+            }
+            onSuccess()
+        }, onFailure)
+    }
+
 
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.archiveNote(note)

@@ -28,5 +28,31 @@
             android:textSize="16sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/noteReminderLayout"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/reminder_pill_background"
+            android:padding="6dp"
+            android:layout_marginTop="8dp"
+            android:visibility="visible"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="timer"
+                android:src="@drawable/timer"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/noteReminderText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/black" />
+        </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
