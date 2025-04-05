@@ -18,14 +18,14 @@ class EditLabelFragment : Fragment() {
     private var _binding: FragmentEditLabelBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: LabelsViewModel
+    private lateinit var labelsViewModel: LabelsViewModel
     private lateinit var adapter: EditLabelAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        labelsViewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
         _binding = FragmentEditLabelBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -36,17 +36,17 @@ class EditLabelFragment : Fragment() {
         // Initialize adapter early so it's ready when click listeners are set
         adapter = EditLabelAdapter(
             mode = LabelAdapterMode.EDIT,
-            onDelete = { label -> viewModel.deleteLabel(label) },
+            onDelete = { label -> labelsViewModel.deleteLabel(label) },
             onRename = { oldLabel, newName ->
                 val newLabel = oldLabel.copy(name = newName)
-                viewModel.updateLabel(oldLabel, newLabel)
+                labelsViewModel.updateLabel(oldLabel, newLabel)
             }
         )
 
         binding.recyclerLabels.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerLabels.adapter = adapter
 
-        viewModel.fetchLabels()
+        labelsViewModel.fetchLabels()
 
         // Show input row when "Create new label" is clicked
         binding.createNewLabelEt.setOnClickListener {
@@ -66,7 +66,7 @@ class EditLabelFragment : Fragment() {
         binding.btnConfirmLabel.setOnClickListener {
             val labelName = binding.labelInputField.text.toString().trim()
             if (labelName.isNotEmpty()) {
-                viewModel.addLabel(labelName)
+                labelsViewModel.addLabel(labelName)
                 binding.labelInputField.setText("")
                 binding.editableAddRow.visibility = View.GONE
                 binding.staticAddRow.visibility = View.VISIBLE
@@ -80,7 +80,7 @@ class EditLabelFragment : Fragment() {
 
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.labelList.collect { labels ->
+                labelsViewModel.labelList.collect { labels ->
                     Log.d("LabelFragmentDebug", "Collected labels: $labels")
                     adapter.submitList(labels)
                 }

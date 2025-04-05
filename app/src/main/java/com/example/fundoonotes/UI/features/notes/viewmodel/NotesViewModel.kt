@@ -24,7 +24,7 @@ class NotesViewModel (
             is NotesGridContext.Archive -> fetchArchivedNotes()
             is NotesGridContext.Bin -> fetchBinNotes()
             is NotesGridContext.Reminder -> fetchReminderNotes()
-            is NotesGridContext.Label -> {} // future use
+            is NotesGridContext.Label -> fetchNotes()
         }
     }
 
@@ -34,17 +34,24 @@ class NotesViewModel (
             is NotesGridContext.Archive -> archivedNotesFlow
             is NotesGridContext.Bin -> binNotes
             is NotesGridContext.Reminder -> reminderNotes
-            is NotesGridContext.Label -> MutableStateFlow(emptyList()) // placeholder
+            is NotesGridContext.Label -> notesFlow
         }
     }
 
     fun filterNotesForContext(notes: List<Note>, context: NotesGridContext): List<Note> {
         return when (context) {
-            is NotesGridContext.Notes -> notes.filter { !it.archived && !it.inBin && !it.deleted }
-            is NotesGridContext.Archive -> notes.filter { it.archived && !it.inBin && !it.deleted }
-            is NotesGridContext.Bin -> notes.filter { it.inBin && !it.deleted }
-            is NotesGridContext.Reminder -> notes.filter { it.hasReminder && !it.inBin }
-            is NotesGridContext.Label -> notes.filter{ !it.archived && !it.inBin && !it.deleted }
+            is NotesGridContext.Notes ->
+                notes.filter { !it.archived && !it.inBin && !it.deleted }
+            is NotesGridContext.Archive ->
+                notes.filter { it.archived && !it.inBin && !it.deleted }
+            is NotesGridContext.Bin ->
+                notes.filter { it.inBin && !it.deleted }
+            is NotesGridContext.Reminder ->
+                notes.filter { it.hasReminder && !it.inBin }
+            is NotesGridContext.Label ->
+                notes.filter {
+                    !it.archived && !it.inBin && !it.deleted && it.labels.contains(context.labelName)
+                }
         }
     }
 
@@ -61,7 +68,6 @@ class NotesViewModel (
             onFailure(IllegalArgumentException("Reminder time cannot be null"))
         }
     }
-
 
     fun fetchNotes() = repository.fetchNotes()
     fun fetchArchivedNotes() = repository.fetchArchivedNotes()
@@ -81,7 +87,6 @@ class NotesViewModel (
             onSuccess()
         }, onFailure)
     }
-
 
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.archiveNote(note)

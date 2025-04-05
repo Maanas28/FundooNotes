@@ -33,6 +33,9 @@ class FirebaseNotesRepository : NotesRepository {
     private val _notesByLabel = MutableStateFlow<List<Note>>(emptyList())
     override val notesByLabel: StateFlow<List<Note>> = _notesByLabel
 
+    private val _labelsForNote = MutableStateFlow<List<String>>(emptyList())
+    override val labelsForNote : MutableStateFlow<List<String>> = _labelsForNote
+
     override fun fetchNotes() {
         val userId = auth.currentUser?.uid ?: return
         firestore.collection("notes")
@@ -146,6 +149,21 @@ class FirebaseNotesRepository : NotesRepository {
                 _notesByLabel.value = notes
             }
     }
+
+    override fun fetchLabelsByNote(note: Note) {
+        val userId = auth.currentUser?.uid ?: return
+        firestore.collection("notes").document(note.id)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null || !snapshot.exists()) {
+                    _labelsForNote.value = emptyList()
+                    return@addSnapshotListener
+                }
+                // Convert the document to a Note object and extract its labels list
+                val noteObj = snapshot.toObject(Note::class.java)
+                _labelsForNote.value = noteObj?.labels ?: emptyList()
+            }
+    }
+
 
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))

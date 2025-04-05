@@ -12,6 +12,7 @@ interface NotesRepository {
     val reminderNotes: StateFlow<List<Note>>
     val labels: StateFlow<List<Label>>
     val notesByLabel: StateFlow<List<Note>>
+    val labelsForNote :  StateFlow<List<String>>
 
     fun fetchNotes()
     fun fetchArchivedNotes()
@@ -19,6 +20,7 @@ interface NotesRepository {
     fun fetchReminderNotes()
     fun fetchLabels()
     fun fetchNotesByLabel(label: String)
+    fun fetchLabelsByNote(note : Note)
 
     fun addNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})

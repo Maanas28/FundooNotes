@@ -2,7 +2,6 @@ package com.example.fundoonotes.UI
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.get
@@ -14,7 +13,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.R
-import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.features.archive.ArchiveFragment
 import com.example.fundoonotes.UI.features.auth.ui.LoginActivity
@@ -28,7 +26,6 @@ import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.features.reminders.RemindersFragment
 import com.example.fundoonotes.UI.features.settings.SettingsFragment
-import com.example.fundoonotes.UI.util.NotesGridContext
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch

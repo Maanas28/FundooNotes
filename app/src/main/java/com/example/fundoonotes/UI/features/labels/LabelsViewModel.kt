@@ -15,6 +15,7 @@ class LabelsViewModel(
 
     fun fetchLabels() = repository.fetchLabels()
 
+
     fun addLabel(name: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
         repository.addNewLabel(name, onSuccess, onFailure)
     }

@@ -22,6 +22,7 @@ class NotesAdapter(
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title = itemView.findViewById<TextView>(R.id.noteTitle)
         val content = itemView.findViewById<TextView>(R.id.noteContent)
+        val labelsContainer: LinearLayout = itemView.findViewById(R.id.labelsContainer)
         val noteReminder: LinearLayout = itemView.findViewById(R.id.noteReminderLayout)
         val noteReminderText: TextView = itemView.findViewById(R.id.noteReminderText)
 
@@ -54,6 +55,34 @@ class NotesAdapter(
             true
         }
 
+
+        holder.labelsContainer.removeAllViews()
+        val labelsList = note.labels
+        if (labelsList.size <= 2) {
+            for (label in labelsList) {
+                val pillView = LayoutInflater.from(holder.itemView.context)
+                    .inflate(R.layout.item_note_label, holder.labelsContainer, false) as TextView
+                pillView.text = label
+                holder.labelsContainer.addView(pillView)
+            }
+        } else {
+            // Display the first two labels
+            for (i in 0 until 2) {
+                val pillView = LayoutInflater.from(holder.itemView.context)
+                    .inflate(R.layout.item_note_label, holder.labelsContainer, false) as TextView
+                pillView.text = labelsList[i]
+                holder.labelsContainer.addView(pillView)
+            }
+            // Calculate the number of additional labels and create a "+x" pill
+            val remaining = labelsList.size - 2
+            val morePillView = LayoutInflater.from(holder.itemView.context)
+                .inflate(R.layout.item_note_label, holder.labelsContainer, false) as TextView
+            morePillView.text = "+$remaining"
+            holder.labelsContainer.addView(morePillView)
+        }
+
+
+
         if (note.hasReminder && note.reminderTime != null) {
             val formatter = SimpleDateFormat("d MMM yyyy, hh:mm a", Locale.getDefault())
             holder.noteReminder.visibility = View.VISIBLE
@@ -61,6 +90,8 @@ class NotesAdapter(
         } else {
             holder.noteReminder.visibility = View.GONE
         }
+
+
 
     }
 

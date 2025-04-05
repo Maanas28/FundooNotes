@@ -1,5 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:showIn="navigation_view">
 
     <!-- Notes & Reminders -->
@@ -16,7 +17,6 @@
             android:orderInCategory="2" />
     </group>
 
-    <!-- Labels Heading + Dynamic Labels (Single Group to avoid divider) -->
     <group
         android:id="@+id/group_labels_dynamic"
         android:checkableBehavior="single">
@@ -27,6 +27,7 @@
             android:enabled="false"
             android:checkable="false"
             android:orderInCategory="100" />
+
 
         <!-- Dynamic labels will be added programmatically after this -->
     </group>

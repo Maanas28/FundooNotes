@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fundoonotes.UI.data.model.Label
+import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.LabelActionHandler
 import com.example.fundoonotes.UI.util.LabelSelectionListener
 import com.example.fundoonotes.databinding.FragmentApplyLabelToNoteBinding
@@ -55,8 +56,26 @@ class ApplyLabelToNoteFragment : Fragment() {
         // Fetch labels so the list isn't empty
         viewModel.fetchLabels()
 
+        // Get the NotesViewModel to access all notes.
+        val notesViewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        // Get the complete list of notes.
+        val allNotes = notesViewModel.notesFlow.value
+        // Filter out only the selected notes using their IDs.
+        val selectedNotes = allNotes.filter { selectedNoteIds.contains(it.id) }
+        // Compute the intersection of labels for all selected notes.
+        // If only one note is selected, the intersection is that note's labels.
+        val commonLabels: Set<String> = if (selectedNotes.isNotEmpty()) {
+            selectedNotes.map { it.labels.toSet() }
+                .reduce { acc, set -> acc.intersect(set) }
+        } else {
+            emptySet()
+        }
+        Log.d("ApplyLabelFragment", "Common labels: $commonLabels")
+
+        // Initialize the adapter in SELECT mode.
         adapter = EditLabelAdapter(
             mode = LabelAdapterMode.SELECT,
+            preSelectedLabels = commonLabels,
             onSelect = { label, isChecked ->
                 if (isChecked) selectedLabels.add(label) else selectedLabels.remove(label)
                 labelSelectionListener?.onLabelListUpdated(selectedLabels.toList())

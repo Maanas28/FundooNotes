@@ -29,6 +29,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
+        <!-- Labels Container -->
+        <LinearLayout
+            android:id="@+id/labelsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp" />
+
         <LinearLayout
             android:id="@+id/noteReminderLayout"
             android:orientation="horizontal"

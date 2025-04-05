@@ -12,6 +12,7 @@ import com.example.fundoonotes.UI.data.model.Label
 
 class EditLabelAdapter(
     private val mode: LabelAdapterMode,
+    private val preSelectedLabels: Set<String> = emptySet(),
     private val onDelete: ((Label) -> Unit)? = null,
     private val onRename: ((Label, String) -> Unit)? = null,
     private val onSelect: ((Label, Boolean) -> Unit)? = null
@@ -92,7 +93,7 @@ class EditLabelAdapter(
         fun bind(label: Label) {
             labelName.text = label.name
             checkbox.setOnCheckedChangeListener(null)
-            checkbox.isChecked = false
+            checkbox.isChecked = preSelectedLabels.contains(label.name)
             checkbox.setOnCheckedChangeListener { _, isChecked ->
                 onSelect?.invoke(label, isChecked)
             }

@@ -1,20 +1,22 @@
 package com.example.fundoonotes.UI.components
 
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.fundoonotes.R
-import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
-import com.example.fundoonotes.UI.features.labels.LabelsViewModel
+import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
-import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
-import com.example.fundoonotes.UI.util.LabelActionHandler
 import kotlinx.coroutines.launch
 
 class NotesListFragment : Fragment() {
