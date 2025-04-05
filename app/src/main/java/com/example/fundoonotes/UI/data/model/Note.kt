@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 
 
 data class Note(
+    val userId : String = "",
     val id: String = "",
     val title: String = "",
     val content: String = "",
@@ -13,4 +14,5 @@ data class Note(
     val inBin : Boolean = false,
     val hasReminder : Boolean = false,
     val reminderTime: Long? = null,
+    val labels: List<String> = emptyList()
 )

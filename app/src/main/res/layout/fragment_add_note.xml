@@ -27,16 +27,6 @@
         android:layout_marginEnd="8dp">
 
         <ImageButton
-            android:id="@+id/btnPin"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:scaleType="centerInside"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="TODO"
-            android:src="@drawable/pin"
-            android:layout_marginEnd="10dp"/>
-
-        <ImageButton
             android:id="@+id/btnReminder"
             android:layout_width="30dp"
             android:layout_height="30dp"
@@ -115,33 +105,13 @@
         android:paddingBottom="8dp"
         android:gravity="center_vertical|start">
 
-        <!-- Add Icon -->
-        <ImageButton
-            android:id="@+id/btnAdd"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="10dp"
-            android:scaleType="centerInside"
-            android:contentDescription="TODO"
-            android:src="@drawable/more"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <!-- Color Picker Icon -->
-        <ImageButton
-            android:id="@+id/btnColor"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:scaleType="centerInside"
-            android:contentDescription="TODO"
-            android:src="@drawable/color_pallete"
-            android:background="?attr/selectableItemBackgroundBorderless" />
 
         <!-- Edited Timestamp -->
         <TextView
             android:id="@+id/tvEditedTime"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Edited 6:54 AM"
+            android:text="Edited Now"
             android:textSize="14sp"
             android:textAlignment="center"
             android:textColor="@android:color/darker_gray"
@@ -149,15 +119,5 @@
             android:layout_gravity="center"
             android:layout_weight="1" />
 
-        <!-- Menu Icon (Right Corner) -->
-        <ImageButton
-            android:id="@+id/btnMenu"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:scaleType="centerInside"
-            android:contentDescription="TODO"
-            android:src="@drawable/more_vert"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_gravity="end" />
     </LinearLayout>
 </RelativeLayout>

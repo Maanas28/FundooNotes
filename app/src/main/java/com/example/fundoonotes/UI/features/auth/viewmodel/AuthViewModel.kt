@@ -2,6 +2,7 @@ package com.example.fundoonotes.UI.features.auth.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.fundoonotes.UI.data.model.User
 import com.example.fundoonotes.UI.data.repository.AuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.firebase.auth.GoogleAuthProvider
@@ -16,8 +17,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun register(email: String, password: String) {
-        repository.registerWithEmail(email, password) { success, message ->
+    fun register(user : User) {
+        repository.registerWithEmail(user) { success, message ->
             authResult.postValue(Pair(success, message))
         }
     }

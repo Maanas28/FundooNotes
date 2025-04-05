@@ -2,6 +2,7 @@ package com.example.fundoonotes.UI.features.auth.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -82,5 +83,8 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun showToast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    private fun showToast(msg: String) {
+        Log.d("LoginActivity", msg)
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
 }

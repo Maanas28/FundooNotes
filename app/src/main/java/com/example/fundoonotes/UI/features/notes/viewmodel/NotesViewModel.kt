@@ -1,7 +1,6 @@
 package com.example.fundoonotes.UI.features.notes.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.repository.NotesRepository
@@ -45,7 +44,7 @@ class NotesViewModel (
             is NotesGridContext.Archive -> notes.filter { it.archived && !it.inBin && !it.deleted }
             is NotesGridContext.Bin -> notes.filter { it.inBin && !it.deleted }
             is NotesGridContext.Reminder -> notes.filter { it.hasReminder && !it.inBin }
-            is NotesGridContext.Label -> notes // implement label logic later
+            is NotesGridContext.Label -> notes.filter{ !it.archived && !it.inBin && !it.deleted }
         }
     }
 

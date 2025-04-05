@@ -1,0 +1,38 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".UI.features.labels.LabelFragment">
+
+    <!-- Top bar container -->
+    <FrameLayout
+        android:id="@+id/labelsTopBarContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Search bar -->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/searchBarContainerLabels"
+            android:name="com.example.fundoonotes.UI.components.SearchBarFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- Selection bar (initially hidden) -->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/selectionBarContainerLabels"
+            android:name="com.example.fundoonotes.UI.components.SelectionBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Notes grid -->
+    <FrameLayout
+        android:id="@+id/labelsNotesGridContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"/>
+</LinearLayout>

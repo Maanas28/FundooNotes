@@ -1,56 +1,76 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:id="@+id/group1">
-
-    </group>
-    <!-- Notes Section -->
+    <!-- Notes & Reminders -->
     <group android:id="@+id/group2" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_notes"
+            android:icon="@drawable/bulb"
             android:title="Notes"
-            android:icon="@drawable/bulb" />
+            android:orderInCategory="1" />
         <item
             android:id="@+id/nav_reminders"
+            android:icon="@drawable/reminder"
             android:title="Reminders"
-            android:icon="@drawable/reminder" />
+            android:orderInCategory="2" />
     </group>
 
-    <!-- Labels Section -->
-    <group android:checkableBehavior="single" android:id="@+id/group3">
+    <!-- Labels Heading + Dynamic Labels (Single Group to avoid divider) -->
+    <group
+        android:id="@+id/group_labels_dynamic"
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/label_heading"
+            android:title="Labels"
+            android:enabled="false"
+            android:checkable="false"
+            android:orderInCategory="100" />
+
+        <!-- Dynamic labels will be added programmatically after this -->
+    </group>
+
+
+    <!-- Create/Edit Labels -->
+    <group android:id="@+id/group3" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_create_labels"
             android:title="Create/Edit Labels"
-            android:icon="@drawable/edit" />
+            android:icon="@drawable/edit"
+            android:orderInCategory="200" />
     </group>
 
-    <!-- Other Sections -->
+    <!-- Archive & Bin -->
     <group android:id="@+id/group4" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_archive"
             android:title="Archive"
-            android:icon="@drawable/archive" />
+            android:icon="@drawable/archive"
+            android:orderInCategory="300" />
         <item
             android:id="@+id/nav_trash"
             android:title="Bin"
-            android:icon="@drawable/bin" />
+            android:icon="@drawable/bin"
+            android:orderInCategory="301" />
     </group>
 
-    <!-- Settings & Help -->
+    <!-- Settings, Feedback, Help -->
     <group android:checkableBehavior="single">
-    <item
-        android:id="@+id/nav_settings"
-        android:title="Settings"
-        android:icon="@drawable/settings" />
-    <item
-        android:id="@+id/app_feedback"
-        android:title="Send App Feedback"
-        android:icon="@drawable/app_feedback" />
-    <item
-        android:id="@+id/help"
-        android:title="Help"
-        android:icon="@drawable/help" />
+        <item
+            android:id="@+id/nav_settings"
+            android:title="Settings"
+            android:icon="@drawable/settings"
+            android:orderInCategory="400" />
+        <item
+            android:id="@+id/app_feedback"
+            android:title="Send App Feedback"
+            android:icon="@drawable/app_feedback"
+            android:orderInCategory="401" />
+        <item
+            android:id="@+id/help"
+            android:title="Help"
+            android:icon="@drawable/help"
+            android:orderInCategory="402" />
     </group>
 </menu>

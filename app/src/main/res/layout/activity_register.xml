@@ -73,7 +73,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/first_name"
-                    android:padding="10dp" />
+                    android:inputType="text" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -91,8 +92,7 @@
                     android:id="@+id/editTextLastName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/last_name"
-                    android:padding="10dp" />
+                    android:hint="@string/last_name"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Email Field -->
@@ -112,8 +112,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_your_email"
-                    android:inputType="textEmailAddress"
-                    android:padding="10dp" />
+                    android:inputType="textEmailAddress"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Password Field -->
@@ -133,8 +132,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_password"
-                    android:inputType="textPassword"
-                    android:padding="10dp" />
+                    android:inputType="textPassword"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Confirm Password Field -->
@@ -154,8 +152,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Confirm Password"
-                    android:inputType="textPassword"
-                    android:padding="10dp" />
+                    android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Register Button -->

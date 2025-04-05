@@ -28,34 +28,13 @@
         android:text="0"
         android:textSize="25sp"
         android:textStyle="bold"
-        android:layout_marginStart="60dp"
-        android:layout_marginEnd="40dp"/>
+        android:layout_marginStart="90dp"
+        android:layout_marginEnd="120dp"/>
 
     <!-- Action buttons (icons only for now) -->
-    <ImageButton
-        android:id="@+id/btnPinSelectedSelectionBar"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginEnd="26dp"
-        app:tint="#1064B2"
-        android:scaleType="centerInside"
-        android:src="@drawable/pin"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Pin" />
 
     <ImageButton
-        android:id="@+id/btnColorSelectedSelectionBar"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginEnd="26dp"
-        app:tint="#1064B2"
-        android:scaleType="centerInside"
-        android:src="@drawable/color_pallete"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Color" />
-
-    <ImageButton
-        android:id="@+id/btnForwardSelectedSelectionBar"
+        android:id="@+id/btnLabelSelectionBar"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="26dp"

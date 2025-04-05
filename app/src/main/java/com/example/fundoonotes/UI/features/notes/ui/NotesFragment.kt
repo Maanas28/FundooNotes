@@ -9,16 +9,24 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SelectionBar
-import com.example.fundoonotes.UI.features.addnote.*
+import com.example.fundoonotes.UI.data.model.Label
+import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
+import com.example.fundoonotes.UI.features.addnote.CanvasNoteFragment
+import com.example.fundoonotes.UI.features.addnote.ImageNoteFragment
+import com.example.fundoonotes.UI.features.addnote.ListNoteFragement
+import com.example.fundoonotes.UI.features.addnote.MicrophoneNoteFragement
+import com.example.fundoonotes.UI.features.labels.ApplyLabelToNoteFragment
+import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.ArchiveActionHandler
 import com.example.fundoonotes.UI.util.DeleteActionHandler
 import com.example.fundoonotes.UI.util.DrawerToggleListener
+import com.example.fundoonotes.UI.util.LabelActionHandler
+import com.example.fundoonotes.UI.util.LabelSelectionListener
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
@@ -29,13 +37,16 @@ class NotesFragment : Fragment(),
     DrawerToggleListener,
     ArchiveActionHandler,
     SelectionBarListener,
-    DeleteActionHandler {
+    DeleteActionHandler,
+    LabelActionHandler,
+    LabelSelectionListener {
 
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel : NotesViewModel
+    private lateinit var notesViewModel: NotesViewModel
+    private lateinit var labelsViewModel: LabelsViewModel
+    internal lateinit var notesListFragment: NotesListFragment
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var notesListFragment: NotesListFragment
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,7 +55,7 @@ class NotesFragment : Fragment(),
         _binding = FragmentNotesBinding.inflate(inflater, container, false)
         drawerLayout = requireActivity().findViewById(R.id.drawerLayout)
 
-        // Add SelectionBar Fragment
+        // Add the SelectionBar which will remain in place
         childFragmentManager.beginTransaction()
             .replace(R.id.selectionBarContainer, SelectionBar())
             .commit()
@@ -57,13 +68,16 @@ class NotesFragment : Fragment(),
         setupBottomNav()
         setupBackPressHandling()
         setupFab()
-        viewModel = ViewModelProvider(this).get(NotesViewModel::class.java)
+        notesViewModel = ViewModelProvider(this).get(NotesViewModel::class.java)
+        labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
     }
 
     private fun setupNotesGrid() {
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Notes).apply {
             selectionBarListener = this@NotesFragment
-            onSelectionChanged = { count -> enterSelectionMode(count) }
+            onSelectionChanged = { count ->
+                enterSelectionMode(count)
+            }
             onSelectionModeEnabled = {
                 binding.searchBar.visibility = View.GONE
                 binding.selectionBarContainer.visibility = View.VISIBLE
@@ -88,7 +102,6 @@ class NotesFragment : Fragment(),
                 R.id.nav_gallery -> ImageNoteFragment("Image Notes")
                 else -> null
             }
-
             fragment?.let {
                 hideMainNotesLayout()
                 childFragmentManager.beginTransaction()
@@ -125,7 +138,7 @@ class NotesFragment : Fragment(),
     override fun onArchiveSelected() {
         notesListFragment.selectedNotes.forEach { note ->
             val updatedNote = note.copy(archived = true)
-            viewModel.archiveNote(updatedNote, onSuccess = {},onFailure = {})
+            notesViewModel.archiveNote(updatedNote, onSuccess = {}, onFailure = {})
         }
         notesListFragment.clearSelection()
     }
@@ -139,10 +152,15 @@ class NotesFragment : Fragment(),
     }
 
     fun enterSelectionMode(count: Int) {
+        val noteIds = notesListFragment.selectedNotes.map { it.id }
+        // Update the selection bar with the current selected note IDs and count.
+        (childFragmentManager.findFragmentById(R.id.selectionBarContainer) as? SelectionBar)
+            ?.apply {
+                updateSelectedNoteIds(noteIds)
+                setSelectedCount(count)
+            }
         binding.searchBar.visibility = View.GONE
         binding.selectionBarContainer.visibility = View.VISIBLE
-        (childFragmentManager.findFragmentById(R.id.selectionBarContainer) as? SelectionBar)
-            ?.setSelectedCount(count)
     }
 
     override fun onSelectionCancelled() {
@@ -150,6 +168,44 @@ class NotesFragment : Fragment(),
         notesListFragment.adapter.notifyDataSetChanged()
         binding.searchBar.visibility = View.VISIBLE
         binding.selectionBarContainer.visibility = View.GONE
+    }
+
+    override fun onLabelSelected(
+        noteIds: List<String>,
+        isChecked: Boolean,
+        selectedNoteIds: List<String>
+    ) {
+        // Open ApplyLabelToNoteFragment with the selected note IDs
+        val fragment = ApplyLabelToNoteFragment.newInstance(noteIds)
+        hideMainNotesLayout()
+        childFragmentManager.beginTransaction()
+            .replace(R.id.bottom_nav_container, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    override fun onLabelListUpdated(selectedLabels: List<Label>) {
+        Log.d("LabelSelection", "User selected: $selectedLabels")
+        // Optionally update UI or cache here
+    }
+
+    override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
+        labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
+    }
+
+    override fun onDeleteSelected() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Notes")
+            .setMessage("Are you sure you want to move selected notes to Bin?")
+            .setPositiveButton("Move to Bin") { _, _ ->
+                notesListFragment.selectedNotes.forEach { note ->
+                    val updated = note.copy(inBin = true)
+                    notesViewModel.deleteNote(updated, onSuccess = {}, onFailure = {})
+                }
+                notesListFragment.clearSelection()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun hideMainNotesLayout() {
@@ -171,20 +227,5 @@ class NotesFragment : Fragment(),
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onDeleteSelected() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Notes")
-            .setMessage("Are you sure you want to move selected notes to Bin?")
-            .setPositiveButton("Move to Bin") { _, _ ->
-                notesListFragment.selectedNotes.forEach { note ->
-                    val updated = note.copy(inBin = true)
-                    viewModel.deleteNote(updated, onSuccess = {},onFailure = {})
-                }
-                notesListFragment.clearSelection()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 }

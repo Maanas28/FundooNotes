@@ -8,10 +8,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.*
 import com.example.fundoonotes.R
+import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
+import com.example.fundoonotes.UI.util.LabelActionHandler
 import kotlinx.coroutines.launch
 
 class NotesListFragment : Fragment() {
@@ -81,6 +84,7 @@ class NotesListFragment : Fragment() {
         }
     }
 
+
     private fun toggleSelection(note: Note) {
         if (selectedNotes.contains(note)) {
             selectedNotes.remove(note)
@@ -112,4 +116,6 @@ class NotesListFragment : Fragment() {
         onSelectionModeDisabled?.invoke()
         selectionBarListener?.onSelectionCancelled()
     }
+
+
 }

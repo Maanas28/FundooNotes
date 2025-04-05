@@ -10,18 +10,22 @@ import com.example.fundoonotes.databinding.ViewSelectionBarBinding
 import com.example.fundoonotes.UI.util.ArchiveActionHandler
 import com.example.fundoonotes.UI.util.UnarchiveActionHandler
 import com.example.fundoonotes.UI.util.DeleteActionHandler
+import com.example.fundoonotes.UI.util.LabelActionHandler
 import com.example.fundoonotes.UI.util.SelectionBarListener
 
-class SelectionBar : Fragment(){
-
-    private var deleteHandler: DeleteActionHandler? = null
+class SelectionBar : Fragment() {
 
     private var _binding: ViewSelectionBarBinding? = null
     private val binding get() = _binding!!
 
     private var selectionListener: SelectionBarListener? = null
     private var archiveListener: ArchiveActionHandler? = null
-    private var unarchiveListner : UnarchiveActionHandler? = null
+    private var unarchiveListner: UnarchiveActionHandler? = null
+    private var deleteHandler: DeleteActionHandler? = null
+    private var labelHandler: LabelActionHandler? = null
+
+    // Local list to hold selected note IDs updated from parent
+    private var selectedNoteIds: List<String> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,19 +42,25 @@ class SelectionBar : Fragment(){
         archiveListener = parentFragment as? ArchiveActionHandler
         deleteHandler = parentFragment as? DeleteActionHandler
         unarchiveListner = parentFragment as? UnarchiveActionHandler
+        labelHandler = parentFragment as? LabelActionHandler
 
         binding.btnCloseSelectionSelectionBar.setOnClickListener {
             selectionListener?.onSelectionCancelled()
         }
 
-        // If this screen is Archive screen, show Unarchive button
+        binding.btnLabelSelectionBar.setOnClickListener {
+            if (selectedNoteIds.isNotEmpty()) {
+                labelHandler?.onLabelSelected(selectedNoteIds, true, selectedNoteIds)
+            }
+        }
+
+        // Archive vs. Unarchive logic
         if (unarchiveListner != null) {
             binding.btnArchiveSelectionBar.setImageResource(R.drawable.unarchive)
             binding.btnArchiveSelectionBar.setOnClickListener {
                 unarchiveListner?.onUnarchiveSelected()
             }
         } else {
-            // Default behavior - Archive
             binding.btnArchiveSelectionBar.setOnClickListener {
                 archiveListener?.onArchiveSelected()
             }
@@ -59,8 +69,12 @@ class SelectionBar : Fragment(){
         binding.btnMoreSelectedSelectionBar.setOnClickListener {
             deleteHandler?.onDeleteSelected()
         }
+    }
 
-
+    // Public method to update the list of selected note IDs from the parent
+    fun updateSelectedNoteIds(ids: List<String>) {
+        selectedNoteIds = ids
+        setSelectedCount(ids.size)
     }
 
     fun setSelectedCount(count: Int) {

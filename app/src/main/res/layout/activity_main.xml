@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".UI.activities.MainActivity">
+    tools:context=".UI.MainActivity">
 
     <!-- Main Content -->
         <FrameLayout
@@ -26,7 +26,7 @@
         app:itemBackground="@drawable/nav_item_background"
         app:itemTextColor="@color/nav_item_text_selector"
         app:itemIconTint="@color/black"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/drawer_menu"/>
+        app:menu="@menu/drawer_menu"
+        app:headerLayout="@layout/nav_header" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

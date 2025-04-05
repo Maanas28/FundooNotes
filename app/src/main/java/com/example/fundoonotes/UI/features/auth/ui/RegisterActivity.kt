@@ -2,6 +2,7 @@ package com.example.fundoonotes.UI.features.auth.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
@@ -9,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
+import com.example.fundoonotes.UI.data.model.User
 import com.example.fundoonotes.UI.util.AuthUtil
 import com.example.fundoonotes.UI.features.auth.factory.AuthViewModelFactory
 import com.example.fundoonotes.UI.features.auth.viewmodel.AuthViewModel
@@ -32,6 +34,7 @@ class RegisterActivity : AppCompatActivity() {
         initGoogleClient()
         setupObservers()
         setupListeners()
+
     }
 
     private fun setupListeners() {
@@ -45,6 +48,9 @@ class RegisterActivity : AppCompatActivity() {
             val email = findViewById<EditText>(R.id.editTextEmail).text.toString().trim()
             val password = findViewById<EditText>(R.id.editTextPassword).text.toString().trim()
             val confirm = findViewById<EditText>(R.id.editTextConfirmPassword).text.toString().trim()
+
+            Log.d("DEBUG", "Email: $email")       // Should log: maanas88@gmail.com
+            Log.d("DEBUG", "Password: $password") // Should log: Kanwar@123
 
             if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
                 toast("Please fill all fields")
@@ -65,8 +71,16 @@ class RegisterActivity : AppCompatActivity() {
                 toast("Weak Password")
                 return@setOnClickListener
             }
+            viewModel.register(
+                User(
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = email,
+                    password = password
+                )
+            )
 
-            viewModel.register(email, password)
+            Log.d("RegisterActivity", "REGISTER INPUTS -> First: $firstName, Last: $lastName, Email: $email, Password: $password, Confirm: $confirm")
             findViewById<ProgressBar>(R.id.progressBar).visibility = View.VISIBLE
         }
 
@@ -77,6 +91,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
+
         viewModel.authResult.observe(this) { (success, message) ->
             findViewById<ProgressBar>(R.id.progressBar).visibility = View.GONE
             if (success) {
@@ -85,8 +100,11 @@ class RegisterActivity : AppCompatActivity() {
                 finish()
             } else {
                 toast("Registration Failed: $message")
+                Log.e("RegisterActivity", "Registration error: $message")
             }
         }
+
+
     }
 
     private fun initGoogleClient() {
