@@ -54,21 +54,6 @@ class NotesViewModel (
                 }
         }
     }
-
-    fun scheduleLocalReminder(
-        note: Note,
-        context: Context,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
-    ) {
-        if (note.reminderTime != null) {
-            ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
-            setReminder(note.copy(hasReminder = true), onSuccess, onFailure)
-        } else {
-            onFailure(IllegalArgumentException("Reminder time cannot be null"))
-        }
-    }
-
     fun fetchNotes() = repository.fetchNotes()
     fun fetchArchivedNotes() = repository.fetchArchivedNotes()
     fun fetchBinNotes() = repository.fetchBinNotes()

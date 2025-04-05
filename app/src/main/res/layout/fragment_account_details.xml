@@ -38,7 +38,7 @@
         android:id="@+id/ivProfile"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@drawable/profile_icon"
+        android:src="@drawable/account"
         android:layout_marginTop="24dp"
         android:contentDescription="Profile Photo"
         app:layout_constraintTop_toBottomOf="@id/btnClose"
@@ -109,13 +109,14 @@
         android:id="@+id/ivWarning"
         android:layout_width="18dp"
         android:layout_height="18dp"
+        android:layout_marginStart="8dp"
         android:contentDescription="Waning"
         android:src="@drawable/warning"
         app:layout_constraintBottom_toBottomOf="@id/tvRecommendedActions"
-        app:layout_constraintStart_toEndOf="@id/tvRecommendedActions"
-        android:layout_marginStart="8dp" />
+        app:layout_constraintStart_toEndOf="@id/tvRecommendedActions" />
 
     <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/materialDivider"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:backgroundTint="@color/black"
@@ -129,28 +130,27 @@
         android:id="@+id/footer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_marginTop="28dp"
-        app:layout_constraintTop_toBottomOf="@id/tvRecommendedActions"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/tvRecommendedActions">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Privacy Policy"
             android:textColor="#666"
-            android:textSize="12sp"/>
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
             android:text=" • "
             android:textColor="#666"
-            android:textSize="12sp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp" />
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -159,5 +159,18 @@
             android:textColor="#666"
             android:textSize="12sp" />
     </LinearLayout>
+
+    <ImageButton
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/white"
+        android:contentDescription="TODO"
+        android:scaleType="centerInside"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/logout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/footer" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

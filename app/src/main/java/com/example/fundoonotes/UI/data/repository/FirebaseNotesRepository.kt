@@ -3,6 +3,7 @@ package com.example.fundoonotes.UI.data.repository
 import android.util.Log
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,9 @@ class FirebaseNotesRepository : NotesRepository {
 
     private val _labelsForNote = MutableStateFlow<List<String>>(emptyList())
     override val labelsForNote : MutableStateFlow<List<String>> = _labelsForNote
+
+    private val _accountDetails = MutableStateFlow<User?>(null)
+    override val accountDetails: StateFlow<User?> get() = _accountDetails
 
     override fun fetchNotes() {
         val userId = auth.currentUser?.uid ?: return
@@ -127,43 +131,20 @@ class FirebaseNotesRepository : NotesRepository {
             }
     }
 
-
-    override fun fetchNotesByLabel(labelName: String) {
+    override fun fetchAccountDetails() {
         val userId = auth.currentUser?.uid ?: return
-        firestore.collection("notes")
+        firestore.collection("users")
             .whereEqualTo("userId", userId)
-            .whereArrayContains("labels", labelName)
-            .whereEqualTo("archived", false)
-            .whereEqualTo("deleted", false)
-            .whereEqualTo("inBin", false)
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) {
-                    _notesByLabel.value = emptyList()
+                if (error != null || snapshot == null || snapshot.isEmpty) {
+                    _accountDetails.value = null
                     return@addSnapshotListener
                 }
-
-                val notes = snapshot.documents.mapNotNull {
-                    it.toObject(Note::class.java)?.copy(id = it.id)
-                }.sortedByDescending { it.timestamp }
-
-                _notesByLabel.value = notes
+                // Assume only one document per userId
+                val user = snapshot.documents.first().toObject(User::class.java)
+                _accountDetails.value = user
             }
     }
-
-    override fun fetchLabelsByNote(note: Note) {
-        val userId = auth.currentUser?.uid ?: return
-        firestore.collection("notes").document(note.id)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    _labelsForNote.value = emptyList()
-                    return@addSnapshotListener
-                }
-                // Convert the document to a Note object and extract its labels list
-                val noteObj = snapshot.toObject(Note::class.java)
-                _labelsForNote.value = noteObj?.labels ?: emptyList()
-            }
-    }
-
 
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))

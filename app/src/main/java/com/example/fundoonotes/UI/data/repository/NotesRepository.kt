@@ -2,6 +2,7 @@ package com.example.fundoonotes.UI.data.repository
 
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.data.model.User
 import kotlinx.coroutines.flow.StateFlow
 
 interface NotesRepository {
@@ -13,14 +14,14 @@ interface NotesRepository {
     val labels: StateFlow<List<Label>>
     val notesByLabel: StateFlow<List<Note>>
     val labelsForNote :  StateFlow<List<String>>
+    val accountDetails : StateFlow<User?>
 
     fun fetchNotes()
     fun fetchArchivedNotes()
     fun fetchBinNotes()
     fun fetchReminderNotes()
     fun fetchLabels()
-    fun fetchNotesByLabel(label: String)
-    fun fetchLabelsByNote(note : Note)
+    fun fetchAccountDetails()
 
     fun addNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
