@@ -5,6 +5,13 @@
     android:orientation="vertical"
     tools:context=".UI.features.reminders.RemindersFragment">
 
+    <FrameLayout
+        android:id="@+id/fullscreenFragmentContainerReminder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+
     <!-- Top bar container -->
     <FrameLayout
         android:id="@+id/reminderTopBarContainer"

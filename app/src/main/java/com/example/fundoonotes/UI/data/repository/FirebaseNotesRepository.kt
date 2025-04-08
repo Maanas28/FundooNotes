@@ -168,6 +168,24 @@ class FirebaseNotesRepository : NotesRepository {
             .addOnFailureListener { onFailure(it) }
     }
 
+    override fun updateNote(note : Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit){
+        firestore.collection("notes")
+            .document(note.id)
+            .update(
+                mapOf(
+                    "title" to note.title,
+                    "content" to note.content,
+                    "hasReminder" to note.hasReminder,
+                    "reminderTime" to note.reminderTime,
+                    "timestamp" to note.timestamp,
+                    "labels" to note.labels
+                )
+            )
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener {  onFailure(it)}
+    }
+
+
     override fun archiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("notes")
             .document(note.id)

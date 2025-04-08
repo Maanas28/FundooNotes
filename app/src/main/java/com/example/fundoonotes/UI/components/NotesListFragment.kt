@@ -1,9 +1,11 @@
 package com.example.fundoonotes.UI.components
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +17,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
+import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import kotlinx.coroutines.launch
@@ -41,6 +44,7 @@ class NotesListFragment : Fragment() {
     val selectedNotes = mutableSetOf<Note>()
 
     var selectionBarListener: SelectionBarListener? = null
+    var editNoteHandler: EditNoteHandler? = null
     var onSelectionChanged: ((Int) -> Unit)? = null
     var onSelectionModeEnabled: (() -> Unit)? = null
     var onSelectionModeDisabled: (() -> Unit)? = null
@@ -64,7 +68,22 @@ class NotesListFragment : Fragment() {
 
         adapter = NotesAdapter(
             notes = emptyList(),
-            onNoteClick = { note -> if (selectedNotes.isNotEmpty()) toggleSelection(note) },
+            onNoteClick = { note ->
+                if (selectedNotes.isNotEmpty()) {
+                    toggleSelection(note)
+                } else {
+                    when (notesContext) {
+                        is NotesGridContext.Notes,
+                        is NotesGridContext.Label,
+                        is NotesGridContext.Reminder,
+                        is NotesGridContext.Archive -> {
+                            editNoteHandler?.onNoteEdit(note)
+                        }
+                        NotesGridContext.Bin -> Toast.makeText(requireContext(), "Note cannot be edited from Bin", Toast.LENGTH_SHORT).show()
+                        null -> Toast.makeText(requireContext(), "Unknown context", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
             onNoteLongClick = { note -> toggleSelection(note) },
             selectedNotes = selectedNotes
         )
@@ -86,6 +105,9 @@ class NotesListFragment : Fragment() {
         }
     }
 
+    fun setNoteInteractionListener(listener: EditNoteHandler) {
+        this.editNoteHandler = listener
+    }
 
     private fun toggleSelection(note: Note) {
         if (selectedNotes.contains(note)) {
@@ -118,6 +140,4 @@ class NotesListFragment : Fragment() {
         onSelectionModeDisabled?.invoke()
         selectionBarListener?.onSelectionCancelled()
     }
-
-
 }

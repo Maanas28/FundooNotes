@@ -24,6 +24,7 @@ interface NotesRepository {
     fun fetchAccountDetails()
 
     fun addNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
+    fun updateNote(note : Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun unarchiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun deleteNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})

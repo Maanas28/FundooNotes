@@ -14,6 +14,7 @@ import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SelectionBar
 import com.example.fundoonotes.UI.data.model.Label
+import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
 import com.example.fundoonotes.UI.features.addnote.CanvasNoteFragment
 import com.example.fundoonotes.UI.features.addnote.ImageNoteFragment
@@ -25,6 +26,7 @@ import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.ArchiveActionHandler
 import com.example.fundoonotes.UI.util.DeleteActionHandler
 import com.example.fundoonotes.UI.util.DrawerToggleListener
+import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.LabelActionHandler
 import com.example.fundoonotes.UI.util.LabelSelectionListener
 import com.example.fundoonotes.UI.util.NotesGridContext
@@ -39,7 +41,9 @@ class NotesFragment : Fragment(),
     SelectionBarListener,
     DeleteActionHandler,
     LabelActionHandler,
-    LabelSelectionListener {
+    LabelSelectionListener,
+    EditNoteHandler,
+    AddNoteFragment.AddNoteListener {
 
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
@@ -75,6 +79,7 @@ class NotesFragment : Fragment(),
     private fun setupNotesGrid() {
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Notes).apply {
             selectionBarListener = this@NotesFragment
+            setNoteInteractionListener(this@NotesFragment)
             onSelectionChanged = { count ->
                 enterSelectionMode(count)
             }
@@ -128,8 +133,11 @@ class NotesFragment : Fragment(),
     private fun setupFab() {
         binding.fab.setOnClickListener {
             hideMainNotesLayout()
+
+            val addNoteFragment = AddNoteFragment.newInstance(null)
+            addNoteFragment.setAddNoteListener(this)
             childFragmentManager.beginTransaction()
-                .replace(R.id.bottom_nav_container, AddNoteFragment())
+                .replace(R.id.bottom_nav_container, addNoteFragment)
                 .addToBackStack(null)
                 .commit()
         }
@@ -208,7 +216,7 @@ class NotesFragment : Fragment(),
             .show()
     }
 
-    private fun hideMainNotesLayout() {
+    internal fun hideMainNotesLayout() {
         binding.bottomNavContainer.visibility = View.VISIBLE
         binding.contentLayout.visibility = View.GONE
         binding.fab.visibility = View.GONE
@@ -222,6 +230,46 @@ class NotesFragment : Fragment(),
         binding.fab.visibility = View.VISIBLE
         binding.bottomTabNavigation.visibility = View.VISIBLE
         binding.bottomNavigationView.visibility = View.VISIBLE
+    }
+
+    // NoteInteractionListener implementations
+    override fun onNoteEdit(note: Note) {
+        openAddOrEditNote(note)
+    }
+
+    override fun onNoteClick(note: Note) {
+        // Handle simple click if needed differently from edit
+    }
+
+    override fun onNoteOptions(note: Note) {
+        // Handle note options menu if needed
+    }
+
+    // AddNoteListener implementations
+    override fun onNoteAdded(note: Note) {
+        // Refresh or update UI if needed
+        Log.d("NotesFragment", "Note added: ${note.title}")
+    }
+
+    override fun onNoteUpdated(note: Note) {
+        // Refresh or update UI if needed
+        Log.d("NotesFragment", "Note updated: ${note.title}")
+    }
+
+    override fun onAddNoteCancelled() {
+        // Handle cancellation if needed
+        Log.d("NotesFragment", "Note addition cancelled")
+    }
+
+    private fun openAddOrEditNote(note: Note?) {
+        hideMainNotesLayout()
+
+        val addNoteFragment = AddNoteFragment.newInstance(note)
+        addNoteFragment.setAddNoteListener(this)
+        childFragmentManager.beginTransaction()
+            .replace(R.id.bottom_nav_container, addNoteFragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     override fun onDestroyView() {

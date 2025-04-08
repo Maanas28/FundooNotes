@@ -5,6 +5,13 @@
     android:orientation="vertical"
     tools:context=".UI.features.labels.LabelFragment">
 
+    <FrameLayout
+        android:id="@+id/fullscreenFragmentContainerLabel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+
     <!-- Top bar container -->
     <FrameLayout
         android:id="@+id/labelsTopBarContainer"

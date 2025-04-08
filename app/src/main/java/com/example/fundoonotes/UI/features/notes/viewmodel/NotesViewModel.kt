@@ -73,6 +73,21 @@ class NotesViewModel (
         }, onFailure)
     }
 
+    fun updateNote(
+        note: Note,
+        context: Context,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.updateNote(note, {
+            if (note.reminderTime != null) {
+                ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
+            }
+            onSuccess()
+        }, onFailure)
+    }
+
+
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.archiveNote(note)
 
