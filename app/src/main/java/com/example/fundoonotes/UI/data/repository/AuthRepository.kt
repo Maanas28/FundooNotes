@@ -18,10 +18,10 @@ class AuthRepository(private val auth: FirebaseAuth) {
             }
     }
 
-    fun registerWithEmail(user: User, onComplete: (Boolean, String?) -> Unit) {
+    fun registerWithEmail(user: User, password: String, onComplete: (Boolean, String?) -> Unit) {
         Log.d("AuthRepo", "Starting registration for email: ${user.email}")
 
-        auth.createUserWithEmailAndPassword(user.email, user.password)
+        auth.createUserWithEmailAndPassword(user.email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val firebaseUser = task.result?.user
@@ -29,22 +29,19 @@ class AuthRepository(private val auth: FirebaseAuth) {
 
                     Log.d("AuthRepo", "Firebase user created with UID: $userId")
 
-                    val userToSave = user.copy(userId = userId, password = "")
+                    val userToSave = user.copy(userId = userId)
 
                     firestore.collection("users")
                         .document(userId)
                         .set(userToSave)
                         .addOnSuccessListener {
-                            Log.d("AuthRepo", "Firestore write SUCCESS for user $userId")
                             onComplete(true, null)
                         }
                         .addOnFailureListener { e ->
-                            Log.e("AuthRepo", "Firestore write FAILED for user $userId", e)
                             onComplete(false, e.message)
                         }
 
                 } else {
-                    Log.e("AuthRepo", "FirebaseAuth registration failed", task.exception)
                     onComplete(false, task.exception?.message)
                 }
             }

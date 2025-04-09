@@ -17,8 +17,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun register(user : User) {
-        repository.registerWithEmail(user) { success, message ->
+    fun register(user : User, password: String) {
+        repository.registerWithEmail(user,password) { success, message ->
             authResult.postValue(Pair(success, message))
         }
     }

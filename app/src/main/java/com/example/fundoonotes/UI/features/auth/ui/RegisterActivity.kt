@@ -75,9 +75,9 @@ class RegisterActivity : AppCompatActivity() {
                 User(
                     firstName = firstName,
                     lastName = lastName,
-                    email = email,
-                    password = password
+                    email = email
                 )
+                , password
             )
 
             Log.d("RegisterActivity", "REGISTER INPUTS -> First: $firstName, Last: $lastName, Email: $email, Password: $password, Confirm: $confirm")

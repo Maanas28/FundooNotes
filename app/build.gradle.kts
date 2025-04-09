@@ -58,4 +58,5 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.androidx.cardview)
     implementation(libs.firebase.messaging)
+    implementation(libs.cloudinary.url.gen)
 }

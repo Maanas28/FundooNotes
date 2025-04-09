@@ -1,8 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".UI.features.auth.ui.RegisterActivity">
 
     <!-- Fundoo Title -->
     <TextView
@@ -16,7 +18,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="200dp" />
+        android:layout_marginTop="80dp" />
 
     <!-- Register Subtitle -->
     <TextView
@@ -56,96 +58,132 @@
             android:layout_marginEnd="10dp"
             android:padding="16dp">
 
-            <!-- Name Fields (Side by Side) -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayoutFirstName"
+            <!-- Profile + First + Last Name -->
+            <LinearLayout
+                android:id="@+id/nameRow"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="10dp"
-                app:errorEnabled="true"
-                app:layout_constraintEnd_toStartOf="@id/textInputLayoutLastName"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/titleRegister">
+                app:layout_constraintEnd_toEndOf="parent">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editTextFirstName"
-                    android:layout_width="match_parent"
+                <!-- Profile Image -->
+                <FrameLayout
+                    android:id="@+id/profileImageContainer"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginEnd="8dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/imageProfile"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/account"
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/CircleShape"
+                        app:strokeColor="@android:color/darker_gray"
+                        app:strokeWidth="2dp" />
+
+                    <ImageView
+                        android:id="@+id/buttonUploadImage"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="4dp"
+                        android:src="@drawable/add"
+                        android:background="@drawable/circle_white_background"
+                        android:padding="4dp"
+                        android:elevation="4dp" />
+                </FrameLayout>
+
+                <!-- First Name -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutFirstName"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="@string/first_name"
-                    android:inputType="text" />
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:errorEnabled="true">
 
-            </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editTextFirstName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/first_name"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayoutLastName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="20dp"
-                app:errorEnabled="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/textInputLayoutFirstName"
-                app:layout_constraintTop_toBottomOf="@id/titleRegister">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editTextLastName"
-                    android:layout_width="match_parent"
+                <!-- Last Name -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayoutLastName"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="@string/last_name"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_weight="1"
+                    app:errorEnabled="true">
 
-            <!-- Email Field -->
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editTextLastName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/last_name" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- Email -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutEmail"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 app:errorEnabled="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textInputLayoutFirstName"
                 app:startIconDrawable="@drawable/baseline_email_24"
-                app:startIconTint="@color/black">
+                app:startIconTint="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/nameRow"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextEmail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_your_email"
-                    android:inputType="textEmailAddress"/>
+                    android:inputType="textEmailAddress" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Password Field -->
+            <!-- Password -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutPassword"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 app:endIconMode="password_toggle"
                 app:errorEnabled="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                app:startIconDrawable="@drawable/baseline_lock_24"
                 app:layout_constraintTop_toBottomOf="@id/textInputLayoutEmail"
-                app:startIconDrawable="@drawable/baseline_lock_24">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextPassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_password"
-                    android:inputType="textPassword"/>
+                    android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Confirm Password Field -->
+            <!-- Confirm Password -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutConfirmPassword"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 app:endIconMode="password_toggle"
                 app:errorEnabled="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                app:startIconDrawable="@drawable/baseline_lock_24"
                 app:layout_constraintTop_toBottomOf="@id/textInputLayoutPassword"
-                app:startIconDrawable="@drawable/baseline_lock_24">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextConfirmPassword"
@@ -158,25 +196,26 @@
             <!-- Register Button -->
             <Button
                 android:id="@+id/buttonRegister"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="@string/registerButton"
                 android:backgroundTint="#FDE933"
                 android:textColor="@color/black"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textInputLayoutConfirmPassword"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textInputLayoutConfirmPassword" />
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- New User Layout -->
+            <!-- Already have account -->
             <LinearLayout
                 android:id="@+id/newUserLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/buttonRegister"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/buttonRegister">
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <TextView
                     android:id="@+id/AlreadyText"
@@ -184,10 +223,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/already_have_an_account"
                     android:textColor="@android:color/black"
-                    android:textSize="15sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/buttonRegister" />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/buttonLoginRegister"
@@ -199,12 +235,10 @@
                     android:text="@string/loginText"
                     android:textColor="@android:color/holo_blue_dark"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/AlreadyText" />
+                    android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- OR TEXT -->
             <TextView
                 android:id="@+id/orText"
                 android:layout_width="wrap_content"
@@ -212,9 +246,9 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/or_register_in_with"
                 android:textSize="15sp"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/newUserLayout"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/newUserLayout" />
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Social Logins -->
             <LinearLayout
@@ -223,9 +257,9 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/orText"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/orText">
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/buttonGoogleRegister"
@@ -237,8 +271,6 @@
                     android:focusable="true"
                     android:padding="8dp"
                     android:src="@drawable/google_icon"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:shapeAppearanceOverlay="@style/CircleShape"
                     app:strokeColor="@android:color/darker_gray"
                     app:strokeWidth="2dp" />
@@ -257,7 +289,7 @@
                     app:strokeWidth="2dp" />
             </LinearLayout>
 
-            <!-- Progress Bar Overlay -->
+            <!-- Loading Overlay -->
             <FrameLayout
                 android:id="@+id/progressOverlay"
                 android:layout_width="match_parent"

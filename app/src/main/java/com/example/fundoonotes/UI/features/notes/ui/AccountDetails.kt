@@ -1,5 +1,6 @@
 package com.example.fundoonotes.UI.features.notes.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.R
+import com.example.fundoonotes.UI.features.auth.ui.LoginActivity
 import com.example.fundoonotes.UI.features.notes.viewmodel.AccountViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -51,6 +53,10 @@ class AccountDetails : DialogFragment() {
         }
 
         accountViewModel.fetchAccountDetails()
+
+        view.findViewById<View>(R.id.btnLogout).setOnClickListener {
+            handleLogout()
+        }
     }
 
 
@@ -62,4 +68,11 @@ class AccountDetails : DialogFragment() {
         )
         dialog?.window?.setGravity(Gravity.CENTER)
     }
+
+    private fun handleLogout() {
+        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+        startActivity(Intent(requireContext(), LoginActivity::class.java))
+        requireActivity().finish()
+    }
+
 }
