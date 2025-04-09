@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
     id("kotlin-parcelize")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -48,7 +49,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.drawerlayout)
-    implementation(libs.androidx.lifecycle.runtime.android) // Navigation Drawer Layout
+    implementation(libs.androidx.lifecycle.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -58,5 +59,8 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.androidx.cardview)
     implementation(libs.firebase.messaging)
-    implementation(libs.cloudinary.url.gen)
+    implementation(libs.cloudinary.android)
+    implementation(libs.glide)
+    kapt(libs.compiler)
+
 }

@@ -11,9 +11,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bumptech.glide.Glide
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.features.auth.ui.LoginActivity
 import com.example.fundoonotes.UI.features.notes.viewmodel.AccountViewModel
+import com.google.android.material.imageview.ShapeableImageView
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -21,6 +24,7 @@ class AccountDetails : DialogFragment() {
 
     private lateinit var tvName: TextView
     private lateinit var tvEmail: TextView
+    private lateinit var imageView: ShapeableImageView
     private lateinit var accountViewModel: AccountViewModel
 
     override fun onCreateView(
@@ -36,29 +40,35 @@ class AccountDetails : DialogFragment() {
 
         tvName = view.findViewById(R.id.tvName)
         tvEmail = view.findViewById(R.id.tvEmail)
-        view.findViewById<View>(R.id.btnClose).setOnClickListener { dismiss() }
+        imageView = view.findViewById(R.id.ivProfile)
+
+        view.findViewById<View>(R.id.btnClose).setOnClickListener {
+            dismiss()
+        }
+
+        view.findViewById<View>(R.id.btnLogout).setOnClickListener {
+            handleLogout()
+        }
 
         accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
 
-        // Using repeatOnLifecycle to observe accountDetails whenever lifecycle is at least STARTED
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 accountViewModel.accountDetails.collectLatest { user ->
-                    user?.let {
-                        tvName.text = "${it.firstName} ${it.lastName}"
-                        tvEmail.text = it.email
+                    tvName.text = "${user?.firstName} ${user?.lastName}"
+                    tvEmail.text = user?.email
+                    user?.profileImage?.let { imageUrl ->
+                        Glide.with(requireContext())
+                            .load(imageUrl)
+                            .placeholder(R.drawable.account)
+                            .into(imageView)
                     }
                 }
             }
         }
 
         accountViewModel.fetchAccountDetails()
-
-        view.findViewById<View>(R.id.btnLogout).setOnClickListener {
-            handleLogout()
-        }
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -70,9 +80,8 @@ class AccountDetails : DialogFragment() {
     }
 
     private fun handleLogout() {
-        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+        FirebaseAuth.getInstance().signOut()
         startActivity(Intent(requireContext(), LoginActivity::class.java))
         requireActivity().finish()
     }
-
 }
