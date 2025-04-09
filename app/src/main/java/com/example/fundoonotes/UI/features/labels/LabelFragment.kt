@@ -11,8 +11,11 @@ import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SearchBarFragment
 import com.example.fundoonotes.UI.components.SelectionBar
+import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.DeleteActionHandler
+import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
@@ -20,12 +23,14 @@ import com.example.fundoonotes.UI.util.ViewToggleListener
 class LabelFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
-    DeleteActionHandler{
+    DeleteActionHandler,
+    EditNoteHandler {
 
     private lateinit var searchBar : View
     private lateinit var selectionBar : View
     private lateinit var notesListFragment : NotesListFragment
     private lateinit var viewModel : NotesViewModel
+    private lateinit var fullscreenContainer: View
 
 
     private var labelName: String = ""
@@ -48,6 +53,7 @@ class LabelFragment : Fragment(),
 
         searchBar = view.findViewById(R.id.searchBarContainerLabels)
         selectionBar = view.findViewById(R.id.selectionBarContainerLabels)
+        fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerLabel)
         viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
 
         // Inject Search Bar
@@ -59,6 +65,7 @@ class LabelFragment : Fragment(),
         // Inject Notes List
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Label(labelName)).apply {
             selectionBarListener = this@LabelFragment
+            setNoteInteractionListener(this@LabelFragment)
             onSelectionChanged = { count -> updateSelectionBar(count) }
             onSelectionModeEnabled = {
                 searchBar.visibility = View.GONE
@@ -107,6 +114,22 @@ class LabelFragment : Fragment(),
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    // NoteInteractionListener implementations
+    override fun onNoteEdit(note: Note) {
+        val addNoteFragment = AddNoteFragment.newInstance(note)
+        fullscreenContainer.visibility = View.VISIBLE
+        childFragmentManager.beginTransaction()
+            .replace(R.id.fullscreenFragmentContainerLabel, addNoteFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun restoreMainNotesLayout() {
+        view?.findViewById<View>(R.id.fullscreenFragmentContainerLabel)?.visibility = View.GONE
+        view?.findViewById<View>(R.id.archiveTopBarContainer)?.visibility = View.VISIBLE
+        view?.findViewById<View>(R.id.archiveNotesGridContainer)?.visibility = View.VISIBLE
     }
 
     companion object {

@@ -24,8 +24,10 @@ class ReminderScheduler(private val context: Context) {
         }
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra("noteId", note.id)
             putExtra("noteTitle", note.title)
             putExtra("noteContent", note.content)
+            putExtra("action", "REFRESH_UI_AND_NOTIFY")
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

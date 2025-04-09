@@ -23,6 +23,7 @@ import com.example.fundoonotes.UI.features.addnote.MicrophoneNoteFragement
 import com.example.fundoonotes.UI.features.labels.ApplyLabelToNoteFragment
 import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
+import com.example.fundoonotes.UI.util.AddNoteListener
 import com.example.fundoonotes.UI.util.ArchiveActionHandler
 import com.example.fundoonotes.UI.util.DeleteActionHandler
 import com.example.fundoonotes.UI.util.DrawerToggleListener
@@ -43,7 +44,7 @@ class NotesFragment : Fragment(),
     LabelActionHandler,
     LabelSelectionListener,
     EditNoteHandler,
-    AddNoteFragment.AddNoteListener {
+    AddNoteListener {
 
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
@@ -194,7 +195,6 @@ class NotesFragment : Fragment(),
 
     override fun onLabelListUpdated(selectedLabels: List<Label>) {
         Log.d("LabelSelection", "User selected: $selectedLabels")
-        // Optionally update UI or cache here
     }
 
     override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
@@ -237,27 +237,16 @@ class NotesFragment : Fragment(),
         openAddOrEditNote(note)
     }
 
-    override fun onNoteClick(note: Note) {
-        // Handle simple click if needed differently from edit
-    }
-
-    override fun onNoteOptions(note: Note) {
-        // Handle note options menu if needed
-    }
-
     // AddNoteListener implementations
     override fun onNoteAdded(note: Note) {
-        // Refresh or update UI if needed
         Log.d("NotesFragment", "Note added: ${note.title}")
     }
 
     override fun onNoteUpdated(note: Note) {
-        // Refresh or update UI if needed
         Log.d("NotesFragment", "Note updated: ${note.title}")
     }
 
     override fun onAddNoteCancelled() {
-        // Handle cancellation if needed
         Log.d("NotesFragment", "Note addition cancelled")
     }
 

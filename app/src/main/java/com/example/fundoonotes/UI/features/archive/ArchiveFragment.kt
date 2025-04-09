@@ -11,23 +11,29 @@ import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SearchBarFragment
 import com.example.fundoonotes.UI.components.SelectionBar
+import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
+import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
 import com.example.fundoonotes.UI.util.DeleteActionHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.UnarchiveActionHandler
 import com.example.fundoonotes.UI.util.ViewToggleListener
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
+import com.example.fundoonotes.UI.util.EditNoteHandler
 
 class ArchiveFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
     DeleteActionHandler,
-    UnarchiveActionHandler {
+    UnarchiveActionHandler,
+    EditNoteHandler {
 
     private lateinit var searchBar: View
     private lateinit var selectionBar: View
     private lateinit var notesListFragment: NotesListFragment
     private lateinit var viewModel: NotesViewModel
+    private lateinit var fullscreenContainer: View
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,6 +47,7 @@ class ArchiveFragment : Fragment(),
 
         searchBar = view.findViewById(R.id.searchBarContainerArchive)
         selectionBar = view.findViewById(R.id.selectionBarContainerArchive)
+        fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerArchive)
         viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
 
         val searchBarFragment = SearchBarFragment.newInstance("Archive")
@@ -50,6 +57,7 @@ class ArchiveFragment : Fragment(),
 
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Archive).apply {
             selectionBarListener = this@ArchiveFragment
+            setNoteInteractionListener(this@ArchiveFragment)
             onSelectionChanged = { count -> updateSelectionBar(count) }
             onSelectionModeEnabled = {
                 searchBar.visibility = View.GONE
@@ -105,5 +113,21 @@ class ArchiveFragment : Fragment(),
             viewModel.unarchiveNote(unarchived)
         }
         notesListFragment.clearSelection()
+    }
+
+    // NoteInteractionListener implementations
+    override fun onNoteEdit(note: Note) {
+        val addNoteFragment = AddNoteFragment.newInstance(note)
+        fullscreenContainer.visibility = View.VISIBLE
+        childFragmentManager.beginTransaction()
+            .replace(R.id.fullscreenFragmentContainerArchive, addNoteFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun restoreMainNotesLayout() {
+        view?.findViewById<View>(R.id.fullscreenFragmentContainerArchive)?.visibility = View.GONE
+        view?.findViewById<View>(R.id.archiveTopBarContainer)?.visibility = View.VISIBLE
+        view?.findViewById<View>(R.id.archiveNotesGridContainer)?.visibility = View.VISIBLE
     }
 }

@@ -23,11 +23,15 @@
 
         <TextView
             android:id="@+id/noteContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:maxLines="8"
+            android:ellipsize="end"
+            android:lineSpacingExtra="4dp"/>
+
 
         <!-- Labels Container -->
         <LinearLayout
@@ -62,5 +66,7 @@
                 android:textSize="12sp"
                 android:textColor="@color/black" />
         </LinearLayout>
+
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

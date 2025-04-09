@@ -84,14 +84,26 @@ class NotesAdapter(
 
 
         if (note.hasReminder && note.reminderTime != null) {
+            val now = System.currentTimeMillis()
+            val reminderTime = note.reminderTime
             val formatter = SimpleDateFormat("d MMM yyyy, hh:mm a", Locale.getDefault())
+            val isExpired = reminderTime < now
+
             holder.noteReminder.visibility = View.VISIBLE
-            holder.noteReminderText.text = formatter.format(Date(note.reminderTime))
+            holder.noteReminderText.text = formatter.format(Date(reminderTime))
+
+            if (isExpired) {
+                holder.noteReminderText.paintFlags = holder.noteReminderText.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+                holder.noteReminder.setBackgroundResource(R.drawable.reminder_pill_background_expired)
+            } else {
+                // Reset to normal appearance
+                holder.noteReminderText.paintFlags = holder.noteReminderText.paintFlags and android.graphics.Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                holder.noteReminderText.setTextColor(holder.itemView.context.getColor(R.color.black))
+                holder.noteReminder.setBackgroundResource(R.drawable.reminder_pill_background)
+            }
         } else {
             holder.noteReminder.visibility = View.GONE
         }
-
-
 
     }
 
@@ -101,6 +113,20 @@ class NotesAdapter(
         notes = newNotes
         notifyDataSetChanged()
     }
+
+    fun refreshSingleExpiredReminder(noteId: String) {
+        val now = System.currentTimeMillis()
+        val index = notes.indexOfFirst { it.id == noteId }
+
+        if (index != -1) {
+            val note = notes[index]
+            if (note.hasReminder && note.reminderTime != null && note.reminderTime < now) {
+                notifyItemChanged(index)
+            }
+        }
+    }
+
+
 }
 
 

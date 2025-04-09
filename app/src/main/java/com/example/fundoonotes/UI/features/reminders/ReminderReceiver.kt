@@ -11,13 +11,31 @@ import androidx.core.app.NotificationCompat
 import com.example.fundoonotes.R
 
 class ReminderReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("ReminderReceiver", "Notification triggered for note: ${intent?.getStringExtra("noteTitle")}")
-        val noteTitle = intent?.getStringExtra("noteTitle") ?: "Reminder"
-        val noteContent = intent?.getStringExtra("noteContent") ?: "You have a note reminder"
 
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (context == null || intent == null) return
+
+        val action = intent.getStringExtra("action")
+        val noteTitle = intent.getStringExtra("noteTitle") ?: "Reminder"
+        val noteContent = intent.getStringExtra("noteContent") ?: "You have a note reminder"
+
+        Log.d("ReminderReceiver", "Reminder received for note: $noteTitle")
+
+        if (action == "REFRESH_UI_AND_NOTIFY") {
+            showNotification(context, noteTitle, noteContent)
+
+            // Broadcast to UI with note ID
+            val noteId = intent.getStringExtra("noteId")
+            val uiRefreshIntent = Intent("com.example.fundoonotes.REFRESH_UI").apply {
+                putExtra("noteId", noteId)
+            }
+            context.sendBroadcast(uiRefreshIntent)
+        }
+    }
+
+    private fun showNotification(context: Context, title: String, content: String) {
         val notificationManager =
-            context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val channelId = "reminder_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -31,8 +49,8 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(noteTitle)
-            .setContentText(noteContent)
+            .setContentTitle(title)
+            .setContentText(content)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()

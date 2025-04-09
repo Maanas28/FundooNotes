@@ -1,11 +1,16 @@
 package com.example.fundoonotes.UI.components
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -49,6 +54,9 @@ class NotesListFragment : Fragment() {
     var onSelectionModeEnabled: (() -> Unit)? = null
     var onSelectionModeDisabled: (() -> Unit)? = null
 
+    private lateinit var refreshReceiver: BroadcastReceiver
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         notesContext = arguments?.getParcelable(ARG_CONTEXT)
@@ -61,6 +69,30 @@ class NotesListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        refreshReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val noteId = intent?.getStringExtra("noteId") ?: return
+                adapter.refreshSingleExpiredReminder(noteId)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(
+                refreshReceiver,
+                IntentFilter("com.example.fundoonotes.REFRESH_UI"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            ContextCompat.registerReceiver(
+                requireContext(),
+                refreshReceiver,
+                IntentFilter("com.example.fundoonotes.REFRESH_UI"),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
+
+
+
         recyclerView = view.findViewById(R.id.notesRecyclerView)
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL).apply {
             gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
@@ -72,16 +104,7 @@ class NotesListFragment : Fragment() {
                 if (selectedNotes.isNotEmpty()) {
                     toggleSelection(note)
                 } else {
-                    when (notesContext) {
-                        is NotesGridContext.Notes,
-                        is NotesGridContext.Label,
-                        is NotesGridContext.Reminder,
-                        is NotesGridContext.Archive -> {
-                            editNoteHandler?.onNoteEdit(note)
-                        }
-                        NotesGridContext.Bin -> Toast.makeText(requireContext(), "Note cannot be edited from Bin", Toast.LENGTH_SHORT).show()
-                        null -> Toast.makeText(requireContext(), "Unknown context", Toast.LENGTH_SHORT).show()
-                    }
+                    handleNoteClick(note)
                 }
             },
             onNoteLongClick = { note -> toggleSelection(note) },
@@ -94,6 +117,7 @@ class NotesListFragment : Fragment() {
         notesContext?.let { context ->
             viewModel.fetchForContext(context)
 
+            // Collect notes normally
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                     viewModel.getFlowForContext(context).collect { notes ->
@@ -102,8 +126,16 @@ class NotesListFragment : Fragment() {
                     }
                 }
             }
+
         }
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireContext().unregisterReceiver(refreshReceiver)
+    }
+
+
 
     fun setNoteInteractionListener(listener: EditNoteHandler) {
         this.editNoteHandler = listener
@@ -140,4 +172,22 @@ class NotesListFragment : Fragment() {
         onSelectionModeDisabled?.invoke()
         selectionBarListener?.onSelectionCancelled()
     }
+
+    private fun handleNoteClick(note: Note) {
+        when (notesContext) {
+            is NotesGridContext.Bin -> {
+                Toast.makeText(requireContext(), "Note cannot be edited from Bin", Toast.LENGTH_SHORT).show()
+            }
+            is NotesGridContext.Notes,
+            is NotesGridContext.Label,
+            is NotesGridContext.Reminder,
+            is NotesGridContext.Archive -> {
+                editNoteHandler?.onNoteEdit(note)
+            }
+            null -> {
+                Toast.makeText(requireContext(), "Unknown context", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 }

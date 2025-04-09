@@ -19,8 +19,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.features.archive.ArchiveFragment
+import com.example.fundoonotes.UI.features.labels.LabelFragment
 import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
+import com.example.fundoonotes.UI.features.reminders.RemindersFragment
+import com.example.fundoonotes.UI.util.AddNoteListener
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -35,11 +39,7 @@ class AddNoteFragment : Fragment() {
     private var selectedReminderTime: Long? = null
     private var addNoteListener: AddNoteListener? = null
 
-    interface AddNoteListener {
-        fun onNoteAdded(note: Note)
-        fun onNoteUpdated(note: Note)
-        fun onAddNoteCancelled()
-    }
+
 
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -134,8 +134,25 @@ class AddNoteFragment : Fragment() {
             viewModel.saveNote(finalNote, requireContext())
             addNoteListener?.onNoteAdded(finalNote)
         } else {
-            // Update existing note
-            viewModel.updateNote(finalNote, requireContext(), {
+            val noChange =
+                existingNote?.title == title &&
+                        existingNote?.content == content &&
+                        existingNote?.reminderTime == selectedReminderTime
+
+            if (noChange) {
+                Log.d("AddNoteFragment", "No changes detected, skipping update")
+                when (val parent = parentFragment) {
+                    is NotesFragment -> parent.restoreMainNotesLayout()
+                    is ArchiveFragment -> parent.restoreMainNotesLayout()
+                    is LabelFragment -> parent.restoreMainNotesLayout()
+                    is RemindersFragment -> parent.restoreMainNotesLayout()
+                }
+
+                parentFragmentManager.popBackStack()
+                return
+            }
+
+            viewModel.updateNote(finalNote, existingNote!!, requireContext(), {
                 addNoteListener?.onNoteUpdated(finalNote)
             }, {
                 Log.e("NoteUpdate", "Failed to update note", it)
@@ -143,10 +160,13 @@ class AddNoteFragment : Fragment() {
 
         }
 
-        // Make sure to call restoreMainNotesLayout BEFORE popping the back stack
-        if (parentFragment is NotesFragment) {
-            (parentFragment as NotesFragment).restoreMainNotesLayout()
+        when (val parent = parentFragment) {
+            is NotesFragment -> parent.restoreMainNotesLayout()
+            is ArchiveFragment -> parent.restoreMainNotesLayout()
+            is LabelFragment -> parent.restoreMainNotesLayout()
+            is RemindersFragment -> parent.restoreMainNotesLayout()
         }
+
 
         parentFragmentManager.popBackStack()
     }

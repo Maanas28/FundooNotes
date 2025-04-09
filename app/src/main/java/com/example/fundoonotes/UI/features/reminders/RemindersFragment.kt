@@ -9,17 +9,24 @@ import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SearchBarFragment
 import com.example.fundoonotes.UI.components.SelectionBar
+import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
+import com.example.fundoonotes.UI.features.labels.LabelFragment
+import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 
 class RemindersFragment : Fragment(),
     SelectionBarListener,
-    ViewToggleListener {
+    ViewToggleListener,
+    EditNoteHandler{
 
     private lateinit var searchBar: View
     private lateinit var selectionBar: View
     private lateinit var notesListFragment: NotesListFragment
+    private lateinit var fullscreenContainer: View
+
 
 
     override fun onCreateView(
@@ -34,6 +41,8 @@ class RemindersFragment : Fragment(),
 
         searchBar = view.findViewById(R.id.searchBarContainerReminder)
         selectionBar = view.findViewById(R.id.selectionBarContainerReminder)
+        fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerReminder)
+
 
         val searchBarFragment = SearchBarFragment.newInstance("Reminder")
         childFragmentManager.beginTransaction()
@@ -42,6 +51,7 @@ class RemindersFragment : Fragment(),
 
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Reminder).apply {
             selectionBarListener = this@RemindersFragment
+            setNoteInteractionListener(this@RemindersFragment)
             onSelectionChanged = { count -> updateSelectionBar(count) }
             onSelectionModeEnabled = {
                 searchBar.visibility = View.GONE
@@ -58,11 +68,29 @@ class RemindersFragment : Fragment(),
             .commit()
     }
 
+
+
     private fun updateSelectionBar(count: Int) {
         val selectionBarFragment = childFragmentManager
             .findFragmentById(R.id.selectionBarContainerReminder) as? SelectionBar
 
         selectionBarFragment?.setSelectedCount(count)
+    }
+
+    // NoteInteractionListener implementations
+    override fun onNoteEdit(note: Note) {
+        val addNoteFragment = AddNoteFragment.newInstance(note)
+        fullscreenContainer.visibility = View.VISIBLE
+        childFragmentManager.beginTransaction()
+            .replace(R.id.fullscreenFragmentContainerReminder, addNoteFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun restoreMainNotesLayout() {
+        view?.findViewById<View>(R.id.fullscreenFragmentContainerReminder)?.visibility = View.GONE
+        view?.findViewById<View>(R.id.archiveTopBarContainer)?.visibility = View.VISIBLE
+        view?.findViewById<View>(R.id.archiveNotesGridContainer)?.visibility = View.VISIBLE
     }
 
     override fun onSelectionCancelled() {

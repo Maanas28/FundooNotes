@@ -74,18 +74,22 @@ class NotesViewModel (
     }
 
     fun updateNote(
-        note: Note,
+        newNote: Note,
+        existingNote: Note,
         context: Context,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        repository.updateNote(note, {
-            if (note.reminderTime != null) {
-                ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
+        val reminderChanged = newNote.reminderTime != existingNote.reminderTime
+
+        repository.updateNote(newNote, {
+            if (newNote.hasReminder && reminderChanged) {
+                ReminderScheduler(context).scheduleReminder(newNote, newNote.reminderTime!!)
             }
             onSuccess()
         }, onFailure)
     }
+
 
 
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
