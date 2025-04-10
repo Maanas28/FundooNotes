@@ -18,23 +18,42 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-
-    <!-- Title -->
+    <!-- Title (initially visible) -->
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="Notes"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:textAlignment="center"
         android:textColor="@android:color/black"
         app:layout_constraintStart_toEndOf="@id/btnMenu"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/layoutIcons"
-        android:layout_marginStart="12dp"/>
+        app:layout_constraintEnd_toStartOf="@id/layoutIcons"
+        android:layout_marginStart="12dp"
+        android:visibility="visible"/>
 
-    <!-- Search + Grid Icons -->
+    <!-- Search Bar (hidden initially) -->
+    <EditText
+        android:id="@+id/editSearch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Search notes..."
+        android:background="@android:color/transparent"
+        android:textColor="@android:color/black"
+        android:textColorHint="@android:color/darker_gray"
+        android:inputType="text"
+        android:padding="4dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/btnMenu"
+        app:layout_constraintEnd_toStartOf="@id/layoutIcons"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="12dp" />
+
+    <!-- Icon Layout -->
     <LinearLayout
         android:id="@+id/layoutIcons"
         android:layout_width="wrap_content"

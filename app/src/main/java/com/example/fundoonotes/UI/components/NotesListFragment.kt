@@ -1,30 +1,23 @@
 package com.example.fundoonotes.UI.components
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.*
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class NotesListFragment : Fragment() {
@@ -42,7 +35,7 @@ class NotesListFragment : Fragment() {
     }
 
     private lateinit var recyclerView: RecyclerView
-    lateinit var adapter: NotesAdapter
+    internal lateinit var adapter: NotesAdapter
     private lateinit var viewModel: NotesViewModel
 
     private var notesContext: NotesGridContext? = null
@@ -56,42 +49,20 @@ class NotesListFragment : Fragment() {
 
     private lateinit var refreshReceiver: BroadcastReceiver
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         notesContext = arguments?.getParcelable(ARG_CONTEXT)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return inflater.inflate(R.layout.notes_grid_fragment, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        refreshReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val noteId = intent?.getStringExtra("noteId") ?: return
-                adapter.refreshSingleExpiredReminder(noteId)
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(
-                refreshReceiver,
-                IntentFilter("com.example.fundoonotes.REFRESH_UI"),
-                Context.RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            ContextCompat.registerReceiver(
-                requireContext(),
-                refreshReceiver,
-                IntentFilter("com.example.fundoonotes.REFRESH_UI"),
-                ContextCompat.RECEIVER_NOT_EXPORTED
-            )
-        }
-
-
 
         recyclerView = view.findViewById(R.id.notesRecyclerView)
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL).apply {
@@ -101,32 +72,50 @@ class NotesListFragment : Fragment() {
         adapter = NotesAdapter(
             notes = emptyList(),
             onNoteClick = { note ->
-                if (selectedNotes.isNotEmpty()) {
-                    toggleSelection(note)
-                } else {
-                    handleNoteClick(note)
-                }
+                if (selectedNotes.isNotEmpty()) toggleSelection(note)
+                else handleNoteClick(note)
             },
-            onNoteLongClick = { note -> toggleSelection(note) },
+            onNoteLongClick = { toggleSelection(it) },
             selectedNotes = selectedNotes
         )
         recyclerView.adapter = adapter
 
-        viewModel = ViewModelProvider(this)[NotesViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
 
         notesContext?.let { context ->
             viewModel.fetchForContext(context)
 
-            // Collect notes normally
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                    viewModel.getFlowForContext(context).collect { notes ->
+            lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                    viewModel.getFilteredNotesFlow(context).collectLatest { notes ->
                         val filtered = viewModel.filterNotesForContext(notes, context)
                         adapter.updateList(filtered)
                     }
                 }
             }
+        }
 
+        registerRefreshReceiver()
+    }
+
+    private fun registerRefreshReceiver() {
+        refreshReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val noteId = intent?.getStringExtra("noteId") ?: return
+                adapter.refreshSingleExpiredReminder(noteId)
+            }
+        }
+
+        val filter = IntentFilter("com.example.fundoonotes.REFRESH_UI")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(refreshReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            ContextCompat.registerReceiver(
+                requireContext(),
+                refreshReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
         }
     }
 
@@ -135,28 +124,8 @@ class NotesListFragment : Fragment() {
         requireContext().unregisterReceiver(refreshReceiver)
     }
 
-
-
     fun setNoteInteractionListener(listener: EditNoteHandler) {
         this.editNoteHandler = listener
-    }
-
-    private fun toggleSelection(note: Note) {
-        if (selectedNotes.contains(note)) {
-            selectedNotes.remove(note)
-        } else {
-            selectedNotes.add(note)
-        }
-
-        if (selectedNotes.isNotEmpty()) {
-            onSelectionModeEnabled?.invoke()
-        } else {
-            onSelectionModeDisabled?.invoke()
-            selectionBarListener?.onSelectionCancelled()
-        }
-
-        onSelectionChanged?.invoke(selectedNotes.size)
-        adapter.notifyDataSetChanged()
     }
 
     fun toggleView(isGrid: Boolean) {
@@ -173,6 +142,21 @@ class NotesListFragment : Fragment() {
         selectionBarListener?.onSelectionCancelled()
     }
 
+    private fun toggleSelection(note: Note) {
+        if (selectedNotes.contains(note)) selectedNotes.remove(note)
+        else selectedNotes.add(note)
+
+        if (selectedNotes.isNotEmpty()) {
+            onSelectionModeEnabled?.invoke()
+        } else {
+            onSelectionModeDisabled?.invoke()
+            selectionBarListener?.onSelectionCancelled()
+        }
+
+        onSelectionChanged?.invoke(selectedNotes.size)
+        adapter.notifyDataSetChanged()
+    }
+
     private fun handleNoteClick(note: Note) {
         when (notesContext) {
             is NotesGridContext.Bin -> {
@@ -184,10 +168,9 @@ class NotesListFragment : Fragment() {
             is NotesGridContext.Archive -> {
                 editNoteHandler?.onNoteEdit(note)
             }
-            null -> {
+            else -> {
                 Toast.makeText(requireContext(), "Unknown context", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
 }

@@ -21,13 +21,15 @@ import com.example.fundoonotes.UI.util.UnarchiveActionHandler
 import com.example.fundoonotes.UI.util.ViewToggleListener
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.EditNoteHandler
+import com.example.fundoonotes.UI.util.SearchListener
 
 class ArchiveFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
     DeleteActionHandler,
     UnarchiveActionHandler,
-    EditNoteHandler {
+    EditNoteHandler,
+    SearchListener{
 
     private lateinit var searchBar: View
     private lateinit var selectionBar: View
@@ -123,6 +125,10 @@ class ArchiveFragment : Fragment(),
             .replace(R.id.fullscreenFragmentContainerArchive, addNoteFragment)
             .addToBackStack(null)
             .commit()
+    }
+
+    override fun onSearchQueryChanged(query: String) {
+        viewModel.setSearchQuery(query)
     }
 
     fun restoreMainNotesLayout() {

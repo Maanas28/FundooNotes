@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SearchBarFragment
@@ -12,20 +13,24 @@ import com.example.fundoonotes.UI.components.SelectionBar
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
 import com.example.fundoonotes.UI.features.labels.LabelFragment
+import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
+import com.example.fundoonotes.UI.util.SearchListener
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 
 class RemindersFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
-    EditNoteHandler{
+    EditNoteHandler ,
+    SearchListener{
 
     private lateinit var searchBar: View
     private lateinit var selectionBar: View
     private lateinit var notesListFragment: NotesListFragment
     private lateinit var fullscreenContainer: View
+    private lateinit var viewModel : NotesViewModel
 
 
 
@@ -42,6 +47,7 @@ class RemindersFragment : Fragment(),
         searchBar = view.findViewById(R.id.searchBarContainerReminder)
         selectionBar = view.findViewById(R.id.selectionBarContainerReminder)
         fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerReminder)
+        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
 
 
         val searchBarFragment = SearchBarFragment.newInstance("Reminder")
@@ -102,6 +108,10 @@ class RemindersFragment : Fragment(),
 
     override fun toggleView(isGrid: Boolean) {
         notesListFragment.toggleView(isGrid)
+    }
+
+    override fun onSearchQueryChanged(query: String) {
+        viewModel.setSearchQuery(query)
     }
 
 }

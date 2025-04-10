@@ -15,6 +15,7 @@ interface NotesRepository {
     val notesByLabel: StateFlow<List<Note>>
     val labelsForNote :  StateFlow<List<String>>
     val accountDetails : StateFlow<User?>
+    val filteredNotes: StateFlow<List<Note>>
 
     fun fetchNotes()
     fun fetchArchivedNotes()

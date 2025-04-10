@@ -14,13 +14,15 @@ import com.example.fundoonotes.UI.components.SearchBarFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.BinActionHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
+import com.example.fundoonotes.UI.util.SearchListener
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 
 class BinFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
-    BinActionHandler {
+    BinActionHandler,
+    SearchListener {
 
     private lateinit var searchBar: View
     private lateinit var selectionBar: View
@@ -117,4 +119,7 @@ class BinFragment : Fragment(),
         viewModel.fetchBinNotes()
     }
 
+    override fun onSearchQueryChanged(query: String) {
+        viewModel.setSearchQuery(query)
+    }
 }

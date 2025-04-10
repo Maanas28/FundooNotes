@@ -40,6 +40,9 @@ class FirebaseNotesRepository : NotesRepository {
     private val _accountDetails = MutableStateFlow<User?>(null)
     override val accountDetails: StateFlow<User?> get() = _accountDetails
 
+    private val _filteredNotes = MutableStateFlow<List<Note>>(emptyList())
+    override val filteredNotes: StateFlow<List<Note>> = _filteredNotes
+
     override fun fetchNotes() {
         val userId = auth.currentUser?.uid ?: return
         firestore.collection("notes")

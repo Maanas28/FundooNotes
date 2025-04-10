@@ -17,6 +17,7 @@ import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.DeleteActionHandler
 import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
+import com.example.fundoonotes.UI.util.SearchListener
 import com.example.fundoonotes.UI.util.SelectionBarListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 
@@ -24,7 +25,8 @@ class LabelFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
     DeleteActionHandler,
-    EditNoteHandler {
+    EditNoteHandler,
+    SearchListener {
 
     private lateinit var searchBar : View
     private lateinit var selectionBar : View
@@ -124,6 +126,10 @@ class LabelFragment : Fragment(),
             .replace(R.id.fullscreenFragmentContainerLabel, addNoteFragment)
             .addToBackStack(null)
             .commit()
+    }
+
+    override fun onSearchQueryChanged(query: String) {
+        viewModel.setSearchQuery(query)
     }
 
     fun restoreMainNotesLayout() {

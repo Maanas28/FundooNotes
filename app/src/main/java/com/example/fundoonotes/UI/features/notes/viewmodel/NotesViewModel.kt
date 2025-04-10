@@ -2,6 +2,7 @@ package com.example.fundoonotes.UI.features.notes.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.repository.NotesRepository
 import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
@@ -17,6 +18,42 @@ class NotesViewModel (
     val archivedNotesFlow: StateFlow<List<Note>> = repository.archivedNotes
     val binNotes: StateFlow<List<Note>> = repository.binNotes
     val reminderNotes: StateFlow<List<Note>> = repository.reminderNotes
+
+
+    private val searchQuery = MutableStateFlow("")
+
+    private fun filterNotesByQuery(notes: List<Note>, query: String): List<Note> {
+        return if (query.isBlank()) notes
+        else notes.filter {
+            it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true)
+        }
+    }
+
+    fun getFilteredNotesFlow(context: NotesGridContext): StateFlow<List<Note>> {
+        return when (context) {
+            is NotesGridContext.Notes -> combine(notesFlow, searchQuery, ::filterNotesByQuery)
+
+            is NotesGridContext.Archive -> combine(archivedNotesFlow, searchQuery, ::filterNotesByQuery)
+
+            is NotesGridContext.Bin -> combine(binNotes, searchQuery, ::filterNotesByQuery)
+
+            is NotesGridContext.Reminder -> combine(reminderNotes, searchQuery, ::filterNotesByQuery)
+
+            is NotesGridContext.Label -> combine(notesFlow, searchQuery) { notes, query ->
+                notes.filter {
+                    it.labels.contains(context.labelName) &&
+                            (query.isBlank() || it.title.contains(query, true) || it.content.contains(query, true))
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+
+
+
+
+    fun setSearchQuery(query: String) {
+        searchQuery.value = query
+    }
 
     fun fetchForContext(context: NotesGridContext) {
         when (context) {

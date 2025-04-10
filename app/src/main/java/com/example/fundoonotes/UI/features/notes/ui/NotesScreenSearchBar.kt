@@ -2,9 +2,12 @@ package com.example.fundoonotes.UI.features.notes.ui
 
 import android.content.Context
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -13,6 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.features.notes.viewmodel.AccountViewModel
+import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.DrawerToggleListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 import com.google.android.material.imageview.ShapeableImageView
@@ -21,32 +25,41 @@ import kotlinx.coroutines.launch
 
 class NotesScreenSearchBar : Fragment() {
 
-    private lateinit var btnToogleView: ImageView
+    private lateinit var toggleViewIcon: ImageView
     private lateinit var profileIcon: ShapeableImageView
+    private lateinit var searchInput: EditText
     private lateinit var accountViewModel: AccountViewModel
+    private lateinit var notesViewModel: NotesViewModel
 
-    private var isGrid = false
     private var toggleListener: ViewToggleListener? = null
     private var drawerToggleListener: DrawerToggleListener? = null
+    private var isGrid = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         val parent = parentFragment
         toggleListener = parent as? ViewToggleListener
-            ?: throw ClassCastException("$parent must implement ViewToggleListener")
-
         drawerToggleListener = parent as? DrawerToggleListener
-            ?: throw ClassCastException("$parent must implement DrawerToggleListener")
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val view = inflater.inflate(R.layout.notes_screen_search_bar, container, false)
+        return inflater.inflate(R.layout.notes_screen_search_bar, container, false)
+    }
 
-        btnToogleView = view.findViewById(R.id.iv_toggle_view)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        toggleViewIcon = view.findViewById(R.id.iv_toggle_view)
         profileIcon = view.findViewById(R.id.profile_icon)
+        searchInput = view.findViewById(R.id.et_search)
+
+        accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
+        notesViewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+
+        accountViewModel.fetchAccountDetails()
 
         // Load profile image from ViewModel
         accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
@@ -64,12 +77,10 @@ class NotesScreenSearchBar : Fragment() {
             }
         }
 
-        accountViewModel.fetchAccountDetails()
-
-        btnToogleView.setOnClickListener {
+        toggleViewIcon.setOnClickListener {
             isGrid = !isGrid
             toggleListener?.toggleView(isGrid)
-            btnToogleView.setImageResource(
+            toggleViewIcon.setImageResource(
                 if (isGrid) R.drawable.list_view else R.drawable.ic_grid
             )
         }
@@ -83,6 +94,12 @@ class NotesScreenSearchBar : Fragment() {
             dialog.show(parentFragmentManager, "Account Details")
         }
 
-        return view
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                notesViewModel.setSearchQuery(s.toString())
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
     }
 }
