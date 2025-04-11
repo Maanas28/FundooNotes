@@ -65,15 +65,6 @@ class NotesViewModel (
         }
     }
 
-    fun getFlowForContext(context: NotesGridContext): StateFlow<List<Note>> {
-        return when (context) {
-            is NotesGridContext.Notes -> notesFlow
-            is NotesGridContext.Archive -> archivedNotesFlow
-            is NotesGridContext.Bin -> binNotes
-            is NotesGridContext.Reminder -> reminderNotes
-            is NotesGridContext.Label -> notesFlow
-        }
-    }
 
     fun filterNotesForContext(notes: List<Note>, context: NotesGridContext): List<Note> {
         return when (context) {
@@ -143,7 +134,4 @@ class NotesViewModel (
 
     fun restoreNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.restoreNote(note, onSuccess, onFailure)
-
-    fun setReminder(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
-        repository.setReminder(note, onSuccess, onFailure)
 }

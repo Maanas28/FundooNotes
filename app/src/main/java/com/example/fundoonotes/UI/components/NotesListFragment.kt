@@ -130,7 +130,7 @@ class NotesListFragment : Fragment() {
 
     fun toggleView(isGrid: Boolean) {
         recyclerView.layoutManager = if (isGrid)
-            GridLayoutManager(requireContext(), 2)
+            StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         else
             LinearLayoutManager(requireContext())
     }

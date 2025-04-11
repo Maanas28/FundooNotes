@@ -57,12 +57,21 @@ class NotesAdapter(
 
 
         holder.labelsContainer.removeAllViews()
-        val labelsList = note.labels
+        val labelsList = note.labels.sortedByDescending{ it.length}
+        // Function to truncate label text
+        fun truncateLabel(label: String): String {
+            return if (label.length > 12) {
+                label.substring(0, 9) + "..."
+            } else {
+                label
+            }
+        }
+
         if (labelsList.size <= 2) {
             for (label in labelsList) {
                 val pillView = LayoutInflater.from(holder.itemView.context)
                     .inflate(R.layout.item_note_label, holder.labelsContainer, false) as TextView
-                pillView.text = label
+                pillView.text = truncateLabel(label)
                 holder.labelsContainer.addView(pillView)
             }
         } else {

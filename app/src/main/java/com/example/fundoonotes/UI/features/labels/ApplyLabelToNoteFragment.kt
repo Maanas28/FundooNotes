@@ -62,6 +62,10 @@ class ApplyLabelToNoteFragment : Fragment() {
         val allNotes = notesViewModel.notesFlow.value
         // Filter out only the selected notes using their IDs.
         val selectedNotes = allNotes.filter { selectedNoteIds.contains(it.id) }
+        selectedNotes.forEach { note ->
+            Log.d("ApplyLabelFragment", "Note ID ${note.id} has labels: ${note.labels}")
+        }
+
         // Compute the intersection of labels for all selected notes.
         // If only one note is selected, the intersection is that note's labels.
         val commonLabels: Set<String> = if (selectedNotes.isNotEmpty()) {
@@ -105,7 +109,7 @@ class ApplyLabelToNoteFragment : Fragment() {
         }
 
         binding.backArrow.setOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            parentFragmentManager.popBackStack()
         }
     }
 

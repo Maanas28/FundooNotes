@@ -9,30 +9,17 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SelectionBar
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
-import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
-import com.example.fundoonotes.UI.features.addnote.CanvasNoteFragment
-import com.example.fundoonotes.UI.features.addnote.ImageNoteFragment
-import com.example.fundoonotes.UI.features.addnote.ListNoteFragement
-import com.example.fundoonotes.UI.features.addnote.MicrophoneNoteFragement
-import com.example.fundoonotes.UI.features.labels.ApplyLabelToNoteFragment
+import com.example.fundoonotes.UI.features.addnote.*
 import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
-import com.example.fundoonotes.UI.util.AddNoteListener
-import com.example.fundoonotes.UI.util.ArchiveActionHandler
-import com.example.fundoonotes.UI.util.DeleteActionHandler
-import com.example.fundoonotes.UI.util.DrawerToggleListener
-import com.example.fundoonotes.UI.util.EditNoteHandler
-import com.example.fundoonotes.UI.util.LabelActionHandler
-import com.example.fundoonotes.UI.util.LabelSelectionListener
-import com.example.fundoonotes.UI.util.NotesGridContext
-import com.example.fundoonotes.UI.util.SelectionBarListener
-import com.example.fundoonotes.UI.util.ViewToggleListener
+import com.example.fundoonotes.UI.util.*
 import com.example.fundoonotes.databinding.FragmentNotesBinding
 
 class NotesFragment : Fragment(),
@@ -43,24 +30,30 @@ class NotesFragment : Fragment(),
     DeleteActionHandler,
     LabelActionHandler,
     LabelSelectionListener,
+    LabelFragmentHost,
     EditNoteHandler,
-    AddNoteListener {
+    AddNoteListener,
+    MainLayoutToggler {
 
+    // ViewBinding for this fragment
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
+
+    // ViewModels
     private lateinit var notesViewModel: NotesViewModel
     private lateinit var labelsViewModel: LabelsViewModel
+
+    // Fragment and UI elements
     internal lateinit var notesListFragment: NotesListFragment
     private lateinit var drawerLayout: DrawerLayout
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentNotesBinding.inflate(inflater, container, false)
+
+        // Initialize drawer layout
         drawerLayout = requireActivity().findViewById(R.id.drawerLayout)
 
-        // Add the SelectionBar which will remain in place
+        // Load selection bar fragment inside selectionBarContainer
         childFragmentManager.beginTransaction()
             .replace(R.id.selectionBarContainer, SelectionBar())
             .commit()
@@ -69,21 +62,30 @@ class NotesFragment : Fragment(),
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Initialize ViewModels
+        notesViewModel = ViewModelProvider(this)[NotesViewModel::class.java]
+        labelsViewModel = ViewModelProvider(this)[LabelsViewModel::class.java]
+
+        // Setup UI components
         setupNotesGrid()
         setupBottomNav()
         setupBackPressHandling()
         setupFab()
-        notesViewModel = ViewModelProvider(this).get(NotesViewModel::class.java)
-        labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
+
+        // Add a back stack listener to restore the main layout when the label fragment is popped.
+        childFragmentManager.addOnBackStackChangedListener {
+            if (childFragmentManager.backStackEntryCount == 0) {
+                restoreMainLayout()
+            }
+        }
     }
 
+    // Initializes the main notes grid and its interaction listeners
     private fun setupNotesGrid() {
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Notes).apply {
             selectionBarListener = this@NotesFragment
             setNoteInteractionListener(this@NotesFragment)
-            onSelectionChanged = { count ->
-                enterSelectionMode(count)
-            }
+            onSelectionChanged = { count -> enterSelectionMode(count) }
             onSelectionModeEnabled = {
                 binding.searchBar.visibility = View.GONE
                 binding.selectionBarContainer.visibility = View.VISIBLE
@@ -99,6 +101,7 @@ class NotesFragment : Fragment(),
             .commit()
     }
 
+    // Handles bottom navigation item clicks
     private fun setupBottomNav() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             val fragment = when (item.itemId) {
@@ -108,21 +111,25 @@ class NotesFragment : Fragment(),
                 R.id.nav_gallery -> ImageNoteFragment("Image Notes")
                 else -> null
             }
+
+            // Load the selected fragment
             fragment?.let {
-                hideMainNotesLayout()
+                hideMainLayout()
                 childFragmentManager.beginTransaction()
                     .replace(R.id.bottom_nav_container, it)
                     .addToBackStack(null)
                     .commit()
             }
+
             true
         }
     }
 
+    // Handle system back press inside the fragment
     private fun setupBackPressHandling() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             if (binding.bottomNavContainer.isVisible) {
-                restoreMainNotesLayout()
+                restoreMainLayout()
                 childFragmentManager.popBackStack()
             } else {
                 isEnabled = false
@@ -131,12 +138,13 @@ class NotesFragment : Fragment(),
         }
     }
 
+    // Setup Floating Action Button to add new notes
     private fun setupFab() {
         binding.fab.setOnClickListener {
-            hideMainNotesLayout()
-
-            val addNoteFragment = AddNoteFragment.newInstance(null)
-            addNoteFragment.setAddNoteListener(this)
+            hideMainLayout()
+            val addNoteFragment = AddNoteFragment.newInstance(null).apply {
+                setAddNoteListener(this@NotesFragment)
+            }
             childFragmentManager.beginTransaction()
                 .replace(R.id.bottom_nav_container, addNoteFragment)
                 .addToBackStack(null)
@@ -144,6 +152,33 @@ class NotesFragment : Fragment(),
         }
     }
 
+    // Triggered when selection count changes in NotesListFragment
+    fun enterSelectionMode(count: Int) {
+        val noteIds = notesListFragment.selectedNotes.map { it.id }
+
+        if (count == 0) {
+            onSelectionCancelled()
+            return
+        }
+
+        (childFragmentManager.findFragmentById(R.id.selectionBarContainer) as? SelectionBar)?.apply {
+            updateSelectedNoteIds(noteIds)
+            setSelectedCount(count)
+        }
+
+        binding.searchBar.visibility = View.GONE
+        binding.selectionBarContainer.visibility = View.VISIBLE
+    }
+
+    // Cancels selection mode
+    override fun onSelectionCancelled() {
+        notesListFragment.selectedNotes.clear()
+        notesListFragment.adapter.notifyDataSetChanged()
+        binding.searchBar.visibility = View.VISIBLE
+        binding.selectionBarContainer.visibility = View.GONE
+    }
+
+    // Archive selected notes
     override fun onArchiveSelected() {
         notesListFragment.selectedNotes.forEach { note ->
             val updatedNote = note.copy(archived = true)
@@ -152,55 +187,7 @@ class NotesFragment : Fragment(),
         notesListFragment.clearSelection()
     }
 
-    override fun toggleView(isGrid: Boolean) {
-        notesListFragment.toggleView(isGrid)
-    }
-
-    override fun openDrawer() {
-        drawerLayout.openDrawer(GravityCompat.START)
-    }
-
-    fun enterSelectionMode(count: Int) {
-        val noteIds = notesListFragment.selectedNotes.map { it.id }
-        // Update the selection bar with the current selected note IDs and count.
-        (childFragmentManager.findFragmentById(R.id.selectionBarContainer) as? SelectionBar)
-            ?.apply {
-                updateSelectedNoteIds(noteIds)
-                setSelectedCount(count)
-            }
-        binding.searchBar.visibility = View.GONE
-        binding.selectionBarContainer.visibility = View.VISIBLE
-    }
-
-    override fun onSelectionCancelled() {
-        notesListFragment.selectedNotes.clear()
-        notesListFragment.adapter.notifyDataSetChanged()
-        binding.searchBar.visibility = View.VISIBLE
-        binding.selectionBarContainer.visibility = View.GONE
-    }
-
-    override fun onLabelSelected(
-        noteIds: List<String>,
-        isChecked: Boolean,
-        selectedNoteIds: List<String>
-    ) {
-        // Open ApplyLabelToNoteFragment with the selected note IDs
-        val fragment = ApplyLabelToNoteFragment.newInstance(noteIds)
-        hideMainNotesLayout()
-        childFragmentManager.beginTransaction()
-            .replace(R.id.bottom_nav_container, fragment)
-            .addToBackStack(null)
-            .commit()
-    }
-
-    override fun onLabelListUpdated(selectedLabels: List<Label>) {
-        Log.d("LabelSelection", "User selected: $selectedLabels")
-    }
-
-    override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
-        labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
-    }
-
+    // Prompt delete confirmation for selected notes
     override fun onDeleteSelected() {
         AlertDialog.Builder(requireContext())
             .setTitle("Delete Notes")
@@ -216,28 +203,34 @@ class NotesFragment : Fragment(),
             .show()
     }
 
-    internal fun hideMainNotesLayout() {
-        binding.bottomNavContainer.visibility = View.VISIBLE
-        binding.contentLayout.visibility = View.GONE
-        binding.fab.visibility = View.GONE
-        binding.bottomTabNavigation.visibility = View.GONE
-        binding.bottomNavigationView.visibility = View.GONE
+    // Toggles between grid and list layout
+    override fun toggleView(isGrid: Boolean) {
+        notesListFragment.toggleView(isGrid)
     }
 
-    fun restoreMainNotesLayout() {
-        binding.bottomNavContainer.visibility = View.GONE
-        binding.contentLayout.visibility = View.VISIBLE
-        binding.fab.visibility = View.VISIBLE
-        binding.bottomTabNavigation.visibility = View.VISIBLE
-        binding.bottomNavigationView.visibility = View.VISIBLE
+    // Opens the navigation drawer
+    override fun openDrawer() {
+        drawerLayout.openDrawer(GravityCompat.START)
     }
 
-    // NoteInteractionListener implementations
+    // When label dialog is updated with selected labels
+    override fun onLabelListUpdated(selectedLabels: List<Label>) {
+        Log.d("LabelSelection", "User selected: $selectedLabels")
+    }
+
+    override fun getLabelFragmentManager(): FragmentManager = childFragmentManager
+
+    override fun getLabelFragmentContainerId(): Int = R.id.bottom_nav_container
+
+    override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
+        labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
+    }
+
+    // When a note is being edited
     override fun onNoteEdit(note: Note) {
         openAddOrEditNote(note)
     }
 
-    // AddNoteListener implementations
     override fun onNoteAdded(note: Note) {
         Log.d("NotesFragment", "Note added: ${note.title}")
     }
@@ -250,15 +243,34 @@ class NotesFragment : Fragment(),
         Log.d("NotesFragment", "Note addition cancelled")
     }
 
+    // Opens the Add/Edit Note screen
     private fun openAddOrEditNote(note: Note?) {
-        hideMainNotesLayout()
-
-        val addNoteFragment = AddNoteFragment.newInstance(note)
-        addNoteFragment.setAddNoteListener(this)
+        hideMainLayout()
+        val addNoteFragment = AddNoteFragment.newInstance(note).apply {
+            setAddNoteListener(this@NotesFragment)
+        }
         childFragmentManager.beginTransaction()
             .replace(R.id.bottom_nav_container, addNoteFragment)
             .addToBackStack(null)
             .commit()
+    }
+
+    // Hide the main layout and show container layout (Add/Edit, Canvas, etc.)
+    override fun hideMainLayout() {
+        binding.bottomNavContainer.visibility = View.VISIBLE
+        binding.contentLayout.visibility = View.GONE
+        binding.fab.visibility = View.GONE
+        binding.bottomTabNavigation.visibility = View.GONE
+        binding.bottomNavigationView.visibility = View.GONE
+    }
+
+    // Restore main layout and hide bottom container
+    override fun restoreMainLayout() {
+        binding.bottomNavContainer.visibility = View.GONE
+        binding.contentLayout.visibility = View.VISIBLE
+        binding.fab.visibility = View.VISIBLE
+        binding.bottomTabNavigation.visibility = View.VISIBLE
+        binding.bottomNavigationView.visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {
