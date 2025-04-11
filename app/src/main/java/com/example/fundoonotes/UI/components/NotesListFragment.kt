@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -51,7 +52,7 @@ class NotesListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        notesContext = arguments?.getParcelable(ARG_CONTEXT)
+        notesContext = BundleCompat.getParcelable(arguments, ARG_CONTEXT, NotesGridContext::class.java )
     }
 
     override fun onCreateView(

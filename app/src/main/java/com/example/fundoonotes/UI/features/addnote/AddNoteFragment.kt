@@ -14,6 +14,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
@@ -56,7 +57,7 @@ class AddNoteFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        existingNote = arguments?.getParcelable(ARG_NOTE)
+        existingNote = BundleCompat.getParcelable(arguments, ARG_NOTE, Note::class.java)
     }
 
     override fun onAttach(context: Context) {
