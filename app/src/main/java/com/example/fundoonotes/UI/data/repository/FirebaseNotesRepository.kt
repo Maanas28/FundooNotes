@@ -9,12 +9,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Query
-
+import java.util.UUID
 
 class FirebaseNotesRepository : NotesRepository {
 
-    private val firestore = FirebaseFirestore.getInstance()
+    // Configure Firestore to disable offline persistence.
+    private val firestore = FirebaseFirestore.getInstance().apply {
+        firestoreSettings = FirebaseFirestoreSettings.Builder()
+            .setPersistenceEnabled(false)
+            .build()
+    }
     private val auth = FirebaseAuth.getInstance()
 
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
@@ -150,29 +156,27 @@ class FirebaseNotesRepository : NotesRepository {
             }
     }
 
+    // Refactored addNote using client-generated ID.
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
         val noteToAdd = note.copy(
+            id = if (note.id.isBlank()) UUID.randomUUID().toString() else note.id,
             userId = userId,
             archived = false,
             deleted = false,
             inBin = false
         )
         firestore.collection("notes")
-            .add(noteToAdd)
-            .addOnSuccessListener { documentRef ->
-                val id = documentRef.id
-                documentRef.update("id", id)
-                    .addOnSuccessListener {
-                        Log.d("FirestoreSave", "Saved successfully with ID $id")
-                        onSuccess()
-                    }
-                    .addOnFailureListener { onFailure(it) }
+            .document(noteToAdd.id)
+            .set(noteToAdd)
+            .addOnSuccessListener {
+                Log.d("FirestoreSave", "Saved successfully with ID ${noteToAdd.id}")
+                onSuccess()
             }
             .addOnFailureListener { onFailure(it) }
     }
 
-    override fun updateNote(note : Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit){
+    override fun updateNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("notes")
             .document(note.id)
             .update(
@@ -186,9 +190,8 @@ class FirebaseNotesRepository : NotesRepository {
                 )
             )
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener {  onFailure(it)}
+            .addOnFailureListener { onFailure(it) }
     }
-
 
     override fun archiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("notes")
@@ -237,7 +240,7 @@ class FirebaseNotesRepository : NotesRepository {
                 .update(
                     mapOf(
                         "hasReminder" to true,
-                        "reminderTime" to time,
+                        "reminderTime" to time
                     )
                 )
                 .addOnSuccessListener { onSuccess() }
@@ -245,36 +248,25 @@ class FirebaseNotesRepository : NotesRepository {
         } ?: onFailure(Exception("Reminder time is null"))
     }
 
+    // Refactored addNewLabel using client-generated ID.
     override fun addNewLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
-        val labelToAdd = hashMapOf(
-            "name" to label.name,
-            "userId" to userId
+        val labelToAdd = label.copy(
+            id = if (label.id.isBlank()) UUID.randomUUID().toString() else label.id,
+            userId = userId
         )
         firestore.collection("labels")
-            .add(labelToAdd)
-            .addOnSuccessListener { documentRef ->
-                val id = documentRef.id
-                documentRef.update("id", id)
-                    .addOnSuccessListener {
-                        Log.d("Firestore Label", "Saved successfully with ID $id")
-                        onSuccess()
-                    }
-                    .addOnFailureListener { onFailure(it) }
+            .document(labelToAdd.id)
+            .set(labelToAdd)
+            .addOnSuccessListener {
+                Log.d("Firestore Label", "Saved successfully with ID ${labelToAdd.id}")
+                onSuccess()
             }
             .addOnFailureListener { onFailure(it) }
     }
 
-
-    override fun updateLabel(
-        oldLabel: Label,
-        newLabel: Label,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
+    override fun updateLabel(oldLabel: Label, newLabel: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
-
-        // Check if label belongs to the current user
         firestore.collection("labels")
             .document(oldLabel.id)
             .get()
@@ -283,11 +275,8 @@ class FirebaseNotesRepository : NotesRepository {
                 if (label?.userId != userId) {
                     return@addOnSuccessListener onFailure(Exception("Unauthorized operation"))
                 }
-
-                // Update label name
                 doc.reference.update("name", newLabel.name)
                     .addOnSuccessListener {
-                        // Update all notes for this user that contain old label
                         firestore.collection("notes")
                             .whereEqualTo("userId", userId)
                             .whereArrayContains("labels", oldLabel.name)
@@ -309,11 +298,8 @@ class FirebaseNotesRepository : NotesRepository {
             .addOnFailureListener { onFailure(it) }
     }
 
-
     override fun deleteLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
-
-        // Check if label belongs to the current user
         firestore.collection("labels")
             .document(label.id)
             .get()
@@ -322,11 +308,8 @@ class FirebaseNotesRepository : NotesRepository {
                 if (labelDoc?.userId != userId) {
                     return@addOnSuccessListener onFailure(Exception("Unauthorized operation"))
                 }
-
-                // Delete label document
                 doc.reference.delete()
                     .addOnSuccessListener {
-                        // Remove label from all notes of this user
                         firestore.collection("notes")
                             .whereEqualTo("userId", userId)
                             .whereArrayContains("labels", label.name)

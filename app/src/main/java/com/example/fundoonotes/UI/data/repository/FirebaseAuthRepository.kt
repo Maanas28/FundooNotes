@@ -5,10 +5,16 @@ import com.example.fundoonotes.UI.data.model.User
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 
 class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) {
 
-    private val firestore = FirebaseFirestore.getInstance()
+    // Configure Firestore to disable offline persistence.
+    private val firestore = FirebaseFirestore.getInstance().apply {
+        firestoreSettings = FirebaseFirestoreSettings.Builder()
+            .setPersistenceEnabled(false)
+            .build()
+    }
 
     fun loginWithEmail(
         email: String,

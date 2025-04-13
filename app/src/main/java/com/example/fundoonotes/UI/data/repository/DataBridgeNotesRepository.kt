@@ -3,14 +3,17 @@ package com.example.fundoonotes.UI.data.repository
 import android.content.Context
 import android.util.Log
 import com.example.fundoonotes.UI.data.NotesDatabase
-import com.example.fundoonotes.UI.util.NetworkUtils
+import com.example.fundoonotes.UI.data.OfflineSyncManager
+import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.model.*
+import com.example.fundoonotes.UI.util.ConnectivityManager
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
+import com.google.gson.Gson
 
 class DataBridgeNotesRepository(
     context: Context
@@ -23,6 +26,7 @@ class DataBridgeNotesRepository(
         noteDao = NotesDatabase.getInstance(context).noteDao(),
         labelDao = NotesDatabase.getInstance(context).labelDao(),
         userDao = NotesDatabase.getInstance(context).userDao(),
+        offlineOperationDao = NotesDatabase.getInstance(context).offlineOperationDao(),
         scope = CoroutineScope(Dispatchers.IO)
     )
 
@@ -33,7 +37,26 @@ class DataBridgeNotesRepository(
 
     private val appContext = context.applicationContext
 
-    val currentUser = if (isOnline()) firebase.accountDetails else sqliteAuth.currentUser
+    private fun trackOfflineOperation(type: String, entityType: String, entityId: String, entity: Any) {
+        val gson = Gson() // Gson is a popular library for converting Java/Kotlin objects into JSON strings and vice versa.
+        val payload = gson.toJson(entity)
+        val offlineOp = OfflineOperation(
+            operationType = type,
+            entityType = entityType,
+            entityId = entityId,
+            timestamp = System.currentTimeMillis(),
+            payload = payload
+        )
+        sqlite.saveOfflineOperation(offlineOp) {
+            Log.d("DataBridge", "Tracked offline operation: $type for $entityType with id $entityId")
+        }
+    }
+
+    private val offlineSyncManager = OfflineSyncManager(sqlite, firebase, NotesDatabase.getInstance(context).offlineOperationDao())
+
+    fun syncOfflineChanges() {
+        offlineSyncManager.syncOfflineChanges()
+    }
 
     // READ operations: Always prefer Firestore when online
     override val notes: StateFlow<List<Note>> get() = if (isOnline()) firebase.notes else sqlite.notes
@@ -46,7 +69,7 @@ class DataBridgeNotesRepository(
     override val accountDetails: StateFlow<User?> get() = if (isOnline()) firebase.accountDetails else sqlite.accountDetails
     override val filteredNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.filteredNotes else sqlite.filteredNotes
 
-    private fun isOnline() = NetworkUtils.isNetworkAvailable(appContext)
+    private fun isOnline() = ConnectivityManager(appContext, this).isNetworkAvailable()
 
     // Fetch methods: Always use Firestore when online
     override fun fetchNotes() = if (isOnline()) firebase.fetchNotes() else sqlite.fetchNotes()
@@ -56,7 +79,7 @@ class DataBridgeNotesRepository(
     override fun fetchLabels() = if (isOnline()) firebase.fetchLabels() else sqlite.fetchLabels()
     override fun fetchAccountDetails() = if (isOnline()) firebase.fetchAccountDetails() else sqlite.fetchAccountDetails()
 
-    // CREATE operation: When online, update both; when offline, update only SQLite
+//    // CREATE operation: When online, update both; when offline, update only SQLite
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             val noteWithId = note.copy(
@@ -65,21 +88,23 @@ class DataBridgeNotesRepository(
             )
 
             if (isOnline()) {
-                // Online: Update both Firebase and SQLite
                 firebase.addNote(noteWithId, {
-                    // Once Firebase succeeds, update SQLite
                     sqlite.addNote(noteWithId, onSuccess, onFailure)
                 }, onFailure)
             } else {
-                // Offline: Update only SQLite
-                sqlite.addNote(noteWithId, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.addNote(noteWithId, {
+                    trackOfflineOperation("ADD", "NOTE", noteWithId.id, noteWithId)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // UPDATE operation: When online, update both; when offline, update only SQLite
+
+    // UPDATE operation: Refactored to track offline operations
     override fun updateNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -92,15 +117,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.updateNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.updateNote(note, {
+                    trackOfflineOperation("UPDATE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Archive operation: When online, update both; when offline, update only SQLite
+    // Archive operation: Refactored to track offline operations
     override fun archiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -113,15 +141,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.archiveNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.archiveNote(note, {
+                    trackOfflineOperation("ARCHIVE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Unarchive operation: When online, update both; when offline, update only SQLite
+    // Unarchive operation: Refactored to track offline operations
     override fun unarchiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -134,15 +165,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.unarchiveNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.unarchiveNote(note, {
+                    trackOfflineOperation("UNARCHIVE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Delete operation: When online, update both; when offline, update only SQLite
+    // Delete operation: Refactored to track offline operations
     override fun deleteNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -155,15 +189,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.deleteNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.deleteNote(note, {
+                    trackOfflineOperation("DELETE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Permanent delete operation: When online, update both; when offline, update only SQLite
+    // Permanent delete operation: Refactored to track offline operations
     override fun permanentlyDeleteNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -176,15 +213,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.permanentlyDeleteNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.permanentlyDeleteNote(note, {
+                    trackOfflineOperation("PERMANENT_DELETE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Restore operation: When online, update both; when offline, update only SQLite
+    // Restore operation: Refactored to track offline operations
     override fun restoreNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -197,15 +237,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.restoreNote(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.restoreNote(note, {
+                    trackOfflineOperation("RESTORE", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Set reminder operation: When online, update both; when offline, update only SQLite
+    // Set reminder operation: Refactored to track offline operations
     override fun setReminder(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -218,15 +261,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.setReminder(note, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.setReminder(note, {
+                    trackOfflineOperation("SET_REMINDER", "NOTE", note.id, note)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Add label operation: When online, update both; when offline, update only SQLite
+    // Add label operation: Refactored to track offline operations
     override fun addNewLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = firebaseAuth.getCurrentUserId() ?: return onFailure(Exception("User not logged in"))
         Log.d("DataBridge", "Adding label with name: ${label.name}, userId: $userId")
@@ -258,8 +304,7 @@ class DataBridgeNotesRepository(
                 onFailure(e)
             })
         } else {
-            // Offline: Update only SQLite
-            // Generate a temporary ID for offline mode
+            // Offline: Update SQLite and track the change
             val offlineLabel = Label(
                 id = UUID.randomUUID().toString(),
                 name = label.name,
@@ -269,6 +314,7 @@ class DataBridgeNotesRepository(
             Log.d("DataBridge", "Offline mode: Adding to SQLite only: id=${offlineLabel.id}, userId=${offlineLabel.userId}")
             sqlite.addNewLabel(offlineLabel, {
                 Log.d("DataBridge", "SQLite success (offline mode)")
+                trackOfflineOperation("ADD", "LABEL", offlineLabel.id, offlineLabel)
                 onSuccess()
             }, { e ->
                 Log.e("DataBridge", "SQLite failure (offline mode)", e)
@@ -277,7 +323,7 @@ class DataBridgeNotesRepository(
         }
     }
 
-    // Update label operation: When online, update both; when offline, update only SQLite
+    // Update label operation: Refactored to track offline operations
     override fun updateLabel(oldLabel: Label, newLabel: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -290,15 +336,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.updateLabel(oldLabel, newLabel, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.updateLabel(oldLabel, newLabel, {
+                    trackOfflineOperation("UPDATE", "LABEL", oldLabel.id, newLabel)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Delete label operation: When online, update both; when offline, update only SQLite
+    // Delete label operation: Refactored to track offline operations
     override fun deleteLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             if (isOnline()) {
@@ -311,15 +360,18 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.deleteLabel(label, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.deleteLabel(label, {
+                    trackOfflineOperation("DELETE", "LABEL", label.id, label)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    // Toggle label operation: When online, update both; when offline, update only SQLite
+    // Toggle label operation: Refactored to track offline operations
     override fun toggleLabelForNotes(
         label: Label,
         isChecked: Boolean,
@@ -338,8 +390,17 @@ class DataBridgeNotesRepository(
                     onFailure(e)
                 })
             } else {
-                // Offline: Update only SQLite
-                sqlite.toggleLabelForNotes(label, isChecked, noteIds, onSuccess, onFailure)
+                // Offline: Update SQLite and track the change
+                sqlite.toggleLabelForNotes(label, isChecked, noteIds, {
+                    // Create a data object to store the toggle operation details
+                    val toggleData = mapOf(
+                        "labelId" to label.id,
+                        "isChecked" to isChecked,
+                        "noteIds" to noteIds
+                    )
+                    trackOfflineOperation("TOGGLE_LABEL", "LABEL_NOTE", label.id, toggleData)
+                    onSuccess()
+                }, onFailure)
             }
         } catch (e: Exception) {
             onFailure(e)
@@ -375,4 +436,6 @@ class DataBridgeNotesRepository(
 
         firebaseAuth.loginWithGoogleCredential(credential, userInfo, onComplete)
     }
+
+
 }

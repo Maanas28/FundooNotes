@@ -71,4 +71,5 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
     implementation("androidx.credentials:credentials:1.2.0-alpha02") // or latest
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
+    implementation ("com.google.code.gson:gson:2.10.1")
 }

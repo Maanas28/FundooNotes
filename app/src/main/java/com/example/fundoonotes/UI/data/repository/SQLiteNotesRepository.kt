@@ -1,187 +1,10 @@
-//package com.example.fundoonotes.UI.data.repository
-//
-//import com.example.fundoonotes.UI.data.dao.LabelDao
-//import com.example.fundoonotes.UI.data.dao.NoteDao
-//import com.example.fundoonotes.UI.data.dao.UserDao
-//import com.example.fundoonotes.UI.data.mappers.toDomain
-//import com.example.fundoonotes.UI.data.mappers.toEntity
-//import com.example.fundoonotes.UI.data.model.Label
-//import com.example.fundoonotes.UI.data.model.Note
-//import com.example.fundoonotes.UI.data.model.User
-//import kotlinx.coroutines.CoroutineScope
-//import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.flow.*
-//import kotlinx.coroutines.launch
-//
-//class SQLiteNotesRepository(
-//    private val noteDao: NoteDao,
-//    private val labelDao: LabelDao,
-//    private val userDao: UserDao,
-//    private val scope: CoroutineScope
-//) : NotesRepository {
-//
-//    private val _notes = MutableStateFlow<List<Note>>(emptyList())
-//    override val notes: StateFlow<List<Note>> = _notes.asStateFlow()
-//
-//    override val archivedNotes = MutableStateFlow<List<Note>>(emptyList())
-//    override val binNotes = MutableStateFlow<List<Note>>(emptyList())
-//    override val reminderNotes = MutableStateFlow<List<Note>>(emptyList())
-//    override val labels = MutableStateFlow<List<Label>>(emptyList())
-//    override val notesByLabel = MutableStateFlow<List<Note>>(emptyList())
-//    override val labelsForNote = MutableStateFlow<List<String>>(emptyList())
-//    override val accountDetails = MutableStateFlow<User?>(null)
-//    override val filteredNotes = MutableStateFlow<List<Note>>(emptyList())
-//
-//    override fun fetchNotes() {
-//        scope.launch {
-//            val userId = accountDetails.value?.userId ?: return@launch
-//            val notes = noteDao.getNotes(userId).map { it.toDomain() }
-//            _notes.emit(notes) // <- this must emit to update UI
-//        }
-//    }
-//
-//
-//    override fun fetchArchivedNotes() {
-//        accountDetails.value?.userId?.let { userId ->
-//            scope.launch(Dispatchers.IO) {
-//                archivedNotes.emit(noteDao.getArchivedNotes(userId).map { it.toDomain() })
-//            }
-//        }
-//    }
-//
-//    override fun fetchBinNotes() {
-//        accountDetails.value?.userId?.let { userId ->
-//            scope.launch(Dispatchers.IO) {
-//                binNotes.emit(noteDao.getBinNotes(userId).map { it.toDomain() })
-//            }
-//        }
-//    }
-//
-//    override fun fetchReminderNotes() {
-//        accountDetails.value?.userId?.let { userId ->
-//            scope.launch(Dispatchers.IO) {
-//                reminderNotes.emit(noteDao.getReminderNotes(userId).map { it.toDomain() })
-//            }
-//        }
-//    }
-//
-//    override fun fetchLabels() {
-//        accountDetails.value?.userId?.let { userId ->
-//            scope.launch(Dispatchers.IO) {
-//                labels.emit(labelDao.getLabels(userId).map { it.toDomain() })
-//            }
-//        }
-//    }
-//
-//    override fun fetchAccountDetails() {
-//        scope.launch(Dispatchers.IO) {
-//            val user = userDao.getAllUsers().firstOrNull()
-//            accountDetails.emit(user?.toDomain())
-//        }
-//    }
-//
-//
-//    override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch {
-//            try {
-//                noteDao.insertNote(note.toEntity())
-//                fetchNotes() // ⚠️ this will emit into the flow
-//                onSuccess()
-//            } catch (e: Exception) {
-//                onFailure(e)
-//            }
-//        }
-//    }
-//
-//    override fun updateNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch(Dispatchers.IO) {
-//            runCatching {
-//                noteDao.updateNote(note.toEntity())
-//            }.onSuccess { onSuccess() }.onFailure { onFailure(it as Exception) }
-//        }
-//    }
-//
-//    override fun deleteNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        updateNote(note.copy(inBin = true), onSuccess, onFailure)
-//    }
-//
-//    override fun permanentlyDeleteNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch(Dispatchers.IO) {
-//            runCatching {
-//                noteDao.deleteNote(note.id)
-//            }.onSuccess { onSuccess() }.onFailure { onFailure(it as Exception) }
-//        }
-//    }
-//
-//    override fun restoreNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        updateNote(note.copy(inBin = false), onSuccess, onFailure)
-//    }
-//
-//    override fun archiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        updateNote(note.copy(archived = true), onSuccess, onFailure)
-//    }
-//
-//    override fun unarchiveNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        updateNote(note.copy(archived = false), onSuccess, onFailure)
-//    }
-//
-//    override fun setReminder(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        updateNote(note.copy(hasReminder = true), onSuccess, onFailure)
-//    }
-//
-//    override fun addNewLabel(label: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        val userId = accountDetails.value?.userId ?: return onFailure(Exception("User not logged in"))
-//        val labelEntity = Label(userId = userId, id = java.util.UUID.randomUUID().toString(), name = label).toEntity()
-//        scope.launch(Dispatchers.IO) {
-//            runCatching {
-//                labelDao.insertLabel(labelEntity)
-//            }.onSuccess { onSuccess() }.onFailure { onFailure(it as Exception) }
-//        }
-//    }
-//
-//    override fun updateLabel(oldLabel: Label, newLabel: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch(Dispatchers.IO) {
-//            runCatching {
-//                labelDao.updateLabel(newLabel.toEntity())
-//            }.onSuccess { onSuccess() }.onFailure { onFailure(it as Exception) }
-//        }
-//    }
-//
-//    override fun deleteLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch(Dispatchers.IO) {
-//            runCatching {
-//                labelDao.deleteLabel(label.id)
-//            }.onSuccess { onSuccess() }.onFailure { onFailure(it as Exception) }
-//        }
-//    }
-//
-//    override fun toggleLabelForNotes(label: Label, isChecked: Boolean, noteIds: List<String>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        scope.launch(Dispatchers.IO) {
-//            try {
-//                noteIds.forEach { id ->
-//                    val noteEntity = noteDao.getNoteById(id)
-//                    if (noteEntity != null) {
-//                        val currentLabels = noteEntity.labels.split(",").toMutableList()
-//                        val updatedLabels = if (isChecked) {
-//                            if (!currentLabels.contains(label.name)) currentLabels + label.name else currentLabels
-//                        } else {
-//                            currentLabels.filterNot { it == label.name }
-//                        }
-//                        noteDao.updateNote(noteEntity.copy(labels = updatedLabels.joinToString(",")))
-//                    }
-//                }
-//                onSuccess()
-//            } catch (e: Exception) {
-//                onFailure(e)
-//            }
-//        }
-//    }
-//}
 package com.example.fundoonotes.UI.data.repository
 
 import com.example.fundoonotes.UI.data.dao.LabelDao
 import com.example.fundoonotes.UI.data.dao.NoteDao
+import com.example.fundoonotes.UI.data.dao.OfflineOperationDao
 import com.example.fundoonotes.UI.data.dao.UserDao
+import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.mappers.toDomain
 import com.example.fundoonotes.UI.data.mappers.toEntity
 import com.example.fundoonotes.UI.data.model.Label
@@ -189,8 +12,9 @@ import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -198,6 +22,7 @@ class SQLiteNotesRepository(
     private val noteDao: NoteDao,
     private val labelDao: LabelDao,
     private val userDao: UserDao,
+    private val offlineOperationDao: OfflineOperationDao,
     private val scope: CoroutineScope
 ) : NotesRepository {
 
@@ -234,6 +59,27 @@ class SQLiteNotesRepository(
     init {
         // Initialize by fetching account details first
         fetchAccountDetails()
+    }
+
+    fun saveOfflineOperation(operation: OfflineOperation, onComplete: () -> Unit) {
+        scope.launch {
+            offlineOperationDao.insertOfflineOperation(operation)
+            onComplete()
+        }
+    }
+
+    fun getOfflineOperations(onComplete: (List<OfflineOperation>) -> Unit) {
+        scope.launch {
+            val ops = offlineOperationDao.getOfflineOperations()
+            onComplete(ops)
+        }
+    }
+
+    fun removeOfflineOperation(opId: Int, onComplete: () -> Unit) {
+        scope.launch {
+            offlineOperationDao.removeOfflineOperation(opId)
+            onComplete()
+        }
     }
 
     override fun fetchNotes() {
