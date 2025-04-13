@@ -63,8 +63,8 @@ class NotesFragment : Fragment(),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Initialize ViewModels
-        notesViewModel = ViewModelProvider(this)[NotesViewModel::class.java]
-        labelsViewModel = ViewModelProvider(this)[LabelsViewModel::class.java]
+        notesViewModel = NotesViewModel(requireContext())
+        labelsViewModel = LabelsViewModel(requireContext())
 
         // Setup UI components
         setupNotesGrid()

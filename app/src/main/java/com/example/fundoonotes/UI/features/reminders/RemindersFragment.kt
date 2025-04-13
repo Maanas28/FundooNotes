@@ -55,8 +55,8 @@ class RemindersFragment : Fragment(),
         searchBar = view.findViewById(R.id.searchBarContainerReminder)
         selectionBar = view.findViewById(R.id.selectionBarContainerReminder)
         fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerReminder)
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
-        labelsViewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
+        labelsViewModel = LabelsViewModel(requireContext())
 
 
         val searchBarFragment = SearchBarFragment.newInstance("Reminder")

@@ -56,14 +56,12 @@ class NotesScreenSearchBar : Fragment() {
         profileIcon = view.findViewById(R.id.profile_icon)
         searchInput = view.findViewById(R.id.et_search)
 
-        accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
-        notesViewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        accountViewModel = AccountViewModel(requireContext())
+        notesViewModel =  NotesViewModel(requireContext())
 
         accountViewModel.fetchAccountDetails()
 
         // Load profile image from ViewModel
-        accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
-
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 accountViewModel.accountDetails.collectLatest { user ->

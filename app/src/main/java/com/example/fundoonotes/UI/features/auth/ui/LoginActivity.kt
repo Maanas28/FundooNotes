@@ -1,42 +1,61 @@
 package com.example.fundoonotes.UI.features.auth.ui
 
+import AuthViewModel
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
+import android.widget.*
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.MainActivity
 import com.example.fundoonotes.UI.util.AuthUtil
-import com.example.fundoonotes.UI.features.auth.factory.AuthViewModelFactory
-import com.example.fundoonotes.UI.features.auth.viewmodel.AuthViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.identity.SignInClient
 
 class LoginActivity : AppCompatActivity() {
+
     private lateinit var viewModel: AuthViewModel
-    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
-    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var oneTapClient: SignInClient
+    private lateinit var signInRequest: BeginSignInRequest
+
+    private val oneTapLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Identity.getSignInClient(this)
+                .getSignInCredentialFromIntent(result.data)
+                .googleIdToken?.let { idToken ->
+                    viewModel.loginWithGoogle(idToken)
+                } ?: showToast("Google Sign-In failed: ID Token null")
+        } else {
+            showToast("Google Sign-In cancelled")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val factory = AuthViewModelFactory(FirebaseAuth.getInstance())
-        viewModel = ViewModelProvider(this, factory)[AuthViewModel::class.java]
+        viewModel = AuthViewModel(this)
 
-        initGoogleClient()
+        setupGoogleOneTap()
         setupObservers()
         setupListeners()
+    }
+
+    private fun setupGoogleOneTap() {
+        oneTapClient = Identity.getSignInClient(this)
+        signInRequest = BeginSignInRequest.builder()
+            .setGoogleIdTokenRequestOptions(
+                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                    .setSupported(true)
+                    .setServerClientId(getString(R.string.default_web_client_id))
+                    .setFilterByAuthorizedAccounts(true)
+                    .build()
+            )
+            .setAutoSelectEnabled(true)
+            .build()
     }
 
     private fun setupListeners() {
@@ -50,7 +69,15 @@ class LoginActivity : AppCompatActivity() {
         }
 
         findViewById<ImageView>(R.id.buttonGoogleLogin).setOnClickListener {
-            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            oneTapClient.beginSignIn(signInRequest)
+                .addOnSuccessListener { result ->
+                    oneTapLauncher.launch(
+                        IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+                    )
+                }
+                .addOnFailureListener {
+                    showToast("Google Sign-In failed: ${it.message}")
+                }
         }
 
         findViewById<TextView>(R.id.buttonRegisterLogin).setOnClickListener {
@@ -66,25 +93,12 @@ class LoginActivity : AppCompatActivity() {
                 finish()
             } else {
                 showToast("Login Failed: $message")
+                Log.e("LoginActivity", "Login error: $message")
             }
         }
     }
 
-    private fun initGoogleClient() {
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail().build()
-
-        googleSignInClient = GoogleSignIn.getClient(this, options)
-
-        googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(it.data).result
-            account?.let { acc -> viewModel.loginWithGoogle(acc) }
-        }
-    }
-
     private fun showToast(msg: String) {
-        Log.d("LoginActivity", msg)
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }

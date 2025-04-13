@@ -74,7 +74,8 @@ class AddNoteFragment : Fragment() {
     ): View? = inflater.inflate(R.layout.fragment_add_note, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
+
 
         // Initialize views
         etTitle = view.findViewById(R.id.etTitle)

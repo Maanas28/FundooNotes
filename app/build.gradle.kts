@@ -3,7 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.services)
     id("kotlin-parcelize")
-    id("org.jetbrains.kotlin.kapt")
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -56,11 +57,18 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation(libs.play.services.auth)
     implementation(libs.androidx.cardview)
     implementation(libs.firebase.messaging)
     implementation(libs.cloudinary.android)
     implementation(libs.glide)
-    kapt(libs.compiler)
-
+    ksp(libs.compiler)
+    implementation ("androidx.room:room-runtime:2.7.0")
+    ksp ("androidx.room:room-compiler:2.7.0")
+    implementation ("androidx.room:room-ktx:2.7.0")
+    implementation(libs.play.services.auth) // or latest
+    implementation("com.google.android.gms:play-services-identity:18.0.1")
+    implementation("androidx.credentials:credentials:1.2.0-alpha02") // or latest
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
+    implementation("androidx.credentials:credentials:1.2.0-alpha02") // or latest
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
 }

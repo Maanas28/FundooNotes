@@ -1,18 +1,24 @@
 package com.example.fundoonotes.UI.features.notes.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.User
-import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
-import com.example.fundoonotes.UI.data.repository.NotesRepository
+import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class AccountViewModel (
-    private val repository: NotesRepository = FirebaseNotesRepository()
+class AccountViewModel(
+    private val repository: DataBridgeNotesRepository
 ) : ViewModel() {
 
-    val accountDetails : StateFlow<User?> =  repository.accountDetails
+    constructor(context: Context) : this(DataBridgeNotesRepository(context))
+
+    val accountDetails: StateFlow<User?> = repository.accountDetails
 
     fun fetchAccountDetails() {
-        repository.fetchAccountDetails()
+        viewModelScope.launch {
+            repository.fetchAccountDetails()
+        }
     }
 }

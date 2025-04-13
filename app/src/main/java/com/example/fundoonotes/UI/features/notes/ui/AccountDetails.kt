@@ -50,7 +50,7 @@ class AccountDetails : DialogFragment() {
             handleLogout()
         }
 
-        accountViewModel = ViewModelProvider(requireActivity())[AccountViewModel::class.java]
+        accountViewModel = AccountViewModel(requireContext())
 
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {

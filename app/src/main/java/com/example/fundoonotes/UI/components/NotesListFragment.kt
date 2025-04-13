@@ -81,7 +81,7 @@ class NotesListFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
 
         notesContext?.let { context ->
             viewModel.fetchForContext(context)

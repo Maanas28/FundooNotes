@@ -4,21 +4,22 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import com.example.fundoonotes.UI.data.repository.NotesRepository
-import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.ReminderScheduler
 import kotlinx.coroutines.flow.*
 
-class NotesViewModel (
-    private val repository: NotesRepository = FirebaseNotesRepository()
+class NotesViewModel(
+    private val repository: NotesRepository
 ) : ViewModel() {
+
+    constructor(context: Context) : this(DataBridgeNotesRepository(context))
 
     val notesFlow: StateFlow<List<Note>> = repository.notes
     val archivedNotesFlow: StateFlow<List<Note>> = repository.archivedNotes
     val binNotes: StateFlow<List<Note>> = repository.binNotes
     val reminderNotes: StateFlow<List<Note>> = repository.reminderNotes
-
 
     private val searchQuery = MutableStateFlow("")
 
@@ -32,13 +33,9 @@ class NotesViewModel (
     fun getFilteredNotesFlow(context: NotesGridContext): StateFlow<List<Note>> {
         return when (context) {
             is NotesGridContext.Notes -> combine(notesFlow, searchQuery, ::filterNotesByQuery)
-
             is NotesGridContext.Archive -> combine(archivedNotesFlow, searchQuery, ::filterNotesByQuery)
-
             is NotesGridContext.Bin -> combine(binNotes, searchQuery, ::filterNotesByQuery)
-
             is NotesGridContext.Reminder -> combine(reminderNotes, searchQuery, ::filterNotesByQuery)
-
             is NotesGridContext.Label -> combine(notesFlow, searchQuery) { notes, query ->
                 notes.filter {
                     it.labels.contains(context.labelName) &&
@@ -47,9 +44,6 @@ class NotesViewModel (
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
-
-
-
 
     fun setSearchQuery(query: String) {
         searchQuery.value = query
@@ -65,34 +59,24 @@ class NotesViewModel (
         }
     }
 
-
     fun filterNotesForContext(notes: List<Note>, context: NotesGridContext): List<Note> {
         return when (context) {
-            is NotesGridContext.Notes ->
-                notes.filter { !it.archived && !it.inBin && !it.deleted }
-            is NotesGridContext.Archive ->
-                notes.filter { it.archived && !it.inBin && !it.deleted }
-            is NotesGridContext.Bin ->
-                notes.filter { it.inBin && !it.deleted }
-            is NotesGridContext.Reminder ->
-                notes.filter { it.hasReminder && !it.inBin }
-            is NotesGridContext.Label ->
-                notes.filter {
-                    !it.archived && !it.inBin && !it.deleted && it.labels.contains(context.labelName)
-                }
+            is NotesGridContext.Notes -> notes.filter { !it.archived && !it.inBin && !it.deleted }
+            is NotesGridContext.Archive -> notes.filter { it.archived && !it.inBin && !it.deleted }
+            is NotesGridContext.Bin -> notes.filter { it.inBin && !it.deleted }
+            is NotesGridContext.Reminder -> notes.filter { it.hasReminder && !it.inBin }
+            is NotesGridContext.Label -> notes.filter {
+                !it.archived && !it.inBin && !it.deleted && it.labels.contains(context.labelName)
+            }
         }
     }
+
     fun fetchNotes() = repository.fetchNotes()
     fun fetchArchivedNotes() = repository.fetchArchivedNotes()
     fun fetchBinNotes() = repository.fetchBinNotes()
     fun fetchReminderNotes() = repository.fetchReminderNotes()
 
-    fun saveNote(
-        note: Note,
-        context: Context,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
-    ) {
+    fun saveNote(note: Note, context: Context, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
         repository.addNote(note, {
             if (note.reminderTime != null) {
                 ReminderScheduler(context).scheduleReminder(note, note.reminderTime)
@@ -109,7 +93,6 @@ class NotesViewModel (
         onFailure: (Exception) -> Unit
     ) {
         val reminderChanged = newNote.reminderTime != existingNote.reminderTime
-
         repository.updateNote(newNote, {
             if (newNote.hasReminder && reminderChanged) {
                 ReminderScheduler(context).scheduleReminder(newNote, newNote.reminderTime!!)
@@ -118,10 +101,8 @@ class NotesViewModel (
         }, onFailure)
     }
 
-
-
     fun archiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
-        repository.archiveNote(note)
+        repository.archiveNote(note, onSuccess, onFailure)
 
     fun unarchiveNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.unarchiveNote(note, onSuccess, onFailure)

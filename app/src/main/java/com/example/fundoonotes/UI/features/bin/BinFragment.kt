@@ -42,7 +42,8 @@ class BinFragment : Fragment(),
 
         searchBar = view.findViewById(R.id.searchBarContainerBin)
         selectionBar = view.findViewById(R.id.selectionBarContainerBin)
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
+
 
 
         val searchBarFragment = SearchBarFragment.newInstance("Bin")

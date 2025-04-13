@@ -64,8 +64,8 @@ class LabelFragment : Fragment(),
         searchBar = view.findViewById(R.id.searchBarContainerLabels)
         selectionBar = view.findViewById(R.id.selectionBarContainerLabels)
         fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerLabel)
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
-        labelsViewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
+        labelsViewModel = LabelsViewModel(requireContext())
 
 
         // Inject Search Bar

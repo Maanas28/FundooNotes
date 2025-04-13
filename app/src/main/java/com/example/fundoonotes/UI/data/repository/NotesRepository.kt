@@ -32,7 +32,7 @@ interface NotesRepository {
     fun permanentlyDeleteNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun restoreNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun setReminder(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
-    fun addNewLabel(label: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
+    fun addNewLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
     fun updateLabel(oldLabel: Label, newLabel: Label, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun deleteLabel(label: Label, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {})
     fun toggleLabelForNotes(label: Label, isChecked: Boolean, noteIds: List<String>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)

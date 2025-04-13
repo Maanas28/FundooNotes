@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.Query
 
 
 class FirebaseNotesRepository : NotesRepository {
@@ -244,10 +245,10 @@ class FirebaseNotesRepository : NotesRepository {
         } ?: onFailure(Exception("Reminder time is null"))
     }
 
-    override fun addNewLabel(label: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    override fun addNewLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
         val labelToAdd = hashMapOf(
-            "name" to label,
+            "name" to label.name,
             "userId" to userId
         )
         firestore.collection("labels")
@@ -376,5 +377,24 @@ class FirebaseNotesRepository : NotesRepository {
             .addOnFailureListener { onFailure(it) }
     }
 
-
+    fun getLabelByName(name: String, userId: String, onSuccess: (Label) -> Unit, onFailure: (Exception) -> Unit) {
+        firestore.collection("labels")
+            .whereEqualTo("name", name)
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val document = querySnapshot.documents[0]
+                    val label = Label(
+                        id = document.getString("id") ?: "",
+                        name = document.getString("name") ?: "",
+                        userId = document.getString("userId") ?: ""
+                    )
+                    onSuccess(label)
+                } else {
+                    onFailure(Exception("Label not found"))
+                }
+            }
+            .addOnFailureListener(onFailure)
+    }
 }

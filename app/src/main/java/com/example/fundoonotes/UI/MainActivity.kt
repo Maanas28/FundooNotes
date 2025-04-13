@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.drawerlayout.widget.DrawerLayout
@@ -75,10 +76,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModels() {
-        // Consider using ViewModelProvider instead of direct instantiation
-        // for proper lifecycle management
-        notesViewModel = ViewModelProvider(this)[NotesViewModel::class.java]
-        labelsViewModel = ViewModelProvider(this)[LabelsViewModel::class.java]
+        notesViewModel = NotesViewModel(applicationContext)
+        labelsViewModel = LabelsViewModel(applicationContext)
+
 
         // Fetch data after initializing viewmodels
         labelsViewModel.fetchLabels()

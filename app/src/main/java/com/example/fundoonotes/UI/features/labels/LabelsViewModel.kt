@@ -1,24 +1,26 @@
 package com.example.fundoonotes.UI.features.labels
 
-import android.util.Log
-import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.example.fundoonotes.UI.data.model.Label
-import com.example.fundoonotes.UI.data.repository.NotesRepository
+import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import kotlinx.coroutines.flow.StateFlow
 
 class LabelsViewModel(
-    private val repository: NotesRepository = FirebaseNotesRepository()
+    private val repository: DataBridgeNotesRepository
 ) : ViewModel() {
+
+    constructor(context: Context) : this(DataBridgeNotesRepository(context))
 
     val labelList: StateFlow<List<Label>> = repository.labels
 
     fun fetchLabels() = repository.fetchLabels()
 
-
     fun addLabel(name: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
-        repository.addNewLabel(name, onSuccess, onFailure)
+        val dummyLabel = Label(id = "", name = name, userId = "")
+        repository.addNewLabel(dummyLabel, onSuccess, onFailure)
     }
+
 
     fun updateLabel(
         oldLabel: Label,
@@ -36,6 +38,4 @@ class LabelsViewModel(
     fun toggleLabelForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
         repository.toggleLabelForNotes(label, isChecked, noteIds, {}, {})
     }
-
-
 }

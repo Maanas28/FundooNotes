@@ -25,7 +25,7 @@ class EditLabelFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        labelsViewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        labelsViewModel = LabelsViewModel(requireContext())
         _binding = FragmentEditLabelBinding.inflate(inflater, container, false)
         return binding.root
     }

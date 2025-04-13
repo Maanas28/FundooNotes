@@ -26,6 +26,6 @@
     <string name="google_login">Google Login</string>
     <string name="already_have_an_account">Already have an Account?</string>
     <string name="or_sign_in_with">Or Sign In With</string>
-    <string name="default_web_client_id">955269503093-6j9jg3dd19f9k3h224s270un6dqu29u6.apps.googleusercontent.com</string>
+    <string name="web_client_id">955269503093-6j9jg3dd19f9k3h224s270un6dqu29u6.apps.googleusercontent.com</string>
     <string name="reminder_text">Reminder </string>
 </resources>

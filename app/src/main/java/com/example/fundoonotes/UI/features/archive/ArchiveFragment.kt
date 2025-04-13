@@ -55,9 +55,10 @@ class ArchiveFragment : Fragment(),
         fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerArchive)
 
         // Shared ViewModel
-        viewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        viewModel = NotesViewModel(requireContext())
 
-        labelsViewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        labelsViewModel = LabelsViewModel(requireContext())
+
 
         // Add SearchBarFragment for Archive screen
         val searchBarFragment = SearchBarFragment.newInstance("Archive")

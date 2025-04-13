@@ -45,7 +45,7 @@ class ApplyLabelToNoteFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(requireActivity())[LabelsViewModel::class.java]
+        viewModel = LabelsViewModel(requireContext())
         _binding = FragmentApplyLabelToNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -57,7 +57,7 @@ class ApplyLabelToNoteFragment : Fragment() {
         viewModel.fetchLabels()
 
         // Get the NotesViewModel to access all notes.
-        val notesViewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        val notesViewModel = NotesViewModel(requireContext())
         // Get the complete list of notes.
         val allNotes = notesViewModel.notesFlow.value
         // Filter out only the selected notes using their IDs.
