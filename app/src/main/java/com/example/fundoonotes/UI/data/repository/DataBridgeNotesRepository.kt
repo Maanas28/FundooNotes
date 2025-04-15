@@ -30,10 +30,6 @@ class DataBridgeNotesRepository(
         scope = CoroutineScope(Dispatchers.IO)
     )
 
-    private val sqliteAuth = SQLiteAuthRepository(
-        NotesDatabase.getInstance(context).userDao(),
-        CoroutineScope(Dispatchers.IO)
-    )
 
     private val appContext = context.applicationContext
 
@@ -52,13 +48,12 @@ class DataBridgeNotesRepository(
         }
     }
 
-    private val offlineSyncManager = OfflineSyncManager(sqlite, firebase, NotesDatabase.getInstance(context).offlineOperationDao())
+    private val offlineSyncManager = OfflineSyncManager(sqlite, firebase)
 
     fun syncOfflineChanges() {
         offlineSyncManager.syncOfflineChanges()
     }
 
-    // READ operations: Always prefer Firestore when online
     override val notes: StateFlow<List<Note>> get() = if (isOnline()) firebase.notes else sqlite.notes
     override val archivedNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.archivedNotes else sqlite.archivedNotes
     override val binNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.binNotes else sqlite.binNotes
@@ -71,7 +66,6 @@ class DataBridgeNotesRepository(
 
     private fun isOnline() = ConnectivityManager(appContext, this).isNetworkAvailable()
 
-    // Fetch methods: Always use Firestore when online
     override fun fetchNotes() = if (isOnline()) firebase.fetchNotes() else sqlite.fetchNotes()
     override fun fetchArchivedNotes() = if (isOnline()) firebase.fetchArchivedNotes() else sqlite.fetchArchivedNotes()
     override fun fetchBinNotes() = if (isOnline()) firebase.fetchBinNotes() else sqlite.fetchBinNotes()
@@ -412,10 +406,6 @@ class DataBridgeNotesRepository(
         if (!isOnline()) return onComplete(false, "No internet connection")
 
         firebaseAuth.registerWithEmail(user, password) { success, message ->
-            if (success) {
-                val updatedUser = user.copy(userId = firebaseAuth.getCurrentUserId() ?: "")
-                sqliteAuth.registerUserLocally(updatedUser) { _, _ -> }
-            }
             onComplete(success, message)
         }
     }
@@ -424,9 +414,6 @@ class DataBridgeNotesRepository(
         if (!isOnline()) return onComplete(false, "No internet connection")
 
         firebaseAuth.loginWithEmail(email, password) { success, message ->
-            if (success) {
-                sqliteAuth.loginUserLocally(email) { _, _ -> }
-            }
             onComplete(success, message)
         }
     }

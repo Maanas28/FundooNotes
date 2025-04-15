@@ -3,26 +3,42 @@ package com.example.fundoonotes.UI.features.notes.ui
 import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.components.NotesListFragment
 import com.example.fundoonotes.UI.components.SelectionBar
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
-import com.example.fundoonotes.UI.features.addnote.*
+import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
+import com.example.fundoonotes.UI.features.addnote.CanvasNoteFragment
+import com.example.fundoonotes.UI.features.addnote.ImageNoteFragment
+import com.example.fundoonotes.UI.features.addnote.ListNoteFragement
+import com.example.fundoonotes.UI.features.addnote.MicrophoneNoteFragement
 import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
-import com.example.fundoonotes.UI.util.*
+import com.example.fundoonotes.UI.util.AddNoteListener
+import com.example.fundoonotes.UI.util.ArchiveActionHandler
+import com.example.fundoonotes.UI.util.DeleteActionHandler
+import com.example.fundoonotes.UI.util.DrawerToggleListener
+import com.example.fundoonotes.UI.util.EditNoteHandler
+import com.example.fundoonotes.UI.util.LabelActionHandler
+import com.example.fundoonotes.UI.util.LabelFragmentHost
+import com.example.fundoonotes.UI.util.LabelSelectionListener
+import com.example.fundoonotes.UI.util.MainLayoutToggler
+import com.example.fundoonotes.UI.util.NotesGridContext
+import com.example.fundoonotes.UI.util.SelectionBarListener
+import com.example.fundoonotes.UI.util.ViewToggleListener
 import com.example.fundoonotes.databinding.FragmentNotesBinding
 
-class NotesFragment : Fragment(),
+class DashboardFragment : Fragment(),
     ViewToggleListener,
     DrawerToggleListener,
     ArchiveActionHandler,
@@ -83,8 +99,8 @@ class NotesFragment : Fragment(),
     // Initializes the main notes grid and its interaction listeners
     private fun setupNotesGrid() {
         notesListFragment = NotesListFragment.newInstance(NotesGridContext.Notes).apply {
-            selectionBarListener = this@NotesFragment
-            setNoteInteractionListener(this@NotesFragment)
+            selectionBarListener = this@DashboardFragment
+            setNoteInteractionListener(this@DashboardFragment)
             onSelectionChanged = { count -> enterSelectionMode(count) }
             onSelectionModeEnabled = {
                 binding.searchBar.visibility = View.GONE
@@ -101,7 +117,7 @@ class NotesFragment : Fragment(),
             .commit()
     }
 
-    // Handles bottom navigation item clicks
+    // Bottom Nav click - launches full-screen fragments using parentFragmentManager
     private fun setupBottomNav() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             val fragment = when (item.itemId) {
@@ -112,11 +128,10 @@ class NotesFragment : Fragment(),
                 else -> null
             }
 
-            // Load the selected fragment
             fragment?.let {
                 hideMainLayout()
-                childFragmentManager.beginTransaction()
-                    .replace(R.id.bottom_nav_container, it)
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fullScreenContainer, it)
                     .addToBackStack(null)
                     .commit()
             }
@@ -128,12 +143,19 @@ class NotesFragment : Fragment(),
     // Handle system back press inside the fragment
     private fun setupBackPressHandling() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            if (binding.bottomNavContainer.isVisible) {
-                restoreMainLayout()
-                childFragmentManager.popBackStack()
-            } else {
-                isEnabled = false
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+            when {
+                binding.fullScreenContainer.isVisible -> {
+                    // First pop fragment from back stack
+                    parentFragmentManager.popBackStack()
+                    // Then restore main layout
+                    restoreMainLayout()
+                    // Don't call the default back press
+                }
+                else -> {
+                    // Normal back behavior (like closing the app)
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
             }
         }
     }
@@ -143,10 +165,10 @@ class NotesFragment : Fragment(),
         binding.fab.setOnClickListener {
             hideMainLayout()
             val addNoteFragment = AddNoteFragment.newInstance(null).apply {
-                setAddNoteListener(this@NotesFragment)
+                setAddNoteListener(this@DashboardFragment)
             }
-            childFragmentManager.beginTransaction()
-                .replace(R.id.bottom_nav_container, addNoteFragment)
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fullScreenContainer, addNoteFragment)
                 .addToBackStack(null)
                 .commit()
         }
@@ -220,7 +242,7 @@ class NotesFragment : Fragment(),
 
     override fun getLabelFragmentManager(): FragmentManager = childFragmentManager
 
-    override fun getLabelFragmentContainerId(): Int = R.id.bottom_nav_container
+    override fun getLabelFragmentContainerId(): Int = R.id.fullScreenContainer
 
     override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
         labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
@@ -233,31 +255,32 @@ class NotesFragment : Fragment(),
 
     override fun onNoteAdded(note: Note) {
         Log.d("NotesFragment", "Note added: ${note.title}")
+        notesViewModel.fetchNotes() // Refresh notes list
     }
 
     override fun onNoteUpdated(note: Note) {
         Log.d("NotesFragment", "Note updated: ${note.title}")
+        notesViewModel.fetchNotes() // Refresh notes list
     }
 
     override fun onAddNoteCancelled() {
         Log.d("NotesFragment", "Note addition cancelled")
     }
 
-    // Opens the Add/Edit Note screen
     private fun openAddOrEditNote(note: Note?) {
         hideMainLayout()
         val addNoteFragment = AddNoteFragment.newInstance(note).apply {
-            setAddNoteListener(this@NotesFragment)
+            setAddNoteListener(this@DashboardFragment)
         }
-        childFragmentManager.beginTransaction()
-            .replace(R.id.bottom_nav_container, addNoteFragment)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fullScreenContainer, addNoteFragment)
             .addToBackStack(null)
             .commit()
     }
 
     // Hide the main layout and show container layout (Add/Edit, Canvas, etc.)
     override fun hideMainLayout() {
-        binding.bottomNavContainer.visibility = View.VISIBLE
+        binding.fullScreenContainer.visibility = View.VISIBLE
         binding.contentLayout.visibility = View.GONE
         binding.fab.visibility = View.GONE
         binding.bottomTabNavigation.visibility = View.GONE
@@ -266,11 +289,22 @@ class NotesFragment : Fragment(),
 
     // Restore main layout and hide bottom container
     override fun restoreMainLayout() {
-        binding.bottomNavContainer.visibility = View.GONE
+        binding.fullScreenContainer.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
         binding.fab.visibility = View.VISIBLE
         binding.bottomTabNavigation.visibility = View.VISIBLE
         binding.bottomNavigationView.visibility = View.VISIBLE
+
+        // Clear the fullScreenContainer to avoid view leaks
+        if (binding.fullScreenContainer.childCount > 0) {
+            binding.fullScreenContainer.removeAllViews()
+        }
+    }
+
+    override fun onResume(){
+        super.onResume()
+        Log.d("DashboardFragment", "onResume called");
+        notesViewModel.fetchNotes()
     }
 
     override fun onDestroyView() {

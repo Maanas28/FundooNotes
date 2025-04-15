@@ -66,10 +66,9 @@ dependencies {
     ksp ("androidx.room:room-compiler:2.7.0")
     implementation ("androidx.room:room-ktx:2.7.0")
     implementation(libs.play.services.auth) // or latest
-    implementation("com.google.android.gms:play-services-identity:18.0.1")
-    implementation("androidx.credentials:credentials:1.2.0-alpha02") // or latest
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
-    implementation("androidx.credentials:credentials:1.2.0-alpha02") // or latest
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0") // Credential Manager with Google
+    implementation("com.google.android.gms:play-services-identity:18.1.0")
+    implementation("androidx.credentials:credentials:1.2.0-alpha01")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.0-alpha01")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1") // Credential Manager with Google
     implementation ("com.google.code.gson:gson:2.10.1")
 }

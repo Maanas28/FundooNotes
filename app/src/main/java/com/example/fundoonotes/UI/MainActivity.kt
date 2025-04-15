@@ -4,13 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.R
@@ -23,7 +21,7 @@ import com.example.fundoonotes.UI.features.help.HelpFragment
 import com.example.fundoonotes.UI.features.labels.EditLabelFragment
 import com.example.fundoonotes.UI.features.labels.LabelFragment
 import com.example.fundoonotes.UI.features.labels.LabelsViewModel
-import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
+import com.example.fundoonotes.UI.features.notes.ui.DashboardFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.features.reminders.RemindersFragment
 import com.example.fundoonotes.UI.features.settings.SettingsFragment
@@ -113,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             menuItem.isChecked = true
 
             when (menuItem.itemId) {
-                R.id.nav_notes -> replaceFragment(NotesFragment())
+                R.id.nav_notes -> replaceFragment(DashboardFragment())
                 R.id.nav_reminders -> replaceFragment(RemindersFragment())
                 R.id.nav_create_labels -> replaceFragment(EditLabelFragment())
                 R.id.nav_archive -> replaceFragment(ArchiveFragment())
@@ -146,7 +144,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadDefaultFragment() {
-        replaceFragment(NotesFragment())
+        replaceFragment(DashboardFragment())
         navView.setCheckedItem(R.id.nav_notes)
     }
 

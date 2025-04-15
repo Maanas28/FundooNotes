@@ -10,15 +10,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.MemoryCacheSettings
 import com.google.firebase.firestore.Query
 import java.util.UUID
 
 class FirebaseNotesRepository : NotesRepository {
 
-    // Configure Firestore to disable offline persistence.
     private val firestore = FirebaseFirestore.getInstance().apply {
         firestoreSettings = FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(false)
+            .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
             .build()
     }
     private val auth = FirebaseAuth.getInstance()

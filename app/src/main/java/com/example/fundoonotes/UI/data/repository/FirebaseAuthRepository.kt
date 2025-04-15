@@ -6,13 +6,14 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.MemoryCacheSettings
 
 class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) {
 
     // Configure Firestore to disable offline persistence.
     private val firestore = FirebaseFirestore.getInstance().apply {
         firestoreSettings = FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(false)
+            .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
             .build()
     }
 

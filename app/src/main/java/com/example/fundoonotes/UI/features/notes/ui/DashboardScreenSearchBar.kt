@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
@@ -23,7 +22,7 @@ import com.google.android.material.imageview.ShapeableImageView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class NotesScreenSearchBar : Fragment() {
+class DashboardScreenSearchBar : Fragment() {
 
     private lateinit var toggleViewIcon: ImageView
     private lateinit var profileIcon: ShapeableImageView

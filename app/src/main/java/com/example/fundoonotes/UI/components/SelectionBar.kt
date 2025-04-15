@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.features.archive.ArchiveFragment
 import com.example.fundoonotes.UI.features.labels.ApplyLabelToNoteFragment
-import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
 import com.example.fundoonotes.databinding.ViewSelectionBarBinding
 import com.example.fundoonotes.UI.util.*
 

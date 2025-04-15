@@ -16,15 +16,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.archive.ArchiveFragment
 import com.example.fundoonotes.UI.features.labels.LabelFragment
-import com.example.fundoonotes.UI.features.notes.ui.NotesFragment
+import com.example.fundoonotes.UI.features.notes.ui.DashboardFragment
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.features.reminders.RemindersFragment
 import com.example.fundoonotes.UI.util.AddNoteListener
+import com.example.fundoonotes.UI.util.MainLayoutToggler
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -118,13 +118,13 @@ class AddNoteFragment : Fragment() {
         val title = etTitle.text.toString().trim()
         val content = etContent.text.toString().trim()
 
-        // No content entered; just cancel
+        // Don't try to handle UI visibility here, let the parent handle it
+        val callbackTarget = parentFragment as? AddNoteListener
+
         if (title.isEmpty() && content.isEmpty()) {
-            when (parentFragment) {
-                is NotesFragment -> (parentFragment as NotesFragment).restoreMainLayout()
-            }
-            addNoteListener?.onAddNoteCancelled()
-            parentFragmentManager.popBackStack()
+            callbackTarget?.onAddNoteCancelled()
+            // Use activity back press to trigger parent's back handling
+            requireActivity().onBackPressedDispatcher.onBackPressed()
             return
         }
 
@@ -143,47 +143,29 @@ class AddNoteFragment : Fragment() {
         )
 
         if (noteId.isEmpty()) {
-            // New note
+            // New Note
             viewModel.saveNote(finalNote, requireContext())
-            addNoteListener?.onNoteAdded(finalNote)
+            callbackTarget?.onNoteAdded(finalNote)
         } else {
-            // Check if anything has changed
-            val noChange =
-                existingNote?.title == title &&
-                        existingNote?.content == content &&
-                        existingNote?.reminderTime == selectedReminderTime
+            // Check if anything changed
+            val noChange = existingNote?.title == title &&
+                    existingNote?.content == content &&
+                    existingNote?.reminderTime == selectedReminderTime
 
             if (noChange) {
                 Log.d("AddNoteFragment", "No changes detected, skipping update")
-                when (val parent = parentFragment) {
-                    is NotesFragment -> parent.restoreMainLayout()
-                    is ArchiveFragment -> parent.restoreMainLayout()
-                    is LabelFragment -> parent.restoreMainLayout()
-                    is RemindersFragment -> parent.restoreMainLayout()
-                }
-
-                parentFragmentManager.popBackStack()
-                return
+            } else {
+                viewModel.updateNote(finalNote, existingNote!!, requireContext(), {
+                    callbackTarget?.onNoteUpdated(finalNote)
+                }, {
+                    Log.e("NoteUpdate", "Failed to update note", it)
+                })
             }
-
-            // Update note
-            viewModel.updateNote(finalNote, existingNote!!, requireContext(), {
-                addNoteListener?.onNoteUpdated(finalNote)
-            }, {
-                Log.e("NoteUpdate", "Failed to update note", it)
-            })
         }
 
-        // Restore main layout and close fragment
-        when (val parent = parentFragment) {
-            is NotesFragment -> parent.restoreMainLayout()
-            is ArchiveFragment -> parent.restoreMainLayout()
-            is LabelFragment -> parent.restoreMainLayout()
-            is RemindersFragment -> parent.restoreMainLayout()
-        }
-
-        parentFragmentManager.popBackStack()
+        requireActivity().onBackPressedDispatcher.onBackPressed()
     }
+
 
     /**
      * Displays date and time picker dialogs for reminder selection

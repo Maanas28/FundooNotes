@@ -27,7 +27,7 @@ class MicrophoneNoteFragement(private val label: String) : Fragment() {
             parentFragmentManager.popBackStack()
 
             parentFragment?.view?.apply {
-                findViewById<View>(R.id.bottom_nav_container)?.visibility = View.GONE
+                findViewById<View>(R.id.fullScreenContainer)?.visibility = View.GONE
                 findViewById<View>(R.id.contentLayout)?.visibility = View.VISIBLE
                 findViewById<View>(R.id.fab)?.visibility = View.VISIBLE
                 findViewById<View>(R.id.bottomTabNavigation)?.visibility = View.VISIBLE

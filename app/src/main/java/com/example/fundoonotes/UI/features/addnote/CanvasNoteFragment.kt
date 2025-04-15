@@ -25,15 +25,8 @@ class CanvasNoteFragment(private val label: String) : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<ImageButton>(R.id.backButton).setOnClickListener {
-            parentFragmentManager.popBackStack()
-
-            parentFragment?.view?.apply {
-                findViewById<View>(R.id.bottom_nav_container)?.visibility = View.GONE
-                findViewById<View>(R.id.contentLayout)?.visibility = View.VISIBLE
-                findViewById<View>(R.id.fab)?.visibility = View.VISIBLE
-                findViewById<View>(R.id.bottomTabNavigation)?.visibility = View.VISIBLE
-                findViewById<View>(R.id.bottomNavigationView)?.visibility = View.VISIBLE
-            }
+            // Let the parent fragment handle the back navigation
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
 }

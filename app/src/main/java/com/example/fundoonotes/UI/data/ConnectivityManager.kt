@@ -26,6 +26,7 @@ class ConnectivityManager(
     fun isNetworkAvailable(): Boolean {
         val network = sysConnectivityManager.activeNetwork ?: return false
         val capabilities = sysConnectivityManager.getNetworkCapabilities(network) ?: return false
+        Log.d("ConnectivityManager", "Network capabilities: $capabilities");
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }

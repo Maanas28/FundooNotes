@@ -12,7 +12,6 @@ import com.google.gson.Gson
 class OfflineSyncManager(
     private val sqlite: SQLiteNotesRepository,
     private val firebase: FirebaseNotesRepository,
-    private val offlineOperationDao: OfflineOperationDao
 ) {
     private val gson = Gson()
 
