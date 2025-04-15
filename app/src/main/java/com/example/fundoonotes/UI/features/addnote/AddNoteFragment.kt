@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
@@ -123,6 +124,7 @@ class AddNoteFragment : Fragment() {
 
         if (title.isEmpty() && content.isEmpty()) {
             callbackTarget?.onAddNoteCancelled()
+
             // Use activity back press to trigger parent's back handling
             requireActivity().onBackPressedDispatcher.onBackPressed()
             return
@@ -145,7 +147,9 @@ class AddNoteFragment : Fragment() {
         if (noteId.isEmpty()) {
             // New Note
             viewModel.saveNote(finalNote, requireContext())
-            callbackTarget?.onNoteAdded(finalNote)
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+            return
+
         } else {
             // Check if anything changed
             val noChange = existingNote?.title == title &&

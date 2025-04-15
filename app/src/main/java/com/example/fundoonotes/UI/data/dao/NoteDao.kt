@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.fundoonotes.UI.data.entity.NoteEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
@@ -19,17 +20,20 @@ interface NoteDao {
     suspend fun deleteNote(noteId: String)
 
     @Query("SELECT * FROM notes WHERE userId = :userId AND archived = 0 AND deleted = 0 AND inBin = 0 ORDER BY timestamp DESC")
-    suspend fun getNotes(userId: String): List<NoteEntity>
+    fun observeNotes(userId: String): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE userId = :userId AND archived = 1 AND deleted = 0 AND inBin = 0 ORDER BY timestamp DESC")
-    suspend fun getArchivedNotes(userId: String): List<NoteEntity>
+    fun observeArchivedNotes(userId: String): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE userId = :userId AND deleted = 0 AND inBin = 1 ORDER BY timestamp DESC")
-    suspend fun getBinNotes(userId: String): List<NoteEntity>
+    fun observeBinNotes(userId: String): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE userId = :userId AND hasReminder = 1 AND inBin = 0 AND deleted = 0 ORDER BY timestamp DESC")
-    suspend fun getReminderNotes(userId: String): List<NoteEntity>
+    fun observeReminderNotes(userId: String): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE id = :noteId")
     suspend fun getNoteById(noteId: String): NoteEntity?
+
+    @Query("SELECT * FROM notes WHERE userId = :userId")
+    suspend fun getAllNotes(userId: String): List<NoteEntity>
 }

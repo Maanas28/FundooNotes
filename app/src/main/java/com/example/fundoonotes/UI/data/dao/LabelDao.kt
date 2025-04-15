@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.fundoonotes.UI.data.entity.LabelEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LabelDao {
@@ -18,9 +19,10 @@ interface LabelDao {
     @Query("DELETE FROM labels WHERE id = :labelId")
     suspend fun deleteLabel(labelId: String)
 
-    @Query("SELECT * FROM labels WHERE userId = :userId")
-    suspend fun getLabels(userId: String): List<LabelEntity>
+    @Query("SELECT * FROM labels WHERE userId = :userId ORDER BY name ASC")
+    fun observeLabels(userId: String): Flow<List<LabelEntity>>
 
-    @Query("SELECT * FROM labels WHERE id = :labelId")
-    suspend fun getLabelById(labelId: String): LabelEntity?
+    @Query("SELECT * FROM labels WHERE userId = :userId ORDER BY name ASC")
+    suspend fun getLabels(userId: String): List<LabelEntity>
 }
+

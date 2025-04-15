@@ -3,6 +3,7 @@ package com.example.fundoonotes.UI.components
 import android.content.*
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat

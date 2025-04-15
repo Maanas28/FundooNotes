@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
@@ -63,8 +64,11 @@ class DashboardFragment : Fragment(),
     internal lateinit var notesListFragment: NotesListFragment
     private lateinit var drawerLayout: DrawerLayout
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentNotesBinding.inflate(inflater, container, false)
+
+        Log.d("DashboardFragment", "onViewCreated called again")
 
         // Initialize drawer layout
         drawerLayout = requireActivity().findViewById(R.id.drawerLayout)

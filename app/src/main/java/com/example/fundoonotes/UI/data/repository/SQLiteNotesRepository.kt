@@ -83,74 +83,50 @@ class SQLiteNotesRepository(
     }
 
     override fun fetchNotes() {
+        val userId = accountDetails.value?.userId ?: return
         scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val notes = withContext(Dispatchers.IO) {
-                    noteDao.getNotes(userId).map { it.toDomain() }
-                }
-                _notes.emit(notes)
-            } catch (e: Exception) {
-                // Log error or handle exception
+            noteDao.observeNotes(userId).collect {
+                _notes.emit(it.map { e -> e.toDomain() })
             }
         }
     }
 
     override fun fetchArchivedNotes() {
+        val userId = accountDetails.value?.userId ?: return
         scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val archived = withContext(Dispatchers.IO) {
-                    noteDao.getArchivedNotes(userId).map { it.toDomain() }
-                }
-                _archivedNotes.emit(archived)
-            } catch (e: Exception) {
-                // Log error or handle exception
+            noteDao.observeArchivedNotes(userId).collect {
+                _archivedNotes.emit(it.map { e -> e.toDomain() })
             }
         }
     }
 
     override fun fetchBinNotes() {
+        val userId = accountDetails.value?.userId ?: return
         scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val bin = withContext(Dispatchers.IO) {
-                    noteDao.getBinNotes(userId).map { it.toDomain() }
-                }
-                _binNotes.emit(bin)
-            } catch (e: Exception) {
-                // Log error or handle exception
+            noteDao.observeBinNotes(userId).collect {
+                _binNotes.emit(it.map { e -> e.toDomain() })
             }
         }
     }
 
     override fun fetchReminderNotes() {
+        val userId = accountDetails.value?.userId ?: return
         scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val reminders = withContext(Dispatchers.IO) {
-                    noteDao.getReminderNotes(userId).map { it.toDomain() }
-                }
-                _reminderNotes.emit(reminders)
-            } catch (e: Exception) {
-                // Log error or handle exception
+            noteDao.observeReminderNotes(userId).collect {
+                _reminderNotes.emit(it.map { e -> e.toDomain() })
             }
         }
     }
 
     override fun fetchLabels() {
+        val userId = accountDetails.value?.userId ?: return
         scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val allLabels = withContext(Dispatchers.IO) {
-                    labelDao.getLabels(userId).map { it.toDomain() }
-                }
-                _labels.emit(allLabels)
-            } catch (e: Exception) {
-                // Log error or handle exception
+            labelDao.observeLabels(userId).collect {
+                _labels.emit(it.map { label -> label.toDomain() })
             }
         }
     }
+
 
     override fun fetchAccountDetails() {
         scope.launch {
@@ -160,7 +136,7 @@ class SQLiteNotesRepository(
                 }
                 _accountDetails.emit(user)
 
-                // If user exists, fetch all their data
+                // Start observing all flows if user exists
                 user?.let {
                     fetchNotes()
                     fetchArchivedNotes()
@@ -169,10 +145,11 @@ class SQLiteNotesRepository(
                     fetchLabels()
                 }
             } catch (e: Exception) {
-                // Log error or handle exception
+                // Handle error
             }
         }
     }
+
 
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         scope.launch {
@@ -370,35 +347,21 @@ class SQLiteNotesRepository(
     override fun updateLabel(oldLabel: Label, newLabel: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         scope.launch {
             try {
+                val userId = accountDetails.value?.userId ?: return@launch
+
                 withContext(Dispatchers.IO) {
-                    // Update the label itself
+                    // Update label
                     labelDao.updateLabel(newLabel.toEntity())
 
-                    // Update all notes that have this label
-                    val userId = accountDetails.value?.userId ?: return@withContext
-                    val allNotes = noteDao.getNotes(userId) +
-                            noteDao.getArchivedNotes(userId) +
-                            noteDao.getBinNotes(userId)
-
-                    for (noteEntity in allNotes) {
+                    // Update notes that use this label
+                    noteDao.getAllNotes(userId).forEach { noteEntity ->
                         val labels = parseLabels(noteEntity.labels)
                         if (labels.contains(oldLabel.name)) {
-                            val updatedLabels = labels.map {
-                                if (it == oldLabel.name) newLabel.name else it
-                            }
-                            noteDao.updateNote(noteEntity.copy(
-                                labels = formatLabels(updatedLabels)
-                            ))
+                            val updatedLabels = labels.map { if (it == oldLabel.name) newLabel.name else it }
+                            noteDao.updateNote(noteEntity.copy(labels = formatLabels(updatedLabels)))
                         }
                     }
                 }
-
-                // Refresh all notes and labels
-                fetchLabels()
-                fetchNotes()
-                fetchArchivedNotes()
-                fetchBinNotes()
-                fetchReminderNotes()
 
                 onSuccess()
             } catch (e: Exception) {
@@ -406,37 +369,26 @@ class SQLiteNotesRepository(
             }
         }
     }
+
 
     override fun deleteLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         scope.launch {
             try {
+                val userId = accountDetails.value?.userId ?: return@launch
+
                 withContext(Dispatchers.IO) {
-                    // Delete the label
+                    // Delete label
                     labelDao.deleteLabel(label.id)
 
-                    // Remove this label from all notes
-                    val userId = accountDetails.value?.userId ?: return@withContext
-                    val allNotes = noteDao.getNotes(userId) +
-                            noteDao.getArchivedNotes(userId) +
-                            noteDao.getBinNotes(userId)
-
-                    for (noteEntity in allNotes) {
+                    // Remove label from notes
+                    noteDao.getAllNotes(userId).forEach { noteEntity ->
                         val labels = parseLabels(noteEntity.labels)
                         if (labels.contains(label.name)) {
-                            val updatedLabels = labels.filter { it != label.name }
-                            noteDao.updateNote(noteEntity.copy(
-                                labels = formatLabels(updatedLabels)
-                            ))
+                            val updatedLabels = labels.filterNot { it == label.name }
+                            noteDao.updateNote(noteEntity.copy(labels = formatLabels(updatedLabels)))
                         }
                     }
                 }
-
-                // Refresh labels and notes
-                fetchLabels()
-                fetchNotes()
-                fetchArchivedNotes()
-                fetchBinNotes()
-                fetchReminderNotes()
 
                 onSuccess()
             } catch (e: Exception) {
@@ -444,6 +396,7 @@ class SQLiteNotesRepository(
             }
         }
     }
+
 
     override fun toggleLabelForNotes(
         label: Label,
@@ -455,31 +408,19 @@ class SQLiteNotesRepository(
         scope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    for (noteId in noteIds) {
-                        val noteEntity = noteDao.getNoteById(noteId) ?: continue
-                        val currentLabels = parseLabels(noteEntity.labels)
+                    noteIds.forEach { noteId ->
+                        val noteEntity = noteDao.getNoteById(noteId) ?: return@forEach
+                        val labels = parseLabels(noteEntity.labels)
 
                         val updatedLabels = if (isChecked) {
-                            if (!currentLabels.contains(label.name)) {
-                                currentLabels + label.name
-                            } else {
-                                currentLabels
-                            }
+                            if (!labels.contains(label.name)) labels + label.name else labels
                         } else {
-                            currentLabels.filterNot { it == label.name }
+                            labels.filterNot { it == label.name }
                         }
 
-                        noteDao.updateNote(noteEntity.copy(
-                            labels = formatLabels(updatedLabels)
-                        ))
+                        noteDao.updateNote(noteEntity.copy(labels = formatLabels(updatedLabels)))
                     }
                 }
-
-                // Refresh notes
-                fetchNotes()
-                fetchArchivedNotes()
-                fetchBinNotes()
-                fetchReminderNotes()
 
                 onSuccess()
             } catch (e: Exception) {
@@ -488,42 +429,6 @@ class SQLiteNotesRepository(
         }
     }
 
-    // Fetch notes by a specific label
-    fun fetchNotesByLabel(labelName: String) {
-        scope.launch {
-            val userId = accountDetails.value?.userId ?: return@launch
-            try {
-                val allNotes = withContext(Dispatchers.IO) {
-                    (noteDao.getNotes(userId) + noteDao.getArchivedNotes(userId))
-                        .filter { !it.inBin && !it.deleted }
-                        .map { it.toDomain() }
-                        .filter { note ->
-                            val noteLabels = parseLabels(note.toEntity().labels)
-                            noteLabels.contains(labelName)
-                        }
-                }
-                _notesByLabel.emit(allNotes)
-            } catch (e: Exception) {
-                // Log error or handle exception
-            }
-        }
-    }
-
-    // Fetch all labels for a specific note
-    fun fetchLabelsForNote(noteId: String) {
-        scope.launch {
-            try {
-                val note = withContext(Dispatchers.IO) {
-                    noteDao.getNoteById(noteId)
-                } ?: return@launch
-
-                val noteLabels = parseLabels(note.labels)
-                _labelsForNote.emit(noteLabels)
-            } catch (e: Exception) {
-                // Log error or handle exception
-            }
-        }
-    }
 
     // Helper methods for label parsing
     private fun parseLabels(labelsString: String): List<String> {
