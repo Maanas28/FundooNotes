@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
@@ -13,12 +14,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.*
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.fundoonotes.R
+import com.example.fundoonotes.UI.data.ConnectivityManager
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.EditNoteHandler
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.SelectionBarListener
+import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -26,6 +30,7 @@ class NotesListFragment : Fragment() {
 
     companion object {
         private const val ARG_CONTEXT = "notes_context"
+        private const val TAG = "NotesListFragment"
 
         fun newInstance(context: NotesGridContext): NotesListFragment {
             return NotesListFragment().apply {
@@ -37,8 +42,11 @@ class NotesListFragment : Fragment() {
     }
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     internal lateinit var adapter: NotesAdapter
     private lateinit var viewModel: NotesViewModel
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var dataBridgeRepository: DataBridgeNotesRepository
 
     private var notesContext: NotesGridContext? = null
     val selectedNotes = mutableSetOf<Note>()
@@ -53,7 +61,9 @@ class NotesListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        notesContext = BundleCompat.getParcelable(arguments, ARG_CONTEXT, NotesGridContext::class.java )
+        notesContext = BundleCompat.getParcelable(arguments, ARG_CONTEXT, NotesGridContext::class.java)
+        dataBridgeRepository = DataBridgeNotesRepository(requireContext())
+        connectivityManager = ConnectivityManager(requireContext(), dataBridgeRepository)
     }
 
     override fun onCreateView(
@@ -67,6 +77,8 @@ class NotesListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         recyclerView = view.findViewById(R.id.notesRecyclerView)
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
+
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL).apply {
             gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
         }
@@ -97,7 +109,48 @@ class NotesListFragment : Fragment() {
             }
         }
 
+        setupSwipeToRefresh()
         registerRefreshReceiver()
+    }
+
+    private fun setupSwipeToRefresh() {
+        swipeRefreshLayout.setOnRefreshListener {
+            performReverseSync()
+        }
+
+        // Set colors for the refresh indicator
+        swipeRefreshLayout.setColorSchemeResources(
+            R.color.colorPrimary,
+            R.color.black,
+            R.color.blue
+        )
+    }
+
+    private fun performReverseSync() {
+        if (connectivityManager.isNetworkAvailable()) {
+            Log.d(TAG, "Network available, starting reverse sync")
+
+            viewModel.reverseSyncNotes(requireContext())
+
+            // Set a timeout to dismiss the refresh indicator if the sync takes too long
+            swipeRefreshLayout.postDelayed({
+                if (swipeRefreshLayout.isRefreshing) {
+                    swipeRefreshLayout.isRefreshing = false
+                    Toast.makeText(requireContext(), "Sync completed", Toast.LENGTH_SHORT).show()
+                }
+            }, 3000)
+
+        } else {
+            Log.d(TAG, "Network not available, showing alert")
+            swipeRefreshLayout.isRefreshing = false
+
+            // Show alert dialog for no internet
+            AlertDialog.Builder(requireContext())
+                .setTitle("No Internet Connection")
+                .setMessage("Please connect to the internet to sync your notes")
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
     }
 
     private fun registerRefreshReceiver() {

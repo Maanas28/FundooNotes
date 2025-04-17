@@ -1,6 +1,8 @@
 package com.example.fundoonotes.UI.features.notes.viewmodel
 
 import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.Note
@@ -9,12 +11,18 @@ import com.example.fundoonotes.UI.data.repository.NotesRepository
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.ReminderScheduler
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class NotesViewModel(
     private val repository: NotesRepository
 ) : ViewModel() {
 
-    constructor(context: Context) : this(DataBridgeNotesRepository(context))
+    private val TAG = "NotesViewModel"
+    private var dataBridgeRepository: DataBridgeNotesRepository? = null
+
+    constructor(context: Context) : this(DataBridgeNotesRepository(context)) {
+        dataBridgeRepository = repository as? DataBridgeNotesRepository
+    }
 
     val notesFlow: StateFlow<List<Note>> = repository.notes
     val archivedNotesFlow: StateFlow<List<Note>> = repository.archivedNotes
@@ -22,6 +30,9 @@ class NotesViewModel(
     val reminderNotes: StateFlow<List<Note>> = repository.reminderNotes
 
     private val searchQuery = MutableStateFlow("")
+
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState
 
     private fun filterNotesByQuery(notes: List<Note>, query: String): List<Note> {
         return if (query.isBlank()) notes
@@ -115,4 +126,35 @@ class NotesViewModel(
 
     fun restoreNote(note: Note, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) =
         repository.restoreNote(note, onSuccess, onFailure)
+
+    fun reverseSyncNotes(context: Context) {
+        _syncState.value = SyncState.Syncing
+
+        viewModelScope.launch {
+            dataBridgeRepository?.syncOnlineChanges(
+                context = context,
+                onSuccess = {
+                    Log.d(TAG, "Reverse sync completed successfully")
+                    fetchNotes()
+                    fetchArchivedNotes()
+                    fetchBinNotes()
+                    fetchReminderNotes()
+                    _syncState.value = SyncState.Success
+                },
+                onFailure = { exception ->
+                    Log.e(TAG, "Reverse sync failed: ${exception.message}", exception)
+                    _syncState.value = SyncState.Failed(exception.message ?: "Unknown error")
+                }
+            ) ?: run {
+                Log.e(TAG, "Repository is not DataBridgeNotesRepository")
+                _syncState.value = SyncState.Failed("Incompatible repository type")
+            }
+        }
+    }
+    sealed class SyncState {
+        object Idle : SyncState()
+        object Syncing : SyncState()
+        object Success : SyncState()
+        data class Failed(val error: String) : SyncState()
+    }
 }

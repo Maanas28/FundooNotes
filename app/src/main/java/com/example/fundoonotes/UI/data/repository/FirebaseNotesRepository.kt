@@ -380,4 +380,58 @@ class FirebaseNotesRepository : NotesRepository {
             }
             .addOnFailureListener(onFailure)
     }
+
+    fun fetchNotesOnce(userId: String, onResult: (List<Note>) -> Unit, onError: (Exception) -> Unit) {
+        firestore.collection("notes")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("archived", false)
+            .whereEqualTo("deleted", false)
+            .whereEqualTo("inBin", false)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val notes = snapshot.documents.mapNotNull {
+                    it.toObject(Note::class.java)?.copy(id = it.id)
+                }.sortedByDescending { it.timestamp }
+                onResult(notes)
+            }
+            .addOnFailureListener { onError(it) }
+    }
+
+    fun fetchLabelsOnce(userId: String, onResult: (List<Label>) -> Unit, onError: (Exception) -> Unit) {
+        firestore.collection("labels")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val labels = snapshot.documents.mapNotNull {
+                    it.toObject(Label::class.java)?.copy(id = it.id)
+                }
+                onResult(labels)
+            }
+            .addOnFailureListener { onError(it) }
+    }
+
+    fun fetchUserDetailsOnce(
+        onSuccess: (User) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid ?: return onFailure(Exception("User not logged in"))
+
+        firestore.collection("users")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.isEmpty) {
+                    onFailure(Exception("User not found in Firestore"))
+                } else {
+                    val user = snapshot.documents.first().toObject(User::class.java)
+                    if (user != null) onSuccess(user)
+                    else onFailure(Exception("Failed to parse user document"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+
 }

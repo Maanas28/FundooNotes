@@ -1,17 +1,20 @@
 package com.example.fundoonotes.UI.data
 
 import android.util.Log
-import com.example.fundoonotes.UI.data.dao.OfflineOperationDao
 import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
+import com.example.fundoonotes.UI.data.model.User
+import com.example.fundoonotes.UI.data.repository.FirebaseAuthRepository
 import com.example.fundoonotes.UI.data.repository.FirebaseNotesRepository
 import com.example.fundoonotes.UI.data.repository.SQLiteNotesRepository
 import com.google.gson.Gson
+import kotlinx.coroutines.withContext
 
-class OfflineSyncManager(
+class SyncManager(
     private val sqlite: SQLiteNotesRepository,
     private val firebase: FirebaseNotesRepository,
+    private val firebaseAuth : FirebaseAuthRepository
 ) {
     private val gson = Gson()
 
@@ -157,6 +160,54 @@ class OfflineSyncManager(
     private fun removeOpAndContinue(opId: Int, operations: List<OfflineOperation>, index: Int) {
         sqlite.removeOfflineOperation(opId) {
             processOfflineOperations(operations, index + 1)
+        }
+    }
+
+    /**
+     * Syncs data from Firestore to SQLite - to be used when connectivity is restored
+     * or when user manually refreshes
+     */
+    fun syncOnlineChanges(
+        user: User,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        try {
+            val notesResult = runCatching {
+                firebase.fetchNotesOnce(user.userId,
+                    onResult = { notes ->
+                        sqlite.replaceAllNotes(notes) {
+                            Log.d("ReverseSync", "Notes synced")
+                        }
+                    },
+                    onError = { throw it }
+                )
+            }
+
+            if (notesResult.isFailure) {
+                onFailure((notesResult.exceptionOrNull() ?: Exception("Notes fetch failed")) as Exception)
+                return
+            }
+
+            val labelsResult = runCatching {
+                firebase.fetchLabelsOnce(user.userId,
+                    onResult = { labels ->
+                        sqlite.replaceAllLabels(labels) {
+                            Log.d("ReverseSync", "Labels synced")
+                            onSuccess()
+                        }
+                    },
+                    onError = { throw it }
+                )
+            }
+
+            if (labelsResult.isFailure) {
+                onFailure((labelsResult.exceptionOrNull() ?: Exception("Labels fetch failed")) as Exception)
+            }
+
+        } catch (e: Exception) {
+            Log.e("ReverseSync", "Sync failed", e)
+            onFailure(e)
         }
     }
 }

@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.google.services)
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
-
 }
 
 android {
@@ -71,5 +70,6 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.2.0-alpha01")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1") // Credential Manager with Google
     implementation ("com.google.code.gson:gson:2.10.1")
+    implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
 }

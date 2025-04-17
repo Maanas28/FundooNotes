@@ -1,12 +1,15 @@
 package com.example.fundoonotes.UI.data.repository
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import com.example.fundoonotes.UI.data.NotesDatabase
-import com.example.fundoonotes.UI.data.OfflineSyncManager
+import com.example.fundoonotes.UI.data.SyncManager
 import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.model.*
-import com.example.fundoonotes.UI.util.ConnectivityManager
+import com.example.fundoonotes.UI.data.ConnectivityManager
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DataBridgeNotesRepository(
     context: Context
@@ -33,6 +38,8 @@ class DataBridgeNotesRepository(
 
     private val appContext = context.applicationContext
 
+    private val offlineSyncManager = SyncManager(sqlite, firebase, firebaseAuth)
+
     private fun trackOfflineOperation(type: String, entityType: String, entityId: String, entity: Any) {
         val gson = Gson() // Gson is a popular library for converting Java/Kotlin objects into JSON strings and vice versa.
         val payload = gson.toJson(entity)
@@ -48,10 +55,62 @@ class DataBridgeNotesRepository(
         }
     }
 
-    private val offlineSyncManager = OfflineSyncManager(sqlite, firebase)
-
     fun syncOfflineChanges() {
         offlineSyncManager.syncOfflineChanges()
+    }
+
+    fun syncOnlineChanges(
+        context: Context,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val connectivityManager = ConnectivityManager(context, this)
+
+        if (!connectivityManager.isNetworkAvailable()) {
+            // Post Toast to main thread safely
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show()
+            }
+            onFailure(Exception("No internet connection"))
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                firebase.fetchUserDetailsOnce(
+                    onSuccess = { user ->
+                        // Still background thread; pass to SyncManager
+                        offlineSyncManager.syncOnlineChanges(user, onSuccess, onFailure)
+                    },
+                    onFailure = { ex ->
+                        // We CANNOT call withContext(Main), so use launch again
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Toast.makeText(context, "User details not found", Toast.LENGTH_SHORT).show()
+                        }
+                        onFailure(ex)
+                    }
+                )
+            } catch (e: Exception) {
+                onFailure(e)
+            }
+        }
+    }
+
+    fun setUpObservers(){
+        sqlite.setUpObservers()
+    }
+
+
+    fun saveUserLocally(user: User) {
+        sqlite.insertUser(user)
+    }
+
+    fun getLoggedInUser(
+        onSuccess: (User) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        Log.d("DataBridge", "Fetching logged in user from Firestore")
+        firebase.fetchUserDetailsOnce(onSuccess, onFailure)
     }
 
     override val notes: StateFlow<List<Note>> get() = if (isOnline()) firebase.notes else sqlite.notes
@@ -423,6 +482,7 @@ class DataBridgeNotesRepository(
 
         firebaseAuth.loginWithGoogleCredential(credential, userInfo, onComplete)
     }
+
 
 
 }

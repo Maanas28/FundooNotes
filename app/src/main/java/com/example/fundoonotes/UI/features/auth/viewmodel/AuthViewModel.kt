@@ -1,11 +1,14 @@
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.User
 import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.launch
 
 class AuthViewModel(context: Context) : ViewModel() {
     private val repository = DataBridgeNotesRepository(context)
@@ -36,4 +39,19 @@ class AuthViewModel(context: Context) : ViewModel() {
             authResult.postValue(Pair(success, message))
         }
     }
+
+    fun saveUserLocally(user: User) {
+        viewModelScope.launch {
+            repository.saveUserLocally(user)
+        }
+    }
+
+    fun getLoggedInUser(
+        onSuccess: (User) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.getLoggedInUser(onSuccess, onFailure)
+    }
+
+
 }

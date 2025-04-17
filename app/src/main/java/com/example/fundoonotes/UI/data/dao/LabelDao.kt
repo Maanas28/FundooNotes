@@ -13,6 +13,9 @@ interface LabelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLabel(label: LabelEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLabels(labels: List<LabelEntity>)
+
     @Update
     suspend fun updateLabel(label: LabelEntity)
 
@@ -24,5 +27,8 @@ interface LabelDao {
 
     @Query("SELECT * FROM labels WHERE userId = :userId ORDER BY name ASC")
     suspend fun getLabels(userId: String): List<LabelEntity>
+
+    @Query("DELETE FROM labels WHERE userId = :userId")
+    suspend fun clearLabelsForUser(userId: String)
 }
 

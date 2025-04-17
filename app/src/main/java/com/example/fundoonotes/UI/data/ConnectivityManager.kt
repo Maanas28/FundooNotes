@@ -1,7 +1,7 @@
-package com.example.fundoonotes.UI.util
+package com.example.fundoonotes.UI.data
 
 import android.content.Context
-import android.net.ConnectivityManager as SysConnectivityManager
+import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -15,9 +15,9 @@ class ConnectivityManager(
     private val context: Context,
     private val repository: DataBridgeNotesRepository
 ) {
-    private var networkCallback: SysConnectivityManager.NetworkCallback? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private val sysConnectivityManager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as SysConnectivityManager
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     /**
      * Checks if the network is available by ensuring the active network has both INTERNET
@@ -39,7 +39,7 @@ class ConnectivityManager(
         val request = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
-        networkCallback = object : SysConnectivityManager.NetworkCallback() {
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
             var wasOffline = !isNetworkAvailable()
 
             override fun onAvailable(network: Network) {
@@ -63,6 +63,7 @@ class ConnectivityManager(
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(context, "Internet connection lost", Toast.LENGTH_SHORT).show()
                 }
+                repository.setUpObservers()
             }
         }
         sysConnectivityManager.registerNetworkCallback(request, networkCallback!!)

@@ -82,6 +82,14 @@ class SQLiteNotesRepository(
         }
     }
 
+    fun setUpObservers(){
+        fetchNotes()
+        fetchArchivedNotes()
+        fetchBinNotes()
+        fetchReminderNotes()
+        fetchLabels()
+    }
+
     override fun fetchNotes() {
         val userId = accountDetails.value?.userId ?: return
         scope.launch {
@@ -138,11 +146,7 @@ class SQLiteNotesRepository(
 
                 // Start observing all flows if user exists
                 user?.let {
-                    fetchNotes()
-                    fetchArchivedNotes()
-                    fetchBinNotes()
-                    fetchReminderNotes()
-                    fetchLabels()
+                    setUpObservers()
                 }
             } catch (e: Exception) {
                 // Handle error
@@ -442,4 +446,34 @@ class SQLiteNotesRepository(
     private fun formatLabels(labels: List<String>): String {
         return labels.joinToString(LABEL_SEPARATOR)
     }
+
+    fun insertUser(user: User) {
+        scope.launch {
+            userDao.insertUser(user.toEntity())
+        }
+    }
+
+    fun replaceAllNotes(notes: List<Note>, onComplete: () -> Unit) {
+        scope.launch {
+            val userId = accountDetails.value?.userId ?: return@launch
+            noteDao.clearNotesForUser(userId)
+            notes.forEach {
+                noteDao.insertNote(it.toEntity())
+            }
+            onComplete()
+        }
+    }
+
+    fun replaceAllLabels(labels: List<Label>, onComplete: () -> Unit) {
+        scope.launch {
+            val userId = accountDetails.value?.userId ?: return@launch
+            labelDao.clearLabelsForUser(userId)
+            labels.forEach {
+                labelDao.insertLabel(it.toEntity())
+            }
+            onComplete()
+        }
+    }
+
+
 }

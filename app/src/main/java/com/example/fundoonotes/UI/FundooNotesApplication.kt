@@ -2,7 +2,7 @@ package com.example.fundoonotes.UI
 
 import android.app.Application
 import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
-import com.example.fundoonotes.UI.util.ConnectivityManager
+import com.example.fundoonotes.UI.data.ConnectivityManager
 
 class FundooNotesApplication : Application() {
     private lateinit var connectivityManager: ConnectivityManager

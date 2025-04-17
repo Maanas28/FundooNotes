@@ -89,6 +89,20 @@ class LoginActivity : AppCompatActivity() {
         viewModel.authResult.observe(this) { (success, message) ->
             if (success) {
                 showToast("Login Successful")
+
+                viewModel.getLoggedInUser(
+                    onSuccess = { firebaseUser ->
+                        Log.d("LoginActivity", "Firebase user: $firebaseUser")
+
+                        viewModel.saveUserLocally(firebaseUser)
+                    },
+                    onFailure = {
+                        Log.e("LoginActivity", "Failed to fetch user from Firestore", it)
+                        showToast("Failed to fetch user details")
+
+                    }
+                )
+
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             } else {
@@ -97,6 +111,8 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
+
+
 
     private fun showToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
