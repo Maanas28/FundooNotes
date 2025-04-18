@@ -63,7 +63,7 @@ class ConnectivityManager(
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(context, "Internet connection lost", Toast.LENGTH_SHORT).show()
                 }
-                repository.setUpObservers()
+                repository.syncOnlineChanges(context)
             }
         }
         sysConnectivityManager.registerNetworkCallback(request, networkCallback!!)

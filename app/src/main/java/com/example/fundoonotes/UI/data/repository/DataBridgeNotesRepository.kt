@@ -10,6 +10,7 @@ import com.example.fundoonotes.UI.data.SyncManager
 import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.model.*
 import com.example.fundoonotes.UI.data.ConnectivityManager
+import com.example.fundoonotes.UI.util.NotesGridContext
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
@@ -113,6 +114,25 @@ class DataBridgeNotesRepository(
         firebase.fetchUserDetailsOnce(onSuccess, onFailure)
     }
 
+    suspend fun fetchNotesPage(
+        context: NotesGridContext,
+        page: Int,
+        pageSize: Int
+    ): List<Note> {
+        Log.d("DBRepo", "Pagination for $context with page $page and pageSize $pageSize")
+        return if (isOnline()) {
+            firebase.fetchNotesPage(context, page, pageSize)
+        } else {
+            sqlite.fetchNotesPage(context, page, pageSize)
+        }
+    }
+
+    fun resetPaginationFor(context: NotesGridContext) {
+        if (isOnline()) firebase.resetPaginationFor(context)
+        else sqlite.resetPaginationFor(context)
+    }
+
+
     override val notes: StateFlow<List<Note>> get() = if (isOnline()) firebase.notes else sqlite.notes
     override val archivedNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.archivedNotes else sqlite.archivedNotes
     override val binNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.binNotes else sqlite.binNotes
@@ -132,7 +152,7 @@ class DataBridgeNotesRepository(
     override fun fetchLabels() = if (isOnline()) firebase.fetchLabels() else sqlite.fetchLabels()
     override fun fetchAccountDetails() = if (isOnline()) firebase.fetchAccountDetails() else sqlite.fetchAccountDetails()
 
-//    // CREATE operation: When online, update both; when offline, update only SQLite
+    //    // CREATE operation: When online, update both; when offline, update only SQLite
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             val noteWithId = note.copy(

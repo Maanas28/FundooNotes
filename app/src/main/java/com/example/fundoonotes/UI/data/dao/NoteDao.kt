@@ -42,4 +42,35 @@ interface NoteDao {
 
     @Query("DELETE FROM notes WHERE userId = :userId")
     suspend fun clearNotesForUser(userId: String)
+
+    @Query("SELECT * FROM notes WHERE archived = 0 AND inBin = 0 AND deleted = 0 ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
+    suspend fun getPagedNotes(limit: Int, offset: Int): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE archived = 1 AND inBin = 0 AND deleted = 0 ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
+    suspend fun getPagedArchivedNotes(limit: Int, offset: Int): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE inBin = 1 AND deleted = 0 ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
+    suspend fun getPagedBinNotes(limit: Int, offset: Int): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE hasReminder = 1 AND inBin = 0 AND deleted = 0 ORDER BY timestamp DESC LIMIT :limit OFFSET :offset")
+    suspend fun getPagedReminderNotes(limit: Int, offset: Int): List<NoteEntity>
+
+    @Query("""
+    SELECT * FROM notes
+    WHERE labels LIKE '%' || :separator || :labelName || :separator || '%'
+       OR labels LIKE :labelName || :separator || '%'
+       OR labels LIKE '%' || :separator || :labelName
+       OR labels = :labelName
+    AND archived = 0 AND inBin = 0 AND deleted = 0
+    ORDER BY timestamp DESC
+    LIMIT :limit OFFSET :offset
+""")
+    suspend fun getPagedNotesByLabel(
+        labelName: String,
+        separator: String = "|:|",
+        limit: Int,
+        offset: Int
+    ): List<NoteEntity>
+
+
 }

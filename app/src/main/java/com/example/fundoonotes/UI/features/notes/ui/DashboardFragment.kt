@@ -259,12 +259,14 @@ class DashboardFragment : Fragment(),
 
     override fun onNoteAdded(note: Note) {
         Log.d("NotesFragment", "Note added: ${note.title}")
-        notesViewModel.fetchNotes() // Refresh notes list
+        notesViewModel.refreshAndLoad(NotesGridContext.Notes)
+
     }
 
     override fun onNoteUpdated(note: Note) {
         Log.d("NotesFragment", "Note updated: ${note.title}")
-        notesViewModel.fetchNotes() // Refresh notes list
+        notesViewModel.refreshAndLoad(NotesGridContext.Notes)
+
     }
 
     override fun onAddNoteCancelled() {

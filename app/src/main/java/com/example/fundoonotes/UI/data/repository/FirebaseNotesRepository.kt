@@ -4,7 +4,9 @@ import android.util.Log
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.model.User
+import com.example.fundoonotes.UI.util.NotesGridContext
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,7 @@ import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class FirebaseNotesRepository : NotesRepository {
@@ -49,6 +52,96 @@ class FirebaseNotesRepository : NotesRepository {
 
     private val _filteredNotes = MutableStateFlow<List<Note>>(emptyList())
     override val filteredNotes: StateFlow<List<Note>> = _filteredNotes
+
+    private var lastNoteSnapshot: DocumentSnapshot? = null
+    private var lastArchivedNoteSnapshot: DocumentSnapshot? = null
+    private var lastBinNoteSnapshot: DocumentSnapshot? = null
+    private var lastReminderNoteSnapshot: DocumentSnapshot? = null
+    private var lastLabelNoteSnapshot: DocumentSnapshot? = null
+
+
+
+    private val lastSnapshots = mutableMapOf<String, DocumentSnapshot?>()
+
+    suspend fun fetchNotesPage(context: NotesGridContext, page: Int, pageSize: Int): List<Note> {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return emptyList()
+        val tag = when (context) {
+            is NotesGridContext.Notes -> "Notes"
+            is NotesGridContext.Archive -> "Archive"
+            is NotesGridContext.Bin -> "Bin"
+            is NotesGridContext.Reminder -> "Reminder"
+            is NotesGridContext.Label -> "Label:${context.labelName}"
+        }
+
+        try {
+            var query: Query = when (context) {
+                is NotesGridContext.Notes -> firestore.collection("notes")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("archived", false)
+                    .whereEqualTo("inBin", false)
+                    .whereEqualTo("deleted", false)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+
+                is NotesGridContext.Archive -> firestore.collection("notes")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("archived", true)
+                    .whereEqualTo("inBin", false)
+                    .whereEqualTo("deleted", false)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+
+                is NotesGridContext.Bin -> firestore.collection("notes")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("inBin", true)
+                    .whereEqualTo("deleted", false)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+
+                is NotesGridContext.Reminder -> firestore.collection("notes")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("hasReminder", true)
+                    .whereEqualTo("inBin", false)
+                    .whereEqualTo("deleted", false)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+
+                is NotesGridContext.Label -> firestore.collection("notes")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("archived", false)
+                    .whereEqualTo("inBin", false)
+                    .whereEqualTo("deleted", false)
+                    .whereArrayContains("labels", context.labelName)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+            }
+
+            // Apply startAfter for pagination
+            lastSnapshots[tag]?.let { snapshot ->
+                query = query.startAfter(snapshot)
+            }
+
+            val snapshot = query.limit(pageSize.toLong()).get().await()
+            if (snapshot.documents.isNotEmpty()) {
+                lastSnapshots[tag] = snapshot.documents.last()
+            }
+
+            return snapshot.documents.mapNotNull {
+                it.toObject(Note::class.java)?.copy(id = it.id)
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepo", "Failed to fetch page: ${e.message}", e)
+            return emptyList()
+        }
+    }
+
+    fun resetPaginationFor(context: NotesGridContext) {
+        val tag = when (context) {
+            is NotesGridContext.Notes -> "Notes"
+            is NotesGridContext.Archive -> "Archive"
+            is NotesGridContext.Bin -> "Bin"
+            is NotesGridContext.Reminder -> "Reminder"
+            is NotesGridContext.Label -> "Label:${context.labelName}"
+        }
+        lastSnapshots.remove(tag)
+    }
+
+
 
     override fun fetchNotes() {
         val userId = auth.currentUser?.uid ?: return

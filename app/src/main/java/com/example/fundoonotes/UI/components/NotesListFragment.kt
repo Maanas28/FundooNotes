@@ -94,16 +94,59 @@ class NotesListFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as? StaggeredGridLayoutManager ?: return
+                val totalItemCount = layoutManager.itemCount
+                val visibleItemPositions = layoutManager.findLastVisibleItemPositions(null)
+                val lastVisibleItemPosition = visibleItemPositions.maxOrNull() ?: 0
+
+                if (lastVisibleItemPosition >= totalItemCount - 3) {
+                    adapter.showLoadingFooter()
+                    notesContext?.let {
+                        viewModel.loadNextPage(it) {
+                            adapter.hideLoadingFooter()
+                        }
+                    }
+                }
+            }
+        })
+
         viewModel = NotesViewModel(requireContext())
 
         notesContext?.let { context ->
-            viewModel.fetchForContext(context)
+            // Initial load
+            viewModel.refreshAndLoad(context)
+            Log.d(TAG, "Called refreshAndLoad for context: $context")
 
             lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                    viewModel.getFilteredNotesFlow(context).collectLatest { notes ->
-                        val filtered = viewModel.filterNotesForContext(notes, context)
-                        adapter.updateList(filtered)
+                    viewModel.filteredPagedNotes.collectLatest { filtered ->
+                        Log.d(TAG, "Collected ${filtered.size} filtered notes")
+                        adapter.updateNotes(filtered)
+                    }
+                }
+            }
+
+            // Observe sync state for better user feedback
+            lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                    viewModel.syncState.collectLatest { state ->
+                        when (state) {
+                            is NotesViewModel.SyncState.Success -> {
+                                swipeRefreshLayout.isRefreshing = false
+                                Toast.makeText(requireContext(), "Sync completed", Toast.LENGTH_SHORT).show()
+                            }
+                            is NotesViewModel.SyncState.Failed -> {
+                                swipeRefreshLayout.isRefreshing = false
+                                Toast.makeText(requireContext(), "Sync failed: ${state.error}", Toast.LENGTH_SHORT).show()
+                            }
+                            is NotesViewModel.SyncState.Syncing -> {
+                            }
+                            else -> {}
+                        }
                     }
                 }
             }
@@ -129,17 +172,8 @@ class NotesListFragment : Fragment() {
     private fun performReverseSync() {
         if (connectivityManager.isNetworkAvailable()) {
             Log.d(TAG, "Network available, starting reverse sync")
-
             viewModel.reverseSyncNotes(requireContext())
-
-            // Set a timeout to dismiss the refresh indicator if the sync takes too long
-            swipeRefreshLayout.postDelayed({
-                if (swipeRefreshLayout.isRefreshing) {
-                    swipeRefreshLayout.isRefreshing = false
-                    Toast.makeText(requireContext(), "Sync completed", Toast.LENGTH_SHORT).show()
-                }
-            }, 3000)
-
+            // The swipeRefreshLayout.isRefreshing will be controlled by the syncState Flow
         } else {
             Log.d(TAG, "Network not available, showing alert")
             swipeRefreshLayout.isRefreshing = false

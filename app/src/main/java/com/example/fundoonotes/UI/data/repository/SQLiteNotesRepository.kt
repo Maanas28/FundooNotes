@@ -1,5 +1,6 @@
 package com.example.fundoonotes.UI.data.repository
 
+import android.util.Log
 import com.example.fundoonotes.UI.data.dao.LabelDao
 import com.example.fundoonotes.UI.data.dao.NoteDao
 import com.example.fundoonotes.UI.data.dao.OfflineOperationDao
@@ -10,6 +11,7 @@ import com.example.fundoonotes.UI.data.mappers.toEntity
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.model.User
+import com.example.fundoonotes.UI.util.NotesGridContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,6 +91,26 @@ class SQLiteNotesRepository(
         fetchReminderNotes()
         fetchLabels()
     }
+
+    suspend fun fetchNotesPage(context: NotesGridContext, page: Int, pageSize: Int): List<Note> {
+        val offset = page * pageSize
+        val entities = when (context) {
+            is NotesGridContext.Notes -> noteDao.getPagedNotes(pageSize, offset)
+            is NotesGridContext.Archive -> noteDao.getPagedArchivedNotes(pageSize, offset)
+            is NotesGridContext.Bin -> noteDao.getPagedBinNotes(pageSize, offset)
+            is NotesGridContext.Reminder -> noteDao.getPagedReminderNotes(pageSize, offset)
+            is NotesGridContext.Label -> { noteDao.getPagedNotesByLabel(context.labelName, LABEL_SEPARATOR, pageSize, offset)
+            }
+        }
+        Log.d("SQLiteRepo", "DB returned ${entities.size} notes")
+        return entities.map { it.toDomain() }
+    }
+
+    fun resetPaginationFor(context: NotesGridContext) {
+        // No-op for SQLite: pagination is stateless and based on OFFSET
+        Log.d("SQLiteRepo", "resetPaginationFor called for $context (no-op)")
+    }
+
 
     override fun fetchNotes() {
         val userId = accountDetails.value?.userId ?: return

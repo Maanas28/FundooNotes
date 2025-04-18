@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fundoonotes.R
 import com.example.fundoonotes.UI.data.model.Note
@@ -25,7 +26,22 @@ class NotesAdapter(
         val labelsContainer: LinearLayout = itemView.findViewById(R.id.labelsContainer)
         val noteReminder: LinearLayout = itemView.findViewById(R.id.noteReminderLayout)
         val noteReminderText: TextView = itemView.findViewById(R.id.noteReminderText)
+    }
 
+    private val ITEM_VIEW_TYPE_NOTE = 0
+    private val ITEM_VIEW_TYPE_LOADING = 1
+
+    private var isLoading = false
+
+    fun showLoadingFooter() {
+        isLoading = true
+        notifyItemInserted(notes.size)
+    }
+
+    fun hideLoadingFooter() {
+        val position = notes.size
+        isLoading = false
+        notifyItemRemoved(position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -35,6 +51,8 @@ class NotesAdapter(
     }
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
+        if (getItemViewType(position) == ITEM_VIEW_TYPE_LOADING) return
+
         val note = notes[position]
         holder.title.text = note.title
         holder.content.text = note.content
@@ -54,7 +72,6 @@ class NotesAdapter(
             onNoteLongClick(note)
             true
         }
-
 
         holder.labelsContainer.removeAllViews()
         val labelsList = note.labels.sortedByDescending{ it.length}
@@ -90,8 +107,6 @@ class NotesAdapter(
             holder.labelsContainer.addView(morePillView)
         }
 
-
-
         if (note.hasReminder && note.reminderTime != null) {
             val now = System.currentTimeMillis()
             val reminderTime = note.reminderTime
@@ -113,14 +128,69 @@ class NotesAdapter(
         } else {
             holder.noteReminder.visibility = View.GONE
         }
-
     }
 
-    override fun getItemCount() = notes.size
+    override fun getItemCount(): Int {
+        return notes.size + if (isLoading) 1 else 0
+    }
 
-    fun updateList(newNotes: List<Note>) {
-        notes = newNotes
-        notifyDataSetChanged()
+    override fun getItemViewType(position: Int): Int {
+        return if (position < notes.size) ITEM_VIEW_TYPE_NOTE else ITEM_VIEW_TYPE_LOADING
+    }
+
+    // Replace setNotes with updateNotes for more efficient updates
+    fun updateNotes(newNotes: List<Note>) {
+        val diffCallback = object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = notes.size
+            override fun getNewListSize(): Int = newNotes.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return notes[oldItemPosition].id == newNotes[newItemPosition].id
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return notes[oldItemPosition] == newNotes[newItemPosition]
+            }
+        }
+
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+        this.notes = newNotes
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    // Keep this method for backward compatibility
+    fun setNotes(newNotes: List<Note>) {
+        updateNotes(newNotes)
+    }
+
+    fun appendNotes(newNotes: List<Note>) {
+        val start = notes.size
+        val updatedNotes = notes + newNotes
+
+        val diffCallback = object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = notes.size
+            override fun getNewListSize(): Int = updatedNotes.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return if (newItemPosition < notes.size) {
+                    notes[oldItemPosition].id == updatedNotes[newItemPosition].id
+                } else {
+                    false // All new items are considered different
+                }
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return if (newItemPosition < notes.size) {
+                    notes[oldItemPosition] == updatedNotes[newItemPosition]
+                } else {
+                    false // All new items are considered different
+                }
+            }
+        }
+
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+        this.notes = updatedNotes
+        diffResult.dispatchUpdatesTo(this)
     }
 
     fun refreshSingleExpiredReminder(noteId: String) {
@@ -134,8 +204,4 @@ class NotesAdapter(
             }
         }
     }
-
-
 }
-
-
