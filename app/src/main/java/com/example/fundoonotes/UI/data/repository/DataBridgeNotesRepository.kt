@@ -10,6 +10,7 @@ import com.example.fundoonotes.UI.data.SyncManager
 import com.example.fundoonotes.UI.data.entity.OfflineOperation
 import com.example.fundoonotes.UI.data.model.*
 import com.example.fundoonotes.UI.data.ConnectivityManager
+import com.example.fundoonotes.UI.util.ReminderScheduler
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,7 @@ class DataBridgeNotesRepository(
 
     private val firebase = FirebaseNotesRepository()
     private val firebaseAuth = FirebaseAuthRepository(FirebaseAuth.getInstance())
+
 
     private val sqlite = SQLiteNotesRepository(
         noteDao = NotesDatabase.getInstance(context).noteDao(),
@@ -132,29 +134,42 @@ class DataBridgeNotesRepository(
     override fun fetchLabels() = if (isOnline()) firebase.fetchLabels() else sqlite.fetchLabels()
     override fun fetchAccountDetails() = if (isOnline()) firebase.fetchAccountDetails() else sqlite.fetchAccountDetails()
 
-//    // CREATE operation: When online, update both; when offline, update only SQLite
+    // CREATE operation: When online, update both; when offline, update only SQLite
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        try {
-            val noteWithId = note.copy(
-                id = if (note.id.isBlank()) UUID.randomUUID().toString() else note.id,
-                userId = firebaseAuth.getCurrentUserId() ?: note.userId
-            )
+        val noteWithId = note.copy(
+            id = if (note.id.isBlank()) UUID.randomUUID().toString() else note.id,
+            userId = firebaseAuth.getCurrentUserId() ?: note.userId
+        )
 
-            if (isOnline()) {
-                firebase.addNote(noteWithId, {
-                    sqlite.addNote(noteWithId, onSuccess, onFailure)
-                }, onFailure)
-            } else {
-                // Offline: Update SQLite and track the change
-                sqlite.addNote(noteWithId, {
-                    trackOfflineOperation("ADD", "NOTE", noteWithId.id, noteWithId)
-                    onSuccess()
-                }, onFailure)
+        if (isOnline()) {
+            val firebaseUser = FirebaseAuth.getInstance().currentUser
+            if (firebaseUser == null) {
+                onFailure(Exception("User not logged in"))
+                return
             }
-        } catch (e: Exception) {
-            onFailure(e)
+
+            firebaseUser.getIdToken(true)
+                .addOnSuccessListener { result ->
+                    val idToken = result.token ?: return@addOnSuccessListener onFailure(Exception("Token is null"))
+
+                    // Call Retrofit-based Firestore note creation
+                    firebase.addNoteWithRetrofit(noteWithId, idToken, {
+                        // Save to SQLite after success
+                        sqlite.addNote(noteWithId, onSuccess, onFailure)
+                    }, onFailure)
+                }
+                .addOnFailureListener {
+                    onFailure(it)
+                }
+        } else {
+            sqlite.addNote(noteWithId, {
+                trackOfflineOperation("ADD", "NOTE", noteWithId.id, noteWithId)
+                onSuccess()
+            }, onFailure)
         }
     }
+
+
 
 
     // UPDATE operation: Refactored to track offline operations

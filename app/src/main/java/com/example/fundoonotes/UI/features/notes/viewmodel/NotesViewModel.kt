@@ -10,6 +10,7 @@ import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import com.example.fundoonotes.UI.data.repository.NotesRepository
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.ReminderScheduler
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -17,7 +18,6 @@ class NotesViewModel(
     private val repository: NotesRepository
 ) : ViewModel() {
 
-    private val TAG = "NotesViewModel"
     private var dataBridgeRepository: DataBridgeNotesRepository? = null
 
     constructor(context: Context) : this(DataBridgeNotesRepository(context)) {
@@ -134,7 +134,6 @@ class NotesViewModel(
             dataBridgeRepository?.syncOnlineChanges(
                 context = context,
                 onSuccess = {
-                    Log.d(TAG, "Reverse sync completed successfully")
                     fetchNotes()
                     fetchArchivedNotes()
                     fetchBinNotes()
@@ -142,11 +141,9 @@ class NotesViewModel(
                     _syncState.value = SyncState.Success
                 },
                 onFailure = { exception ->
-                    Log.e(TAG, "Reverse sync failed: ${exception.message}", exception)
                     _syncState.value = SyncState.Failed(exception.message ?: "Unknown error")
                 }
             ) ?: run {
-                Log.e(TAG, "Repository is not DataBridgeNotesRepository")
                 _syncState.value = SyncState.Failed("Incompatible repository type")
             }
         }

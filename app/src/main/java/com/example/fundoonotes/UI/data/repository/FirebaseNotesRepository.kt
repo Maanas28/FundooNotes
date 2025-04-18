@@ -1,6 +1,13 @@
 package com.example.fundoonotes.UI.data.repository
 
+import android.telecom.Call
 import android.util.Log
+import com.example.fundoonotes.UI.data.ArrayContent
+import com.example.fundoonotes.UI.data.FirestoreArrayValue
+import com.example.fundoonotes.UI.data.FirestoreNoteFields
+import com.example.fundoonotes.UI.data.FirestoreNoteRequest
+import com.example.fundoonotes.UI.data.FirestoreValue
+import com.example.fundoonotes.UI.data.RetrofitClient
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.data.model.User
@@ -11,7 +18,11 @@ import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
-import com.google.firebase.firestore.Query
+import retrofit2.Response
+import okhttp3.ResponseBody
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
 
 class FirebaseNotesRepository : NotesRepository {
@@ -155,6 +166,65 @@ class FirebaseNotesRepository : NotesRepository {
                 _accountDetails.value = user
             }
     }
+
+    fun formatToIsoString(date: java.util.Date): String {
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        formatter.timeZone = TimeZone.getTimeZone("UTC")
+        return formatter.format(date)
+    }
+
+
+    fun addNoteWithRetrofit(
+        note: Note,
+        idToken: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val firestoreNote = FirestoreNoteRequest(
+            fields = FirestoreNoteFields(
+                userId = FirestoreValue(stringValue = note.userId),
+                id = FirestoreValue(stringValue = note.id),
+                title = FirestoreValue(stringValue = note.title),
+                content = FirestoreValue(stringValue = note.content),
+                timestamp = FirestoreValue(timestampValue = formatToIsoString(note.timestamp.toDate())),
+                archived = FirestoreValue(booleanValue = note.archived),
+                deleted = FirestoreValue(booleanValue = note.deleted),
+                inBin = FirestoreValue(booleanValue = note.inBin),
+                hasReminder = FirestoreValue(booleanValue = note.hasReminder),
+                reminderTime = FirestoreValue(integerValue = note.reminderTime?.toString() ?: "0"),
+                labels = FirestoreArrayValue(
+                    arrayValue = ArrayContent(
+                        values = note.labels.map { FirestoreValue(stringValue = it) }
+                    )
+                )
+            )
+        )
+
+        RetrofitClient.firestoreApi.addNote(
+            authHeader = "Bearer $idToken",
+            projectId = "fundoo-kotlin",
+            body = firestoreNote
+        ).enqueue(object : retrofit2.Callback<okhttp3.ResponseBody> {
+            override fun onResponse(
+                call: retrofit2.Call<ResponseBody?>,
+                response: Response<ResponseBody?>
+            ) {
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onFailure(Exception("Failed: ${response.errorBody()?.string()}"))
+                }
+            }
+
+            override fun onFailure(
+                call: retrofit2.Call<ResponseBody?>,
+                t: Throwable
+            ) {
+                onFailure(Exception(t))
+            }
+        })
+    }
+
 
     // Refactored addNote using client-generated ID.
     override fun addNote(note: Note, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
