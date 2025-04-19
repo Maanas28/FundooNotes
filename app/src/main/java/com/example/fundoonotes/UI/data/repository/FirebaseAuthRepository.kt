@@ -54,6 +54,7 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                         }
 
                 } else {
+                    Log.e("AuthRepo", "Registration failed: ${task.exception?.message}")
                     onComplete(false, task.exception?.message)
                 }
             }
@@ -61,7 +62,7 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
 
     fun loginWithGoogleCredential(
         credential: AuthCredential,
-        userInfo: User?,
+        userInfo: User?, // If null => login, else => register
         onComplete: (Boolean, String?) -> Unit
     ) {
         auth.signInWithCredential(credential)
@@ -70,8 +71,8 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                     val firebaseUser = task.result?.user
                     val uid = firebaseUser?.uid ?: return@addOnCompleteListener onComplete(false, "No UID")
 
-                    // Optional: Only register user info if provided (used for Google Sign-Up)
                     if (userInfo != null) {
+                        // REGISTER flow
                         val userToSave = userInfo.copy(userId = uid)
                         firestore.collection("users")
                             .document(uid)
@@ -79,9 +80,9 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                             .addOnSuccessListener { onComplete(true, null) }
                             .addOnFailureListener { e -> onComplete(false, e.message) }
                     } else {
+                        // LOGIN flow
                         onComplete(true, null)
                     }
-
                 } else {
                     onComplete(false, task.exception?.message)
                 }

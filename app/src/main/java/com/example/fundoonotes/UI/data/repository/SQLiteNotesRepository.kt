@@ -1,10 +1,12 @@
 package com.example.fundoonotes.UI.data.repository
 
+import android.util.Log
 import com.example.fundoonotes.UI.data.dao.LabelDao
 import com.example.fundoonotes.UI.data.dao.NoteDao
 import com.example.fundoonotes.UI.data.dao.OfflineOperationDao
 import com.example.fundoonotes.UI.data.dao.UserDao
 import com.example.fundoonotes.UI.data.entity.OfflineOperation
+import com.example.fundoonotes.UI.data.entity.UserEntity
 import com.example.fundoonotes.UI.data.mappers.toDomain
 import com.example.fundoonotes.UI.data.mappers.toEntity
 import com.example.fundoonotes.UI.data.model.Label
@@ -89,6 +91,19 @@ class SQLiteNotesRepository(
         fetchReminderNotes()
         fetchLabels()
     }
+
+    suspend fun saveUserLocally(user: User) {
+        val entity = UserEntity(
+            userId = user.userId ?: "", // Firebase UID should be non-null at this point
+            firstName = user.firstName,
+            lastName = user.lastName,
+            email = user.email,
+            profileImage = user.profileImage
+        )
+        userDao.insertUser(entity)
+    }
+
+
 
     override fun fetchNotes() {
         val userId = accountDetails.value?.userId ?: return

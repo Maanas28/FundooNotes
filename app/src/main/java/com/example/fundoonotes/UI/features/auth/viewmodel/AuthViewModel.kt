@@ -16,7 +16,7 @@ class AuthViewModel(context: Context) : ViewModel() {
 
     fun registerWithGoogle(idToken: String, userInfo: User) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        repository.loginWithGoogleCredential(credential, userInfo) { success, message ->
+        repository.registerWithGoogleCredential(credential, userInfo) { success, message ->
             authResult.postValue(Pair(success, message))
         }
     }

@@ -5,96 +5,92 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
-import android.widget.*
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.example.fundoonotes.R
+import com.example.fundoonotes.databinding.FragmentSearchBarBinding
 import com.example.fundoonotes.UI.util.SearchListener
 import com.example.fundoonotes.UI.util.ViewToggleListener
 
 class SearchBarFragment : Fragment() {
 
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var toggleViewButton: ImageButton
-    private var toggleListener: ViewToggleListener? = null
-    private var isGrid = true
+    private var _binding: FragmentSearchBarBinding? = null
+    private val binding get() = _binding!!
 
-    private lateinit var searchEditText: EditText
-    private lateinit var searchIcon: ImageButton
-    private lateinit var titleView: TextView
+    private lateinit var drawerLayout: DrawerLayout
+    private var toggleListener: ViewToggleListener? = null
     private var searchListener: SearchListener? = null
 
-    private var isSearchMode = false // NEW
+    private var isGrid = true
+    private var isSearchMode = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_search_bar, container, false)
+        _binding = FragmentSearchBarBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
         drawerLayout = requireActivity().findViewById(R.id.drawerLayout)
 
-        titleView = view.findViewById(R.id.tvTitle)
-        searchEditText = view.findViewById(R.id.editSearch)
-        searchIcon = view.findViewById(R.id.btnSearch)
-        toggleViewButton = view.findViewById(R.id.btnToggleGrid)
-
         val title = arguments?.getString(ARG_TITLE) ?: "Notes"
-        titleView.text = title
+        binding.tvTitle.text = title
 
-        // Open drawer
-        view.findViewById<ImageButton>(R.id.btnMenu).setOnClickListener {
+        binding.btnMenu.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        // Toggle grid/list
-        toggleViewButton.setOnClickListener {
+        binding.btnToggleGrid.setOnClickListener {
             isGrid = !isGrid
             toggleListener?.toggleView(isGrid)
-            toggleViewButton.setImageResource(
+            binding.btnToggleGrid.setImageResource(
                 if (isGrid) R.drawable.list_view else R.drawable.ic_grid
             )
         }
 
-        // Toggle search / close mode
-        searchIcon.setOnClickListener {
-            if (!isSearchMode) {
-                // Switch to search mode
-                isSearchMode = true
-                titleView.visibility = View.GONE
-                searchEditText.visibility = View.VISIBLE
-                searchEditText.requestFocus()
-                searchIcon.setImageResource(R.drawable.close)
-            } else {
-                // Exit search mode
-                isSearchMode = false
-                searchEditText.setText("")
-                searchEditText.visibility = View.GONE
-                titleView.visibility = View.VISIBLE
-                searchIcon.setImageResource(R.drawable.search)
-                searchListener?.onSearchQueryChanged("")
-            }
+        binding.btnSearch.setOnClickListener {
+            toggleSearchMode()
         }
 
-        searchEditText.addTextChangedListener(object : TextWatcher {
+        binding.editSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 searchListener?.onSearchQueryChanged(s.toString())
-               }
+            }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
     }
 
+    private fun toggleSearchMode() {
+        if (!isSearchMode) {
+            isSearchMode = true
+            binding.tvTitle.visibility = View.GONE
+            binding.editSearch.visibility = View.VISIBLE
+            binding.editSearch.requestFocus()
+            binding.btnSearch.setImageResource(R.drawable.close)
+        } else {
+            isSearchMode = false
+            binding.editSearch.setText("")
+            binding.editSearch.visibility = View.GONE
+            binding.tvTitle.visibility = View.VISIBLE
+            binding.btnSearch.setImageResource(R.drawable.search)
+            searchListener?.onSearchQueryChanged("")
+        }
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         toggleListener = parentFragment as? ViewToggleListener
         searchListener = parentFragment as? SearchListener
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {

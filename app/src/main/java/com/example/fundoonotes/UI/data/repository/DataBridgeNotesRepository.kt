@@ -125,7 +125,7 @@ class DataBridgeNotesRepository(
     override val accountDetails: StateFlow<User?> get() = if (isOnline()) firebase.accountDetails else sqlite.accountDetails
     override val filteredNotes: StateFlow<List<Note>> get() = if (isOnline()) firebase.filteredNotes else sqlite.filteredNotes
 
-    private fun isOnline() = ConnectivityManager(appContext, this).isNetworkAvailable()
+    fun isOnline() = ConnectivityManager(appContext, this).isNetworkAvailable()
 
     override fun fetchNotes() = if (isOnline()) firebase.fetchNotes() else sqlite.fetchNotes()
     override fun fetchArchivedNotes() = if (isOnline()) firebase.fetchArchivedNotes() else sqlite.fetchArchivedNotes()
@@ -492,12 +492,31 @@ class DataBridgeNotesRepository(
         }
     }
 
-    fun loginWithGoogleCredential(credential: AuthCredential, userInfo: User?, onComplete: (Boolean, String?) -> Unit) {
+    fun registerWithGoogleCredential(
+        credential: AuthCredential,
+        userInfo: User,
+        onComplete: (Boolean, String?) -> Unit
+    ) {
         if (!isOnline()) return onComplete(false, "No internet connection")
+        firebaseAuth.loginWithGoogleCredential(credential, userInfo) { success, message ->
+            if (success && userInfo.userId != null) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    sqlite.saveUserLocally(userInfo.copy(userId = firebaseAuth.getCurrentUserId()!!))
+                }
+            }
+            onComplete(success, message)
+        }
 
-        firebaseAuth.loginWithGoogleCredential(credential, userInfo, onComplete)
     }
 
-
-
+    fun loginWithGoogleCredential(
+        credential: AuthCredential,
+        userInfo: User? = null,
+        onComplete: (Boolean, String?) -> Unit
+    ) {
+        if (!isOnline()) return onComplete(false, "No internet connection")
+        firebaseAuth.loginWithGoogleCredential(credential, userInfo) { success, message ->
+            onComplete(success, message)
+        }
+    }
 }

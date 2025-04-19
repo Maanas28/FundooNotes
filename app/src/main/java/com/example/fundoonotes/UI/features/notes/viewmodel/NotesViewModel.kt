@@ -1,8 +1,6 @@
 package com.example.fundoonotes.UI.features.notes.viewmodel
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.UI.data.model.Note
@@ -10,19 +8,13 @@ import com.example.fundoonotes.UI.data.repository.DataBridgeNotesRepository
 import com.example.fundoonotes.UI.data.repository.NotesRepository
 import com.example.fundoonotes.UI.util.NotesGridContext
 import com.example.fundoonotes.UI.util.ReminderScheduler
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class NotesViewModel(
-    private val repository: NotesRepository
-) : ViewModel() {
+class NotesViewModel(context: Context) : ViewModel() {
 
-    private var dataBridgeRepository: DataBridgeNotesRepository? = null
-
-    constructor(context: Context) : this(DataBridgeNotesRepository(context)) {
-        dataBridgeRepository = repository as? DataBridgeNotesRepository
-    }
+    private val repository: NotesRepository = DataBridgeNotesRepository(context)
+    private val dataBridgeRepository: DataBridgeNotesRepository = repository as DataBridgeNotesRepository
 
     val notesFlow: StateFlow<List<Note>> = repository.notes
     val archivedNotesFlow: StateFlow<List<Note>> = repository.archivedNotes
@@ -129,9 +121,8 @@ class NotesViewModel(
 
     fun reverseSyncNotes(context: Context) {
         _syncState.value = SyncState.Syncing
-
         viewModelScope.launch {
-            dataBridgeRepository?.syncOnlineChanges(
+            dataBridgeRepository.syncOnlineChanges(
                 context = context,
                 onSuccess = {
                     fetchNotes()
@@ -143,11 +134,16 @@ class NotesViewModel(
                 onFailure = { exception ->
                     _syncState.value = SyncState.Failed(exception.message ?: "Unknown error")
                 }
-            ) ?: run {
-                _syncState.value = SyncState.Failed("Incompatible repository type")
-            }
+            )
         }
     }
+
+    fun checkInternetConnection(): Boolean = dataBridgeRepository.isOnline()
+
+    fun getNotesByIds(ids: List<String>): List<Note> {
+        return notesFlow.value.filter { it.id in ids }
+    }
+
     sealed class SyncState {
         object Idle : SyncState()
         object Syncing : SyncState()

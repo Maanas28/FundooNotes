@@ -56,6 +56,7 @@ class LoginActivity : AppCompatActivity() {
             )
             .setAutoSelectEnabled(true)
             .build()
+
     }
 
     private fun setupListeners() {

@@ -1,11 +1,12 @@
 package com.example.fundoonotes.UI.features.labels
 
+import SelectionViewModel
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,6 +15,7 @@ import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
 import com.example.fundoonotes.UI.util.LabelActionHandler
 import com.example.fundoonotes.UI.util.LabelSelectionListener
 import com.example.fundoonotes.databinding.FragmentApplyLabelToNoteBinding
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class ApplyLabelToNoteFragment : Fragment() {
@@ -21,10 +23,11 @@ class ApplyLabelToNoteFragment : Fragment() {
     private var _binding: FragmentApplyLabelToNoteBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: LabelsViewModel
-    private lateinit var adapter: EditLabelAdapter
+    private lateinit var labelViewModel: LabelsViewModel
+    private lateinit var notesViewModel: NotesViewModel
+    private val selectionViewModel by activityViewModels<SelectionViewModel>()
 
-    private var selectedNoteIds: List<String> = emptyList()
+    private var adapter: EditLabelAdapter? = null
     private val selectedLabels = mutableSetOf<Label>()
 
     private var labelSelectionListener: LabelSelectionListener? = null
@@ -32,7 +35,6 @@ class ApplyLabelToNoteFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        selectedNoteIds = arguments?.getStringArrayList(ARG_NOTE_IDS)?.toList() ?: emptyList()
 
         labelSelectionListener = parentFragment as? LabelSelectionListener
             ?: activity as? LabelSelectionListener
@@ -45,7 +47,8 @@ class ApplyLabelToNoteFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = LabelsViewModel(requireContext())
+        labelViewModel = LabelsViewModel(requireContext())
+        notesViewModel = NotesViewModel(requireContext())
         _binding = FragmentApplyLabelToNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -53,56 +56,45 @@ class ApplyLabelToNoteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Fetch labels so the list isn't empty
-        viewModel.fetchLabels()
-
-        // Get the NotesViewModel to access all notes.
-        val notesViewModel = NotesViewModel(requireContext())
-        // Get the complete list of notes.
-        val allNotes = notesViewModel.notesFlow.value
-        // Filter out only the selected notes using their IDs.
-        val selectedNotes = allNotes.filter { selectedNoteIds.contains(it.id) }
-        selectedNotes.forEach { note ->
-            Log.d("ApplyLabelFragment", "Note ID ${note.id} has labels: ${note.labels}")
-        }
-
-        // Compute the intersection of labels for all selected notes.
-        // If only one note is selected, the intersection is that note's labels.
-        val commonLabels: Set<String> = if (selectedNotes.isNotEmpty()) {
-            selectedNotes.map { it.labels.toSet() }
-                .reduce { acc, set -> acc.intersect(set) }
-        } else {
-            emptySet()
-        }
-        Log.d("ApplyLabelFragment", "Common labels: $commonLabels")
-
-        // Initialize the adapter in SELECT mode.
-        adapter = EditLabelAdapter(
-            mode = LabelAdapterMode.SELECT,
-            preSelectedLabels = commonLabels,
-            onSelect = { label, isChecked ->
-                if (isChecked) selectedLabels.add(label) else selectedLabels.remove(label)
-                labelSelectionListener?.onLabelListUpdated(selectedLabels.toList())
-                labelHandler?.onLabelToggledForNotes(label, isChecked, selectedNoteIds)
-            }
-        )
-
         binding.labelRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.labelRecyclerView.adapter = adapter
+        labelViewModel.fetchLabels()
 
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Collect labels from ViewModel
-                viewModel.labelList.collect { labels ->
+                launch {
+                    labelViewModel.labelList.collectLatest { labels ->
+                        Log.d("ApplyLabelFragment", "Labels received: ${labels.size}")
+                        adapter?.submitList(labels)
+                    }
+                }
 
-                    Log.d("ApplyLabelFragment", "Labels received: ${labels.size}")
-                    // Pre-check labels that are already applied to all selected notes
-                    if (selectedNoteIds.isNotEmpty()) {
-                        // You would need to fetch notes to check which labels they already have
-                        // For simplicity, we're just submitting the list for now
-                        adapter.submitList(labels)
-                    } else {
-                        adapter.submitList(labels)
+                launch {
+                    selectionViewModel.selectedNotes.collectLatest { selectedNotes ->
+                        Log.d("ApplyLabelFragment", "Selected Notes: ${selectedNotes.map { it.id }}")
+
+                        val labelSets = selectedNotes.map { it.labels.toSet() }
+                        val commonLabels = if (labelSets.isNotEmpty()) {
+                            labelSets.reduce { acc, set -> acc.intersect(set) }
+                        } else emptySet()
+
+                        Log.d("ApplyLabelFragment", "Computed common labels: $commonLabels")
+
+                        if (adapter == null) {
+                            adapter = EditLabelAdapter(
+                                mode = LabelAdapterMode.SELECT,
+                                preSelectedLabels = commonLabels,
+                                onSelect = { label, isChecked ->
+                                    if (isChecked) selectedLabels.add(label)
+                                    else selectedLabels.remove(label)
+
+                                    labelSelectionListener?.onLabelListUpdated(selectedLabels.toList())
+                                    labelHandler?.onLabelToggledForNotes(label, isChecked, selectedNotes.map { it.id })
+                                }
+                            )
+                            binding.labelRecyclerView.adapter = adapter
+                        } else {
+                            adapter?.updatePreSelectedLabels(commonLabels)
+                        }
                     }
                 }
             }
@@ -113,21 +105,12 @@ class ApplyLabelToNoteFragment : Fragment() {
         }
     }
 
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     companion object {
-        private const val ARG_NOTE_IDS = "note_ids"
-
-        fun newInstance(noteIds: List<String>): ApplyLabelToNoteFragment {
-            return ApplyLabelToNoteFragment().apply {
-                arguments = Bundle().apply {
-                    putStringArrayList(ARG_NOTE_IDS, ArrayList(noteIds))
-                }
-            }
-        }
+        fun newInstance(): ApplyLabelToNoteFragment = ApplyLabelToNoteFragment()
     }
 }

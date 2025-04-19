@@ -1,88 +1,96 @@
 package com.example.fundoonotes.UI.features.reminders
 
+import SelectionViewModel
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProvider
-import com.example.fundoonotes.R
-import com.example.fundoonotes.UI.components.NotesListFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import com.example.fundoonotes.UI.components.NotesDisplayFragment
 import com.example.fundoonotes.UI.components.SearchBarFragment
 import com.example.fundoonotes.UI.components.SelectionBar
+import com.example.fundoonotes.UI.components.SelectionBarMode
 import com.example.fundoonotes.UI.data.model.Label
 import com.example.fundoonotes.UI.data.model.Note
 import com.example.fundoonotes.UI.features.addnote.AddNoteFragment
-import com.example.fundoonotes.UI.features.labels.LabelFragment
 import com.example.fundoonotes.UI.features.labels.LabelsViewModel
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
-import com.example.fundoonotes.UI.util.EditNoteHandler
-import com.example.fundoonotes.UI.util.LabelActionHandler
-import com.example.fundoonotes.UI.util.LabelFragmentHost
-import com.example.fundoonotes.UI.util.MainLayoutToggler
-import com.example.fundoonotes.UI.util.NotesGridContext
-import com.example.fundoonotes.UI.util.SearchListener
-import com.example.fundoonotes.UI.util.SelectionBarListener
-import com.example.fundoonotes.UI.util.ViewToggleListener
+import com.example.fundoonotes.UI.util.*
+import com.example.fundoonotes.databinding.FragmentRemindersBinding
 
 class RemindersFragment : Fragment(),
     SelectionBarListener,
     ViewToggleListener,
-    EditNoteHandler ,
+    EditNoteHandler,
     SearchListener,
     MainLayoutToggler,
     LabelFragmentHost,
     LabelActionHandler {
 
-    private lateinit var searchBar: View
-    private lateinit var selectionBar: View
-    private lateinit var notesListFragment: NotesListFragment
-    private lateinit var fullscreenContainer: View
-    private lateinit var viewModel : NotesViewModel
-    private lateinit var labelsViewModel : LabelsViewModel
+    private var _binding: FragmentRemindersBinding? = null
+    private val binding get() = _binding!!
 
+    private lateinit var notesDisplayFragment: NotesDisplayFragment
+    private lateinit var viewModel: NotesViewModel
+    private lateinit var labelsViewModel: LabelsViewModel
+    private val selectionViewModel by activityViewModels<SelectionViewModel>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_reminders, container, false)
+        _binding = FragmentRemindersBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        searchBar = view.findViewById(R.id.searchBarContainerReminder)
-        selectionBar = view.findViewById(R.id.selectionBarContainerReminder)
-        fullscreenContainer = view.findViewById(R.id.fullscreenFragmentContainerReminder)
+        // Initialize ViewModels
         viewModel = NotesViewModel(requireContext())
         labelsViewModel = LabelsViewModel(requireContext())
 
+        setupSearchBar()
+        setupNotesList()
+        setupBackStackListener()
+    }
 
+    /** Sets up the SearchBarFragment */
+    private fun setupSearchBar() {
         val searchBarFragment = SearchBarFragment.newInstance("Reminder")
         childFragmentManager.beginTransaction()
-            .replace(R.id.searchBarContainerReminder, searchBarFragment)
+            .replace(binding.searchBarContainerReminder.id, searchBarFragment)
             .commit()
+    }
 
-        notesListFragment = NotesListFragment.newInstance(NotesGridContext.Reminder).apply {
+    /** Sets up NotesListFragment and its callbacks */
+    private fun setupNotesList() {
+        notesDisplayFragment = NotesDisplayFragment.newInstance(NotesGridContext.Reminder).apply {
             selectionBarListener = this@RemindersFragment
             setNoteInteractionListener(this@RemindersFragment)
-            onSelectionChanged = { count -> updateSelectionBar(count) }
             onSelectionModeEnabled = {
-                searchBar.visibility = View.GONE
-                selectionBar.visibility = View.VISIBLE
+                binding.searchBarContainerReminder.visibility = View.GONE
+                binding.selectionBarContainerReminder.visibility = View.VISIBLE
             }
             onSelectionModeDisabled = {
-                searchBar.visibility = View.VISIBLE
-                selectionBar.visibility = View.GONE
+                binding.searchBarContainerReminder.visibility = View.VISIBLE
+                binding.selectionBarContainerReminder.visibility = View.GONE
             }
         }
 
         childFragmentManager.beginTransaction()
-            .replace(R.id.reminderNotesGridContainer, notesListFragment)
+            .replace(binding.reminderNotesGridContainer.id, notesDisplayFragment)
             .commit()
 
-        // Add a back stack listener to restore the main layout when the label fragment is popped.
+        val selectionBar = SelectionBar.newInstance(SelectionBarMode.DEFAULT)
+        childFragmentManager.beginTransaction()
+            .replace(binding.selectionBarContainerReminder.id, selectionBar)
+            .commit()
+    }
+
+    /** Restore main layout when label fragment is popped */
+    private fun setupBackStackListener() {
         childFragmentManager.addOnBackStackChangedListener {
             if (childFragmentManager.backStackEntryCount == 0) {
                 restoreMainLayout()
@@ -90,73 +98,62 @@ class RemindersFragment : Fragment(),
         }
     }
 
-
-
-    private fun updateSelectionBar(count: Int) {
-        val selectionBarFragment = childFragmentManager
-            .findFragmentById(R.id.selectionBarContainerReminder) as? SelectionBar
-
-        selectionBarFragment?.updateSelectedNoteIds(notesListFragment.selectedNotes.map { it.id })
-        selectionBarFragment?.setSelectedCount(count)
-    }
-
-    // NoteInteractionListener implementations
+    /** Callback from NotesListFragment when editing a note */
     override fun onNoteEdit(note: Note) {
         val addNoteFragment = AddNoteFragment.newInstance(note)
-        fullscreenContainer.visibility = View.VISIBLE
+        binding.fullscreenFragmentContainerReminder.visibility = View.VISIBLE
         childFragmentManager.beginTransaction()
-            .replace(R.id.fullscreenFragmentContainerReminder, addNoteFragment)
+            .replace(binding.fullscreenFragmentContainerReminder.id, addNoteFragment)
             .addToBackStack(null)
             .commit()
     }
 
-
+    /** Clears selection and resets layout visibility */
     override fun onSelectionCancelled() {
-        notesListFragment.selectedNotes.clear()
-        notesListFragment.adapter.notifyDataSetChanged()
-        searchBar.visibility = View.VISIBLE
-        selectionBar.visibility = View.GONE
+        selectionViewModel.clearSelection()
+        binding.searchBarContainerReminder.visibility = View.VISIBLE
+        binding.selectionBarContainerReminder.visibility = View.GONE
     }
 
+    /** Toggles the layout between grid and list */
     override fun toggleView(isGrid: Boolean) {
-        notesListFragment.toggleView(isGrid)
+        notesDisplayFragment.toggleView(isGrid)
     }
 
+    /** Handles search query update */
     override fun onSearchQueryChanged(query: String) {
         viewModel.setSearchQuery(query)
     }
 
-    // --- MainLayoutToggler implementation ---
-    // Hides the archive top bar and notes grid for full-screen mode
+    /** Hides main layout when a full-screen fragment is displayed */
     override fun hideMainLayout() {
-        view?.findViewById<View>(R.id.reminderTopBarContainer)?.visibility = View.GONE
-        view?.findViewById<View>(R.id.reminderNotesGridContainer)?.visibility = View.GONE
-        view?.findViewById<View>(R.id.fullscreenFragmentContainerReminder)?.apply {
-            visibility = View.VISIBLE
-        }
+        binding.reminderTopBarContainer.visibility = View.GONE
+        binding.reminderNotesGridContainer.visibility = View.GONE
+        binding.fullscreenFragmentContainerReminder.visibility = View.VISIBLE
     }
 
-    //Restores archive top bar and notes grid after full-screen mode
+    /** Restores main layout after full-screen fragment is popped */
     override fun restoreMainLayout() {
-        view?.findViewById<View>(R.id.fullscreenFragmentContainerReminder)?.visibility = View.GONE
-        view?.findViewById<View>(R.id.reminderTopBarContainer)?.visibility = View.VISIBLE
-        view?.findViewById<View>(R.id.reminderNotesGridContainer)?.visibility = View.VISIBLE
+        binding.fullscreenFragmentContainerReminder.visibility = View.GONE
+        binding.reminderTopBarContainer.visibility = View.VISIBLE
+        binding.reminderNotesGridContainer.visibility = View.VISIBLE
     }
 
-    // --- LabelFragmentHost implementation ---
-    // Returns the container where the label fragment should be loaded
+    /** Returns container ID for full-screen fragment transactions */
     override fun getLabelFragmentContainerId(): Int {
-        val container = view?.findViewById<View>(R.id.fullscreenFragmentContainerReminder)
-        return container?.id ?: R.id.fullscreenFragmentContainerReminder
+        return binding.fullscreenFragmentContainerReminder.id
     }
 
-    //Provides the FragmentManager for managing label fragments
+    /** Returns fragment manager for label operations */
     override fun getLabelFragmentManager() = childFragmentManager
 
-
-    // Implement the onLabelToggledForNotes callback:
+    /** Updates labels for selected notes */
     override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
-        // Archive-specific label toggle - usually similar to your NotesFragment:
         labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

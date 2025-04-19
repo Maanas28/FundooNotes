@@ -1,126 +1,75 @@
 package com.example.fundoonotes.UI.features.bin
 
-import android.annotation.SuppressLint
-import android.app.AlertDialog
+import SelectionViewModel
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.ViewModelProvider
-import com.example.fundoonotes.R
-import com.example.fundoonotes.UI.components.NotesListFragment
-import com.example.fundoonotes.UI.components.SearchBarFragment
+import androidx.fragment.app.activityViewModels
+import com.example.fundoonotes.UI.components.*
 import com.example.fundoonotes.UI.features.notes.viewmodel.NotesViewModel
-import com.example.fundoonotes.UI.util.BinActionHandler
-import com.example.fundoonotes.UI.util.NotesGridContext
-import com.example.fundoonotes.UI.util.SearchListener
-import com.example.fundoonotes.UI.util.SelectionBarListener
-import com.example.fundoonotes.UI.util.ViewToggleListener
+import com.example.fundoonotes.UI.util.*
+import com.example.fundoonotes.databinding.FragmentBinBinding
 
-class BinFragment : Fragment(),
-    SelectionBarListener,
-    ViewToggleListener,
-    BinActionHandler,
-    SearchListener {
+class BinFragment : Fragment(), SelectionBarListener, ViewToggleListener, SearchListener {
 
-    private lateinit var searchBar: View
-    private lateinit var selectionBar: View
-    private lateinit var notesListFragment: NotesListFragment
-    private lateinit var viewModel: NotesViewModel
+    private var _binding: FragmentBinBinding? = null
+    private val binding get() = _binding!!
 
+    private lateinit var notesDisplayFragment: NotesDisplayFragment
+    private lateinit var notesViewModel: NotesViewModel
+    private val selectionViewModel by activityViewModels<SelectionViewModel>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.fragment_bin, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentBinBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        searchBar = view.findViewById(R.id.searchBarContainerBin)
-        selectionBar = view.findViewById(R.id.selectionBarContainerBin)
-        viewModel = NotesViewModel(requireContext())
-
-
+        notesViewModel = NotesViewModel(requireContext())
 
         val searchBarFragment = SearchBarFragment.newInstance("Bin")
         childFragmentManager.beginTransaction()
-            .replace(R.id.searchBarContainerBin, searchBarFragment)
+            .replace(binding.searchBarContainerBin.id, searchBarFragment)
             .commit()
 
-        notesListFragment = NotesListFragment.newInstance(NotesGridContext.Bin).apply {
+        notesDisplayFragment = NotesDisplayFragment.newInstance(NotesGridContext.Bin).apply {
             selectionBarListener = this@BinFragment
-            onSelectionChanged = { count -> updateSelectionBar(count) }
             onSelectionModeEnabled = {
-                searchBar.visibility = View.GONE
-                selectionBar.visibility = View.VISIBLE
+                binding.searchBarContainerBin.visibility = View.GONE
+                binding.selectionBarContainerBin.visibility = View.VISIBLE
             }
             onSelectionModeDisabled = {
-                searchBar.visibility = View.VISIBLE
-                selectionBar.visibility = View.GONE
+                binding.searchBarContainerBin.visibility = View.VISIBLE
+                binding.selectionBarContainerBin.visibility = View.GONE
             }
         }
 
         childFragmentManager.beginTransaction()
-            .replace(R.id.binNotesGridContainer, notesListFragment)
+            .replace(binding.binNotesGridContainer.id, notesDisplayFragment)
             .commit()
 
-        // Inject Bin Selection Bar (custom icons)
-        val binSelectionBarFragment = SelectionBarBin()
+        val selectionBar = SelectionBar.newInstance(SelectionBarMode.BIN)
         childFragmentManager.beginTransaction()
-            .replace(R.id.selectionBarContainerBin, binSelectionBarFragment)
+            .replace(binding.selectionBarContainerBin.id, selectionBar)
             .commit()
-    }
-
-    private fun updateSelectionBar(count: Int) {
-        val selectionBarFragment = childFragmentManager
-            .findFragmentById(R.id.selectionBarContainerBin) as? SelectionBarBin
-
-        selectionBarFragment?.setSelectedCount(count)
     }
 
     override fun onSelectionCancelled() {
-        notesListFragment.selectedNotes.clear()
-        notesListFragment.adapter.notifyDataSetChanged()
-        searchBar.visibility = View.VISIBLE
-        selectionBar.visibility = View.GONE
+        selectionViewModel.clearSelection()
+        binding.searchBarContainerBin.visibility = View.VISIBLE
+        binding.selectionBarContainerBin.visibility = View.GONE
     }
 
     override fun toggleView(isGrid: Boolean) {
-        notesListFragment.toggleView(isGrid)
-    }
-
-    override fun onRestoreSelected() {
-        notesListFragment.selectedNotes.forEach { note ->
-            val restored = note.copy(inBin = false)
-            viewModel.restoreNote(restored)
-        }
-        notesListFragment.clearSelection()
-        notesListFragment.adapter.notifyDataSetChanged()
-        viewModel.fetchBinNotes()
-    }
-
-
-    override fun onDeleteForeverSelected() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Forever")
-            .setMessage("Are you sure you want to permanently delete the selected notes?")
-            .setPositiveButton("Delete") { _, _ ->
-                notesListFragment.selectedNotes.forEach { note ->
-                    viewModel.permanentlyDeleteNote(note)
-                }
-                notesListFragment.clearSelection()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-        notesListFragment.adapter.notifyDataSetChanged()
-        viewModel.fetchBinNotes()
+        notesDisplayFragment.toggleView(isGrid)
     }
 
     override fun onSearchQueryChanged(query: String) {
-        viewModel.setSearchQuery(query)
+        notesViewModel.setSearchQuery(query)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

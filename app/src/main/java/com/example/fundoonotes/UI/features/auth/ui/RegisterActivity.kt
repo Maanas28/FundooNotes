@@ -59,9 +59,22 @@ class RegisterActivity : AppCompatActivity() {
             Identity.getSignInClient(this)
                 .getSignInCredentialFromIntent(result.data)
                 .googleIdToken?.let { idToken ->
-                    viewModel.loginWithGoogle(idToken)
+                    val firstName = findViewById<EditText>(R.id.editTextFirstName).text.toString()
+                    val lastName = findViewById<EditText>(R.id.editTextLastName).text.toString()
+                    val uploadedUrl = uploadedImageUrl // set from Cloudinary after image upload
+
+                    val userInfo = com.example.fundoonotes.UI.data.model.User(
+                        firstName = firstName,
+                        lastName = lastName,
+                        email = "", // FirebaseAuth will overwrite this
+                        profileImage = uploadedUrl
+                    )
+
+                    viewModel.registerWithGoogle(idToken, userInfo)
+                    findViewById<ProgressBar>(R.id.progressBar).visibility = View.VISIBLE
                 } ?: toast("Google Sign-In failed: ID Token null")
         } else {
+            Log.d("RegisterActivity", "Google Sign-In failed: ${result} with code ${result.resultCode}")
             toast("Google Sign-In cancelled")
         }
     }

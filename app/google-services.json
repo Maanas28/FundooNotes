@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "161253127806-n4ufq7mtkaq48mud3uul2oh6i4cs33p1.apps.googleusercontent.com",
+          "client_id": "161253127806-voo25ch1g6e6sbpl694df3ntd1ol0dr7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fundoonotes",
+            "certificate_hash": "fffd0b9f97a2e48c573743bc824ca952a317b785"
+          }
+        },
+        {
+          "client_id": "161253127806-rr5dt6cden54ka8k9vic7srphg2boq6l.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
