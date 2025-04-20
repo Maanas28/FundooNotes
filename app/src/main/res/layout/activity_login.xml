@@ -9,7 +9,7 @@
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Fundoo"
+        android:text="@string/fundoo"
         android:textColor="#F6DF04"
         android:textSize="55sp"
         android:layout_marginTop="200dp"

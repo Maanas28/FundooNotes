@@ -28,4 +28,6 @@
     <string name="or_sign_in_with">Or Sign In With</string>
     <string name="default_web_client_id">161253127806-n4ufq7mtkaq48mud3uul2oh6i4cs33p1.apps.googleusercontent.com</string>
     <string name="reminder_text">Reminder </string>
+    <string name="fundoo">Fundoo</string>
+    <string name="confirm_password">Confirm Password</string>
 </resources>
