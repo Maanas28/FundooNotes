@@ -44,8 +44,7 @@ class MainActivity : AppCompatActivity() {
         // Only proceed with UI setup if user is authenticated
         setContentView(R.layout.activity_main)
 
-        // Initialize ViewModels
-        initializeViewModels()
+        labelsViewModel.fetchLabels()
 
         // Initialize UI components
         initializeUIComponents()
@@ -69,12 +68,6 @@ class MainActivity : AppCompatActivity() {
             finish()
             return
         }
-    }
-
-    private fun initializeViewModels() {
-
-        // Fetch data after initializing viewmodels
-        labelsViewModel.fetchLabels()
     }
 
     private fun initializeUIComponents() {
