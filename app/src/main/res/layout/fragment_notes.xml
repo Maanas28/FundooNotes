@@ -37,7 +37,7 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/searchBar"
-                android:name="com.example.fundoonotes.UI.features.notes.ui.DashboardScreenSearchBar"
+                android:name="com.example.fundoonotes.features.notes.ui.DashboardScreenSearchBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toTopOf="parent"
@@ -46,7 +46,7 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/selectionBarContainer"
-                android:name="com.example.fundoonotes.UI.components.SelectionBar"
+                android:name="com.example.fundoonotes.common.components.SelectionBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone" />

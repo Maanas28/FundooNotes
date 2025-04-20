@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context=".UI.features.labels.ApplyLabelToNoteFragment">
+    tools:context=".features.labels.ui.ApplyLabelToNoteFragment">
 
     <!-- Back Arrow -->
     <ImageButton

@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".UI.features.archive.ArchiveFragment">
+    tools:context=".features.archive.ArchiveFragment">
 
     <!-- Main archive layout -->
     <LinearLayout
@@ -20,14 +20,14 @@
             <!-- Search bar -->
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/searchBarContainerArchive"
-                android:name="com.example.fundoonotes.UI.components.SearchBarFragment"
+                android:name="com.example.fundoonotes.common.components.SearchBarFragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
             <!-- Selection bar (initially hidden) -->
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/selectionBarContainerArchive"
-                android:name="com.example.fundoonotes.UI.components.SelectionBar"
+                android:name="com.example.fundoonotes.common.components.SelectionBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone" />

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".UI.features.bin.BinFragment">
+    tools:context=".features.bin.BinFragment">
 
     <FrameLayout
         android:id="@+id/fullscreenFragmentContainerBin"
@@ -20,14 +20,14 @@
         <!-- Search bar -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/searchBarContainerBin"
-            android:name="com.example.fundoonotes.UI.components.SearchBarFragment"
+            android:name="com.example.fundoonotes.common.components.SearchBarFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <!-- Selection bar (initially hidden) -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/selectionBarContainerBin"
-            android:name="com.example.fundoonotes.UI.components.SelectionBar"
+            android:name="com.example.fundoonotes.common.components.SelectionBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone" />

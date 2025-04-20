@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".UI.features.reminders.RemindersFragment">
+    tools:context=".features.reminders.ui.RemindersFragment">
 
     <FrameLayout
         android:id="@+id/fullscreenFragmentContainerReminder"
@@ -21,14 +21,14 @@
         <!-- Search bar -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/searchBarContainerReminder"
-            android:name="com.example.fundoonotes.UI.components.SearchBarFragment"
+            android:name="com.example.fundoonotes.common.components.SearchBarFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <!-- Selection bar (initially hidden) -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/selectionBarContainerReminder"
-            android:name="com.example.fundoonotes.UI.components.SelectionBar"
+            android:name="com.example.fundoonotes.common.components.SelectionBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone" />
