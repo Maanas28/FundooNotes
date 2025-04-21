@@ -1,14 +1,10 @@
 package com.example.fundoonotes.features.reminders.util
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import com.example.fundoonotes.R
+import com.example.fundoonotes.common.util.managers.NotificationManagerUtil
 
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -22,7 +18,7 @@ class ReminderReceiver : BroadcastReceiver() {
         Log.d("ReminderReceiver", "Reminder received for note: $noteTitle")
 
         if (action == "REFRESH_UI_AND_NOTIFY") {
-            showNotification(context, noteTitle, noteContent)
+            NotificationManagerUtil.showNotification(context, noteTitle, noteContent)
 
             // Broadcast to UI with note ID
             val noteId = intent.getStringExtra("noteId")
@@ -30,33 +26,6 @@ class ReminderReceiver : BroadcastReceiver() {
                 putExtra("noteId", noteId)
             }
             context.sendBroadcast(uiRefreshIntent)
-        }
-    }
-
-    companion object{
-        fun showNotification(context: Context, title: String, content: String) {
-            val notificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            val channelId = "reminder_channel"
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    channelId,
-                    "Reminder Notifications",
-                    NotificationManager.IMPORTANCE_HIGH
-                )
-                notificationManager.createNotificationChannel(channel)
-            }
-
-            val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(title)
-                .setContentText(content)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-
-            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
         }
     }
 }

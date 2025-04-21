@@ -44,6 +44,7 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
     private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
 
     private var notesContext: NotesGridContext? = null
+    private var animateOnLoad: Boolean = false
 
     var selectionBarListener: SelectionBarListener? = null
     var editNoteHandler: EditNoteHandler? = null
@@ -53,11 +54,13 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
 
     companion object {
         private const val ARG_CONTEXT = "notes_context"
+        private const val ARG_ANIMATE_ON_LOAD = "animate_on_load"
 
-        fun newInstance(context: NotesGridContext): NotesDisplayFragment {
+        fun newInstance(context: NotesGridContext, animateOnLoad: Boolean = false): NotesDisplayFragment {
             return NotesDisplayFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(ARG_CONTEXT, context)
+                    putBoolean(ARG_ANIMATE_ON_LOAD, animateOnLoad)
                 }
             }
         }
@@ -66,6 +69,7 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         notesContext = BundleCompat.getParcelable(arguments, ARG_CONTEXT, NotesGridContext::class.java)
+        animateOnLoad = arguments?.getBoolean(ARG_ANIMATE_ON_LOAD) ?: false
         permissionManager = PermissionManager(requireContext())
     }
 
@@ -148,7 +152,10 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
                     viewModel.getFilteredNotesFlow(context).collectLatest { notes ->
                         val filtered = viewModel.filterNotesForContext(notes, context)
                         adapter.updateList(filtered)
-                        binding.notesRecyclerView.scheduleLayoutAnimation()
+
+                        if (animateOnLoad) {
+                            binding.notesRecyclerView.scheduleLayoutAnimation()
+                        }
 
                         val selectedIds = selectionSharedViewModel.getSelection()
                         adapter.updateSelectedNotes(selectedIds.toSet())

@@ -93,7 +93,10 @@ class DashboardFragment : Fragment(),
 
     /** Initializes the notes grid and listeners */
     private fun setupNotesGrid() {
-        notesDisplayFragment = NotesDisplayFragment.Companion.newInstance(NotesGridContext.Notes).apply {
+        notesDisplayFragment = NotesDisplayFragment.newInstance(
+            NotesGridContext.Notes,
+            animateOnLoad = true
+        ).apply {
             selectionBarListener = this@DashboardFragment
             setNoteInteractionListener(this@DashboardFragment)
             onSelectionModeEnabled = {

@@ -75,7 +75,7 @@
         android:gravity="top"
         android:inputType="textMultiLine"
         android:layout_marginTop="12dp"
-        android:layout_below="@id/reminderBadge"/>
+        android:layout_below="@id/labelPillsContainer"/>
 
     <!-- Reminder Pill -->
     <TextView
@@ -92,6 +92,17 @@
         android:paddingRight="12dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
+        android:visibility="gone" />
+
+    <!-- Label Pills Container -->
+    <LinearLayout
+        android:id="@+id/labelPillsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/reminderBadge"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
         android:visibility="gone" />
 
     <!-- Bottom Action Bar -->

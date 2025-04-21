@@ -9,10 +9,13 @@ import com.example.fundoonotes.common.database.repository.databridge.DataBridgeN
 import com.example.fundoonotes.common.database.repository.interfaces.NotesRepository
 import com.example.fundoonotes.common.util.NotesGridContext
 import com.example.fundoonotes.features.reminders.util.ReminderScheduler
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -32,38 +35,29 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState
 
-    private fun filterNotesByQuery(notes: List<Note>, query: String): List<Note> {
-        return if (query.isBlank()) notes
-        else notes.filter {
-            it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true)
-        }
-    }
 
     fun getFilteredNotesFlow(context: NotesGridContext): StateFlow<List<Note>> {
-        return when (context) {
-            is NotesGridContext.Notes -> combine(notesFlow, searchQuery, ::filterNotesByQuery)
-            is NotesGridContext.Archive -> combine(
-                archivedNotesFlow,
-                searchQuery,
-                ::filterNotesByQuery
-            )
-            is NotesGridContext.Bin -> combine(binNotes, searchQuery, ::filterNotesByQuery)
-            is NotesGridContext.Reminder -> combine(
-                reminderNotes,
-                searchQuery,
-                ::filterNotesByQuery
-            )
-            is NotesGridContext.Label -> combine(notesFlow, searchQuery) { notes, query ->
-                notes.filter {
-                    it.labels.contains(context.labelName) &&
-                            (query.isBlank() || it.title.contains(
-                                query,
-                                true
-                            ) || it.content.contains(query, true))
+        val baseFlow = when (context) {
+            is NotesGridContext.Notes -> notesFlow
+            is NotesGridContext.Archive -> archivedNotesFlow
+            is NotesGridContext.Bin -> binNotes
+            is NotesGridContext.Reminder -> reminderNotes
+            is NotesGridContext.Label -> notesFlow
+        }
+
+        return searchQuery
+            .debounce(300)
+            .combine(baseFlow) { query, notes ->
+                filterNotesForContext(notes, context).filter {
+                    query.isBlank() ||
+                            it.title.contains(query, true) ||
+                            it.content.contains(query, true)
                 }
             }
-        }.stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(5000), emptyList())
+            .distinctUntilChanged()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
+
 
     fun setSearchQuery(query: String) {
         searchQuery.value = query

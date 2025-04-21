@@ -5,9 +5,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import com.example.fundoonotes.common.data.model.Note
+import com.example.fundoonotes.common.util.managers.PermissionManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,9 +16,10 @@ class ReminderScheduler(private val context: Context) {
 
     fun scheduleReminder(note: Note, triggerTimeMillis: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val permissionManager = PermissionManager(context)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-            requestExactAlarmPermission(context)
+            permissionManager.requestExactAlarmPermission()
             return
         }
 
@@ -44,23 +45,11 @@ class ReminderScheduler(private val context: Context) {
             )
             val formatted = SimpleDateFormat("dd MMM yyyy, hh:mm:ss a", Locale.getDefault())
             Log.d("ReminderScheduler", "Reminder scheduled at: ${formatted.format(
-                Date(
-                    triggerTimeMillis
-                )
+                Date(triggerTimeMillis)
             )} for note: ${note.title}")
 
         } catch (e: SecurityException) {
             Log.e("ReminderScheduler", "SecurityException: ${e.message}")
         }
     }
-
-    private fun requestExactAlarmPermission(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        }
-    }
-
 }

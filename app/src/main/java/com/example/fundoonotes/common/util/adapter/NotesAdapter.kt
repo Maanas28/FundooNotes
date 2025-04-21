@@ -47,16 +47,16 @@ class NotesAdapter(
     }
 
     fun refreshSingleExpiredReminder(noteId: String) {
-        val now = System.currentTimeMillis()
         val index = notes.indexOfFirst { it.id == noteId }
 
         if (index != -1) {
-            val note = notes[index]
-            if (note.hasReminder && note.reminderTime != null && note.reminderTime < now) {
-                notifyItemChanged(index)
-            }
+            val original = notes[index]
+            val updated = original.copy(reminderTime = System.currentTimeMillis() - 1)
+            notes = notes.toMutableList().apply { set(index, updated) }
+            notifyItemChanged(index)
         }
     }
+
 
     fun getCurrentNotes(): List<Note> = notes
 }
