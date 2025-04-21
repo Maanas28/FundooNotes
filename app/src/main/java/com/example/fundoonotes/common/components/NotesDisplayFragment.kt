@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.BundleCompat
@@ -75,13 +76,13 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         setupSwipeToRefresh()
         observeNotes()
         observeSelectionChanges()
         registerRefreshReceiver()
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -121,6 +122,9 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
 
 
         binding.notesRecyclerView.adapter = adapter
+
+        binding.notesRecyclerView.layoutAnimation =
+            AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_animation_fall_down)
     }
 
     private fun setupSwipeToRefresh() {
@@ -144,6 +148,7 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
                     viewModel.getFilteredNotesFlow(context).collectLatest { notes ->
                         val filtered = viewModel.filterNotesForContext(notes, context)
                         adapter.updateList(filtered)
+                        binding.notesRecyclerView.scheduleLayoutAnimation()
 
                         val selectedIds = selectionSharedViewModel.getSelection()
                         adapter.updateSelectedNotes(selectedIds.toSet())
