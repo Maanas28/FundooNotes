@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -26,10 +27,11 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.getValue
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: AuthViewModel
+    private val viewModel by viewModels<AuthViewModel>()
     private lateinit var oneTapClient: SignInClient
     private lateinit var signInRequest: BeginSignInRequest
 
@@ -89,7 +91,6 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_register)
         supportActionBar?.hide()
 
-        viewModel = AuthViewModel(this)
         setupGoogleOneTap()
         setupListeners()
         setupObservers()

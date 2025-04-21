@@ -1,5 +1,6 @@
 package com.example.fundoonotes
 
+import AuthViewModel
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navView: NavigationView
     private lateinit var toggle: ActionBarDrawerToggle
     private val labelsViewModel by viewModels<LabelsViewModel>()
+    private val authViewModel by viewModels<AuthViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,12 +64,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAuthenticationState() {
-        val auth = FirebaseAuth.getInstance()
-        if (auth.currentUser == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
+
+        authViewModel.getLoggedInUser(
+            onSuccess = {
+                // User is authenticated, do nothing or continue
+            },
+            onFailure = {
+                // User is NOT authenticated, redirect to login
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
+        )
     }
 
     private fun initializeUIComponents() {

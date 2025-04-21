@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.fundoonotes.MainActivity
 import com.example.fundoonotes.R
@@ -18,12 +19,14 @@ import com.example.fundoonotes.features.auth.util.AuthUtil
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
+import kotlin.getValue
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: AuthViewModel
+    private val viewModel by viewModels<AuthViewModel>()
     private lateinit var oneTapClient: SignInClient
     private lateinit var signInRequest: BeginSignInRequest
+
 
     private val oneTapLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -41,7 +44,6 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        viewModel = AuthViewModel(this)
 
         setupGoogleOneTap()
         setupObservers()

@@ -20,14 +20,11 @@ class SelectLabelViewHolder(
 
     fun bind(label: Label, isChecked: Boolean) {
         labelName.text = label.name
-
-        Log.d("SelectLabelViewHolder", "Binding label: ${label.name}, shouldCheck=$isChecked")
-
         checkbox.setOnCheckedChangeListener(null)
         checkbox.isChecked = isChecked
         checkbox.setOnCheckedChangeListener { _, newChecked ->
-            Log.d("SelectLabelViewHolder", "Checkbox changed: ${label.name} -> $newChecked")
             onSelect?.invoke(label, newChecked)
         }
     }
+
 }

@@ -9,7 +9,7 @@ import com.example.fundoonotes.common.data.model.Label
 
 class EditLabelAdapter(
     private val mode: LabelAdapterMode,
-    var preSelectedLabels: Set<String> = emptySet(),
+    private var preSelectedLabelIds: Set<String> = emptySet(),
     private val onDelete: ((Label) -> Unit)? = null,
     private val onRename: ((Label, String) -> Unit)? = null,
     private val onSelect: ((Label, Boolean) -> Unit)? = null
@@ -38,7 +38,7 @@ class EditLabelAdapter(
         when (holder) {
             is EditLabelViewHolder -> holder.bind(label, position == editPosition)
             is SelectLabelViewHolder -> {
-                val isChecked = preSelectedLabels.contains(label.id)
+                val isChecked = preSelectedLabelIds.contains(label.id)
                 holder.bind(label, isChecked)
             }
         }
@@ -51,7 +51,7 @@ class EditLabelAdapter(
     }
 
     fun updatePreSelectedLabels(newLabels: Set<String>) {
-        preSelectedLabels = newLabels
+        preSelectedLabelIds = newLabels
         notifyDataSetChanged()
     }
 

@@ -20,6 +20,8 @@ import com.example.fundoonotes.features.labels.util.EditLabelAdapter
 import com.example.fundoonotes.features.labels.util.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ApplyLabelToNoteFragment : Fragment() {
@@ -60,54 +62,53 @@ class ApplyLabelToNoteFragment : Fragment() {
         binding.labelRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         labelsViewModel.fetchLabels()
 
+        binding.backArrow.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    labelsViewModel.labelList.collectLatest { labels ->
-                        Log.d("ApplyLabelFragment", "Labels received: ${labels.size}")
-                        adapter?.submitList(labels)
-                    }
-                }
-
-                launch {
-                    selectionSharedViewModel.selectedNotes.collectLatest { selectedNotes ->
-                        Log.d("ApplyLabelFragment", "Selected Notes: ${selectedNotes.map { it.id }}")
-
-                        val labelSets = selectedNotes.map { it.labels.toSet() }
-                        val commonLabels = if (labelSets.isNotEmpty()) {
+                combine(
+                    labelsViewModel.labelList,
+                    selectionSharedViewModel.selectedNotes
+                ) { labels, selectedNotes -> labels to selectedNotes }
+                    .collectLatest { (labels, selectedNotes) ->
+                        val labelSets = selectedNotes.map { note ->
+                            note.labels.mapNotNull { name ->
+                                labels.find { it.name == name }?.id
+                            }.toSet()
+                        }
+                        val commonLabelIds = if (labelSets.isNotEmpty()) {
                             labelSets.reduce { acc, set -> acc.intersect(set) }
                         } else emptySet()
-
-                        Log.d("ApplyLabelFragment", "Computed common labels: $commonLabels")
 
                         if (adapter == null) {
                             adapter = EditLabelAdapter(
                                 mode = LabelAdapterMode.SELECT,
-                                preSelectedLabels = commonLabels,
+                                preSelectedLabelIds = commonLabelIds,
                                 onSelect = { label, isChecked ->
                                     if (isChecked) selectedLabels.add(label)
                                     else selectedLabels.remove(label)
-
                                     labelSelectionListener?.onLabelListUpdated(selectedLabels.toList())
                                     labelHandler?.onLabelToggledForNotes(
                                         label,
                                         isChecked,
-                                        selectedNotes.map { it.id })
+                                        selectedNotes.map { it.id }
+                                    )
                                 }
                             )
                             binding.labelRecyclerView.adapter = adapter
+                            adapter?.submitList(labels.toList())
                         } else {
-                            adapter?.updatePreSelectedLabels(commonLabels)
+                            adapter?.updatePreSelectedLabels(commonLabelIds)
+                            adapter?.submitList(labels.toList())
                         }
                     }
-                }
             }
         }
-
-        binding.backArrow.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()
