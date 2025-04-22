@@ -83,16 +83,9 @@ class DataBridgeAuthRepository(
 
     fun logoutAndClearData(onComplete: () -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
-            // Clear all Room tables
             sqliteAccount.clearDatabase()
-
-            // Sign out from Firebase
             signOut()
-
-            // Notify ViewModel/UI
-            withContext(Dispatchers.Main) {
-                onComplete()
-            }
+            withContext(Dispatchers.Main) { onComplete() }
         }
     }
 

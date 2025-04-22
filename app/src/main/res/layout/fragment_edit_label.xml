@@ -13,7 +13,6 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:contentDescription="closeButton"
             android:src="@drawable/close"
             android:scaleType="centerInside"
             android:backgroundTint="@color/white"/>
@@ -22,7 +21,7 @@
             android:id="@+id/textViewLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edit labels"
+            android:text="@string/edit_labels"
             android:textAppearance="?attr/textAppearanceHeadline6"
             android:layout_marginStart="110dp"/>
 
@@ -42,15 +41,14 @@
             android:layout_height="40dp"
             android:src="@drawable/add"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/white"
-            android:contentDescription="Add Label" />
+            android:backgroundTint="@color/white" />
 
         <TextView
             android:id="@+id/createNewLabel_et"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Create new label"
+            android:text="@string/create_new_label"
             android:textSize="22sp" />
     </LinearLayout>
 
@@ -69,8 +67,7 @@
             android:layout_height="40dp"
             android:src="@drawable/close"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/white"
-            android:contentDescription="Cancel Label" />
+            android:backgroundTint="@color/white" />
 
         <EditText
             android:id="@+id/labelInputField"
@@ -78,7 +75,6 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:autofillHints=""
-            android:hint="Create new label"
             android:inputType=""
             android:textSize="18sp" />
 
@@ -88,8 +84,7 @@
             android:layout_height="40dp"
             android:src="@drawable/tick"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/white"
-            android:contentDescription="Confirm Label" />
+            android:backgroundTint="@color/white" />
     </LinearLayout>
 
     <!-- List of labels -->

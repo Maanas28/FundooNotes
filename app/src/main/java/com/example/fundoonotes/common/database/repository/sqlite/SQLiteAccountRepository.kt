@@ -47,10 +47,8 @@ class SQLiteAccountRepository(context: android.content.Context) :
         return accountDetails.value?.userId
     }
 
-    fun clearDatabase() {
-        CoroutineScope(Dispatchers.IO).launch {
-            clearUserData()
-        }
+    suspend fun clearDatabase() {
+        clearUserData()
     }
 
     fun clearUserData() {

@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.UUID
 
 class FirebaseLabelsRepository : LabelsRepository {
@@ -157,7 +158,7 @@ class FirebaseLabelsRepository : LabelsRepository {
             .addOnFailureListener { onFailure(it) }
     }
 
-    fun fetchLabelsOnce(userId: String, onResult: (List<Label>) -> Unit, onError: (Exception) -> Unit) {
+    suspend fun getAllLabelsForUser(userId: String): List<Label> = suspendCancellableCoroutine { cont ->
         firestore.collection("labels")
             .whereEqualTo("userId", userId)
             .get()
@@ -165,10 +166,11 @@ class FirebaseLabelsRepository : LabelsRepository {
                 val labels = snapshot.documents.mapNotNull {
                     it.toObject(Label::class.java)?.copy(id = it.id)
                 }
-                onResult(labels)
+                cont.resume(labels, null)
             }
-            .addOnFailureListener { onError(it) }
+            .addOnFailureListener { cont.resume(emptyList(), null) }
     }
+
 
     fun getLabelByName(name: String, userId: String, onSuccess: (Label) -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("labels")

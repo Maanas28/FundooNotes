@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@android:color/white"
     android:orientation="horizontal"
-    android:paddingLeft="5dp"
+    android:paddingStart="5dp"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
     android:gravity="center_vertical">
@@ -17,15 +17,14 @@
         android:layout_height="30dp"
         android:scaleType="centerInside"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/back_icon"
-        android:contentDescription="Close selection" />
+        android:src="@drawable/back_icon"/>
 
     <!-- Selected count -->
     <TextView
         android:id="@+id/tvSelectedCountBin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
+        android:text=""
         android:textSize="25sp"
         android:textStyle="bold"
         android:layout_marginStart="130dp"
@@ -39,8 +38,7 @@
         android:layout_marginEnd="26dp"
         android:scaleType="centerInside"
         android:src="@drawable/restore"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Restore" />
+        android:background="?attr/selectableItemBackgroundBorderless" />
 
     <ImageButton
         android:id="@+id/btnMoreSelectedSelectionBarBin"
@@ -48,7 +46,6 @@
         android:layout_height="30dp"
         app:tint="#1064B2"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="More options"
         android:scaleType="centerInside"
         android:src="@drawable/more_vert" />
 </LinearLayout>

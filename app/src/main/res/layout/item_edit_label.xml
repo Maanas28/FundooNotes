@@ -18,15 +18,14 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/label"
-            android:scaleType="centerInside"
-            android:contentDescription="Label Icon" />
+            android:scaleType="centerInside" />
 
         <TextView
             android:id="@+id/labelNameTextView"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Label Name"
+            android:text="@string/label_name"
             android:textSize="20sp"
             android:layout_marginStart="10dp" />
 
@@ -36,8 +35,7 @@
             android:layout_height="50dp"
             android:src="@drawable/edit"
             android:backgroundTint="@color/white"
-            android:scaleType="centerInside"
-            android:contentDescription="Edit Label" />
+            android:scaleType="centerInside"/>
     </LinearLayout>
 
     <!-- Edit Mode -->
@@ -55,15 +53,14 @@
             android:layout_height="50dp"
             android:src="@drawable/bin"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/white"
-            android:contentDescription="Delete Label" />
+            android:backgroundTint="@color/white" />
 
         <EditText
             android:id="@+id/editLabelName"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:hint="Edit label name"
+            android:hint="@string/edit_label_name"
             android:inputType="text"
             android:textSize="20sp"
             android:layout_marginStart="8dp"
@@ -75,7 +72,6 @@
             android:layout_height="50dp"
             android:src="@drawable/tick"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/white"
-            android:contentDescription="Confirm Edit" />
+            android:backgroundTint="@color/white" />
     </LinearLayout>
 </LinearLayout>

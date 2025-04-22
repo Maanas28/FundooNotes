@@ -51,34 +51,16 @@ abstract class DataBridge<T>(
 
     fun syncOfflineChanges() = syncManager.syncOfflineChanges()
 
-    fun syncOnlineChanges(
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
-    ) {
-        if (!NetworkUtils.isOnline(context)) {
-            Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show()
-            onFailure(Exception("No internet"))
-            return
-        }
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                firebaseAuth.fetchUserDetailsOnce(
-                    onSuccess = { user ->
-                        syncManager.syncOnlineChanges(user, onSuccess, onFailure)
-                    },
-                    onFailure = { ex ->
-                        Handler(Looper.getMainLooper()).post {
-                            Toast.makeText(context, "User not found", Toast.LENGTH_SHORT).show()
-                        }
-                        onFailure(ex)
-                    }
-                )
-            } catch (e: Exception) {
-                onFailure(e)
-            }
+    suspend fun syncOnlineChangesSafe(): Result<Unit> {
+        return try {
+            val userId = sqliteAccount.getUserId() ?: return Result.failure(Exception("User ID not found"))
+            syncManager.syncOnlineChanges(userId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
+
 
 
     protected fun trackOfflineOperation(type: String, entityType: String, entityId: String, entity: Any) {

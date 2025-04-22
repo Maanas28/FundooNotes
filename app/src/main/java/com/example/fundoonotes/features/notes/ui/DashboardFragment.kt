@@ -34,7 +34,7 @@ import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentNotesBinding
 import com.example.fundoonotes.features.addnote.AddNoteFragment
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
-import com.example.fundoonotes.features.notes.util.DashboardBottomNavHandler
+import androidx.core.view.isNotEmpty
 
 class DashboardFragment : Fragment(),
     ViewToggleListener,
@@ -71,7 +71,6 @@ class DashboardFragment : Fragment(),
             .commit()
 
         setupNotesGrid()
-        setupBottomNav()
         setupBackPressHandling()
         setupFab()
         setupBackStackListener()
@@ -112,21 +111,6 @@ class DashboardFragment : Fragment(),
         childFragmentManager.beginTransaction()
             .replace(binding.container.id, notesDisplayFragment)
             .commit()
-    }
-
-    /** Handles bottom navigation for different note types */
-    private fun setupBottomNav() {
-        binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            val fragment = DashboardBottomNavHandler.getFragmentForItem(item.itemId)
-            fragment?.let {
-                hideMainLayout()
-                parentFragmentManager.beginTransaction()
-                    .replace(binding.fullScreenContainer.id, it)
-                    .addToBackStack(null)
-                    .commit()
-            }
-            true
-        }
     }
 
     /** Restores layout when full-screen fragment is popped */
@@ -216,19 +200,15 @@ class DashboardFragment : Fragment(),
         binding.fullScreenContainer.visibility = View.VISIBLE
         binding.contentLayout.visibility = View.GONE
         binding.fab.visibility = View.GONE
-        binding.bottomTabNavigation.visibility = View.GONE
-        binding.bottomNavigationView.visibility = View.GONE
     }
 
     override fun restoreMainLayout() {
         binding.fullScreenContainer.visibility = View.GONE
         binding.contentLayout.visibility = View.VISIBLE
         binding.fab.visibility = View.VISIBLE
-        binding.bottomTabNavigation.visibility = View.VISIBLE
-        binding.bottomNavigationView.visibility = View.VISIBLE
 
         // Clear previous views to avoid memory leaks
-        if (binding.fullScreenContainer.childCount > 0) {
+        if (binding.fullScreenContainer.isNotEmpty()) {
             binding.fullScreenContainer.removeAllViews()
         }
     }

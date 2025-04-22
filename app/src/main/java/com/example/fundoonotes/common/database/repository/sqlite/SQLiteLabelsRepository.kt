@@ -1,6 +1,7 @@
 package com.example.fundoonotes.common.database.repository.sqlite
 
 import android.content.Context
+import android.util.Log
 import com.example.fundoonotes.common.data.mappers.toDomain
 import com.example.fundoonotes.common.data.mappers.toEntity
 import com.example.fundoonotes.common.data.model.Label
@@ -112,10 +113,13 @@ class SQLiteLabelsRepository(
     fun replaceAllLabels(labels: List<Label>, onComplete: () -> Unit) {
         scope.launch {
             val userId = sqliteAccount.getUserId()?: return@launch
+            Log.d("SQLiteLabelsRepository", "Replacing labels in Room DB for userId: $userId. Count: ${labels.size}")
             labelDao.clearLabelsForUser(userId)
             labels.forEach {
+                Log.d("SQLiteLabelsRepository", "Inserting label into Room: ${it.id}, name: ${it.name}")
                 labelDao.insertLabel(it.toEntity())
             }
+            Log.d("SQLiteLabelsRepository", "All labels inserted for userId: $userId")
             onComplete()
         }
     }

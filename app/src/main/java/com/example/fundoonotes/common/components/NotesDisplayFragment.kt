@@ -27,6 +27,7 @@ import com.example.fundoonotes.common.util.interfaces.EditNoteHandler
 import com.example.fundoonotes.common.util.interfaces.SelectionBarListener
 import com.example.fundoonotes.common.util.managers.PermissionManager
 import com.example.fundoonotes.common.viewmodel.NotesViewModel
+import com.example.fundoonotes.common.viewmodel.NotesViewModel.SyncState
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentNotesListBinding
 import kotlinx.coroutines.flow.collectLatest
@@ -84,9 +85,9 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
         setupSwipeToRefresh()
         observeNotes()
         observeSelectionChanges()
+        observeSyncState()
         registerRefreshReceiver()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -124,9 +125,7 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
             }
         )
 
-
         binding.notesRecyclerView.adapter = adapter
-
         binding.notesRecyclerView.layoutAnimation =
             AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_animation_fall_down)
     }
@@ -182,6 +181,35 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
         }
     }
 
+    private fun observeSyncState() {
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.syncState.collectLatest { state ->
+                    when (state) {
+                        is SyncState.Syncing -> {
+                            binding.blockerView.visibility = View.VISIBLE
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.swipeRefreshLayout.isEnabled = false
+                        }
+                        is SyncState.Success, is SyncState.Idle -> {
+                            binding.blockerView.visibility = View.GONE
+                            binding.progressBar.visibility = View.GONE
+                            binding.swipeRefreshLayout.isEnabled = true
+                            binding.swipeRefreshLayout.isRefreshing = false
+                        }
+                        is SyncState.Failed -> {
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                            binding.blockerView.visibility = View.GONE
+                            binding.progressBar.visibility = View.GONE
+                            binding.swipeRefreshLayout.isEnabled = true
+                            binding.swipeRefreshLayout.isRefreshing = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun registerRefreshReceiver() {
         refreshReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -197,14 +225,6 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
     private fun performReverseSync() {
         if (viewModel.checkInternetConnection()) {
             viewModel.reverseSyncNotes()
-
-            binding.swipeRefreshLayout.postDelayed({
-                if (binding.swipeRefreshLayout.isRefreshing) {
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    Toast.makeText(requireContext(), "Sync completed", Toast.LENGTH_SHORT).show()
-                }
-            }, 3000)
-
         } else {
             binding.swipeRefreshLayout.isRefreshing = false
 

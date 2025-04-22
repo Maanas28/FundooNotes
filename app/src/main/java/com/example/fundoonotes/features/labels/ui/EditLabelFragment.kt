@@ -16,6 +16,7 @@ import com.example.fundoonotes.databinding.FragmentEditLabelBinding
 import com.example.fundoonotes.features.labels.util.EditLabelAdapter
 import com.example.fundoonotes.features.labels.util.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class EditLabelFragment : Fragment() {
@@ -73,14 +74,19 @@ class EditLabelFragment : Fragment() {
                 labelsViewModel.addLabel(
                     name = labelName,
                     onSuccess = {
-                        binding.labelInputField.setText("")
-                        binding.editableAddRow.visibility = View.GONE
-                        binding.staticAddRow.visibility = View.VISIBLE
-                        adapter.resetEditState()
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            binding.labelInputField.setText("")
+                            binding.editableAddRow.visibility = View.GONE
+                            binding.staticAddRow.visibility = View.VISIBLE
+                            adapter.resetEditState()
+                        }
                     },
                     onFailure = { exception ->
-                        Toast.makeText(requireContext(), exception.message ?: "Error adding label", Toast.LENGTH_SHORT).show()
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            Toast.makeText(requireContext(), exception.message ?: "Error adding label", Toast.LENGTH_SHORT).show()
+                        }
                     }
+
                 )
             } else {
                 Toast.makeText(requireContext(), "Label name cannot be empty", Toast.LENGTH_SHORT).show()

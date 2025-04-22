@@ -101,23 +101,26 @@ class LoginActivity : AppCompatActivity() {
                     onSuccess = { firebaseUser ->
                         Log.d("LoginActivity", "Firebase user: $firebaseUser")
 
-                        viewModel.saveUserLocally(firebaseUser)
+                        viewModel.saveUserLocally(firebaseUser) {
+                            // Navigate only after user is saved locally
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
                     },
                     onFailure = {
                         Log.e("LoginActivity", "Failed to fetch user from Firestore", it)
                         showToast("Failed to fetch user details")
-
                     }
                 )
-
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
             } else {
                 showToast("Login Failed: $message")
                 Log.e("LoginActivity", "Login error: $message")
             }
         }
     }
+
+
+
 
 
 

@@ -2,6 +2,7 @@ package com.example.fundoonotes.common.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fundoonotes.common.data.model.Note
@@ -133,20 +134,21 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
     fun reverseSyncNotes() {
         _syncState.value = SyncState.Syncing
         viewModelScope.launch {
-            dataBridgeRepository.syncOnlineChanges(
-                onSuccess = {
-                    fetchNotes()
-                    fetchArchivedNotes()
-                    fetchBinNotes()
-                    fetchReminderNotes()
-                    _syncState.value = SyncState.Success
-                },
-                onFailure = { exception ->
-                    _syncState.value = SyncState.Failed(exception.message ?: "Unknown error")
-                }
-            )
+            val result = dataBridgeRepository.syncOnlineChangesSafe()
+            result.onSuccess {
+                Log.d("NotesViewModel", "Reverse sync successful. Now fetching notes.")
+                fetchNotes()
+                fetchArchivedNotes()
+                fetchBinNotes()
+                fetchReminderNotes()
+                _syncState.value = SyncState.Success
+            }.onFailure { exception ->
+                Log.e("NotesViewModel", "Reverse sync failed: ${exception.message}", exception)
+                _syncState.value = SyncState.Failed("Reverse sync failed: ${exception.message}")
+            }
         }
     }
+
 
     fun checkInternetConnection(): Boolean = dataBridgeRepository.isOnline()
 
@@ -158,6 +160,7 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
         object Idle : SyncState()
         object Syncing : SyncState()
         object Success : SyncState()
-        data class Failed(val error: String) : SyncState()
+        data class Failed(val message: String) : SyncState()
     }
+
 }

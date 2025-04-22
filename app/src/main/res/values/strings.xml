@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Fundoo Notes</string>
+    <string name="app_name">Fundoo Notes Maanas</string>
     <string name="open">Open</string>
     <string name="close">Close</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
@@ -30,4 +30,24 @@
     <string name="reminder_text">Reminder </string>
     <string name="fundoo">Fundoo</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="google">Google</string>
+    <string name="profile_photo">Profile Photo</string>
+    <string name="manage_your_google_account">Manage your Google Account</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="dot">•</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="logout">Logout</string>
+    <string name="title">Title</string>
+    <string name="note">Note</string>
+    <string name="edited_now">Edited Now</string>
+    <string name="enter_label_name">Enter label name</string>
+    <string name="edit_labels">Edit labels</string>
+    <string name="create_new_label">Create new label</string>
+    <string name="feedback_screen">Feedback Screen</string>
+    <string name="help_screen">Help Screen</string>
+    <string name="search_notes">Search notes...</string>
+    <string name="settings_screen">Settings Screen</string>
+    <string name="label_name">Label Name</string>
+    <string name="edit_label_name">Edit label name</string>
+    <string name="keep">Keep</string>
 </resources>

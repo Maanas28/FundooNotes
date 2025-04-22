@@ -1,6 +1,7 @@
 package com.example.fundoonotes.common.database.repository.sqlite
 
 import android.content.Context
+import android.util.Log
 import com.example.fundoonotes.common.data.mappers.toDomain
 import com.example.fundoonotes.common.data.mappers.toEntity
 import com.example.fundoonotes.common.data.model.Note
@@ -48,15 +49,20 @@ class SQLiteNotesRepository(
     }
 
     fun replaceAllNotes(notes: List<Note>, onComplete: () -> Unit) {
+
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
+            Log.d("SQLiteNotesRepository", "Replacing notes in Room DB for userId: $userId. Count: ${notes.size}")
             noteDao.clearNotesForUser(userId)
             notes.forEach {
+                Log.d("SQLiteNotesRepository", "Inserting note into Room: ${it.id}, title: ${it.title}")
                 noteDao.insertNote(it.toEntity())
             }
+            Log.d("SQLiteNotesRepository", "All notes inserted for userId: $userId")
             onComplete()
         }
     }
+
 
     fun fetchLabelsForNote(noteId: String) {
         scope.launch {

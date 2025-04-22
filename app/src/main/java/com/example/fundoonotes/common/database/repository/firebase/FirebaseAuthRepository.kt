@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) :
     AccountRepository {
@@ -135,6 +136,20 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                 onFailure(exception)
             }
     }
+
+    suspend fun getCurrentUserBlocking(): String? = suspendCancellableCoroutine { cont ->
+        fetchUserDetailsOnce(
+            onSuccess = { user ->
+                Log.d("FirebaseAuthRepository", "Fetched userId: ${user.userId}")
+                cont.resume(user.userId, null)
+            },
+            onFailure = {
+                Log.e("FirebaseAuthRepository", "Failed to fetch user", it)
+                cont.resume(null, null)
+            }
+        )
+    }
+
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid

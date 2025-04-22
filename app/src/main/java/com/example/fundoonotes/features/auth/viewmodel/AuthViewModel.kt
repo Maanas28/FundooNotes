@@ -40,9 +40,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveUserLocally(user: User) {
+    fun saveUserLocally(user: User, onComplete: () -> Unit) {
         viewModelScope.launch {
             repository.saveUserLocally(user)
+            onComplete()
         }
     }
 

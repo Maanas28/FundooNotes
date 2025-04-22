@@ -7,6 +7,7 @@ import com.example.fundoonotes.common.data.model.FirestoreNoteFields
 import com.example.fundoonotes.common.data.model.FirestoreNoteRequest
 import com.example.fundoonotes.common.data.model.FirestoreValue
 import com.example.fundoonotes.common.data.model.Note
+import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.NotesRepository
 import com.example.fundoonotes.common.util.RetrofitClient
 import com.google.firebase.auth.FirebaseAuth
@@ -15,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -277,9 +279,10 @@ class FirebaseNotesRepository : NotesRepository {
         } ?: onFailure(Exception("Reminder time is null"))
     }
 
-    fun fetchNotesOnce(userId: String, onResult: (List<Note>) -> Unit, onError: (Exception) -> Unit) {
+    suspend fun getAllNotesForUser(userId: String): List<Note>
+            = suspendCancellableCoroutine { cont ->
         firestore.collection("notes")
-            .whereEqualTo("userId", userId)
+            .whereEqualTo("userId",userId)
             .whereEqualTo("archived", false)
             .whereEqualTo("deleted", false)
             .whereEqualTo("inBin", false)
@@ -288,8 +291,10 @@ class FirebaseNotesRepository : NotesRepository {
                 val notes = snapshot.documents.mapNotNull {
                     it.toObject(Note::class.java)?.copy(id = it.id)
                 }.sortedByDescending { it.timestamp }
-                onResult(notes)
+                cont.resume(notes, null)
             }
-            .addOnFailureListener { onError(it) }
+            .addOnFailureListener { exception ->
+                cont.resume(emptyList(), null) // or handle differently if needed
+            }
     }
 }

@@ -11,6 +11,7 @@ import com.example.fundoonotes.common.database.repository.sqlite.SQLiteLabelsRep
 import com.example.fundoonotes.common.database.repository.sqlite.SQLiteNotesRepository
 import com.example.fundoonotes.common.database.repository.sqlite.SQLiteOfflineOperationsRepository
 import com.google.gson.Gson
+import kotlinx.coroutines.CompletableDeferred
 
 class SyncManager(
     private val sqliteLabels: SQLiteLabelsRepository,
@@ -170,47 +171,32 @@ class SyncManager(
      * Syncs data from Firestore to SQLite - to be used when connectivity is restored
      * or when user manually refreshes
      */
-    fun syncOnlineChanges(
-        user: User,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
-    ) {
-        try {
-            val notesResult = runCatching {
-                firebase.fetchNotesOnce(user.userId,
-                    onResult = { notes ->
-                        sqliteNote.replaceAllNotes(notes) {
-                            Log.d("ReverseSync", "Notes synced")
-                        }
-                    },
-                    onError = { throw it }
-                )
-            }
+    suspend fun syncOnlineChanges(userId: String) {
+        val notes = firebase.getAllNotesForUser(userId)
+        val labels = firebaseLabel.getAllLabelsForUser(userId)
 
-            if (notesResult.isFailure) {
-                onFailure((notesResult.exceptionOrNull() ?: Exception("Notes fetch failed")) as Exception)
-                return
-            }
+        Log.d("SyncManager", "Fetched notes from Firebase: ${notes.map { it.id }}")
+        Log.d("SyncManager", "Fetched labels from Firebase: ${labels.map { it.id }}")
 
-            val labelsResult = runCatching {
-                firebaseLabel.fetchLabelsOnce(user.userId,
-                    onResult = { labels ->
-                        sqliteLabels.replaceAllLabels(labels) {
-                            Log.d("ReverseSync", "Labels synced")
-                            onSuccess()
-                        }
-                    },
-                    onError = { throw it }
-                )
-            }
+        val completion = CompletableDeferred<Unit>()
 
-            if (labelsResult.isFailure) {
-                onFailure((labelsResult.exceptionOrNull() ?: Exception("Labels fetch failed")) as Exception)
-            }
+        var notesDone = false
+        var labelsDone = false
 
-        } catch (e: Exception) {
-            Log.e("ReverseSync", "Sync failed", e)
-            onFailure(e)
+        sqliteNote.replaceAllNotes(notes) {
+            notesDone = true
+            Log.d("SyncManager", "Room DB notes sync complete")
+            if (labelsDone) completion.complete(Unit)
         }
+
+        sqliteLabels.replaceAllLabels(labels) {
+            labelsDone = true
+            Log.d("SyncManager", "Room DB labels sync complete")
+            if (notesDone) completion.complete(Unit)
+        }
+
+        completion.await() // wait for both
+        Log.d("SyncManager", "Reverse sync operation completed")
     }
+
 }
