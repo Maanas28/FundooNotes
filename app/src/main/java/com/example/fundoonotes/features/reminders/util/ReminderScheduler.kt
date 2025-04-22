@@ -18,7 +18,7 @@ class ReminderScheduler(private val context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val permissionManager = PermissionManager(context)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && permissionManager.canScheduleExactAlarms()) {
             permissionManager.requestExactAlarmPermission()
             return
         }

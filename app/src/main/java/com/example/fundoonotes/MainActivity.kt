@@ -1,8 +1,8 @@
 package com.example.fundoonotes
 
 import AuthViewModel
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +15,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.features.archive.ArchiveFragment
-import com.example.fundoonotes.features.auth.ui.LoginActivity
 import com.example.fundoonotes.features.bin.BinFragment
 import com.example.fundoonotes.features.feeedback.FeedbackFragment
 import com.example.fundoonotes.features.help.HelpFragment
@@ -26,7 +25,6 @@ import com.example.fundoonotes.features.notes.ui.DashboardFragment
 import com.example.fundoonotes.features.reminders.ui.RemindersFragment
 import com.example.fundoonotes.features.settings.SettingsFragment
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -41,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Check authentication state first - this is good as is
-        checkAuthenticationState()
+        observeAuthenticationAndContinue()
 
         // Only proceed with UI setup if user is authenticated
         setContentView(R.layout.activity_main)
@@ -63,18 +61,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkAuthenticationState() {
-
-        authViewModel.getLoggedInUser(
-            onSuccess = {
-                // User is authenticated, do nothing or continue
-            },
-            onFailure = {
-                // User is NOT authenticated, redirect to login
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
+    private fun observeAuthenticationAndContinue() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.accountDetails.collect { user ->
+                    if (user != null) {
+                        Log.d("MainActivity", "Authenticated as ${user.email}")
+                        // Proceed normally
+                    } else {
+                        Log.d("MainActivity", "User not found, redirecting to login")
+                        redirectToLogin()
+                    }
+                }
             }
-        )
+        }
     }
 
     private fun initializeUIComponents() {
@@ -180,6 +180,8 @@ class MainActivity : AppCompatActivity() {
         navView.invalidate()
     }
 
+    private fun redirectToLogin() {
 
+    }
 
 }

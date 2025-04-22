@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.core.view.GravityCompat
+import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
@@ -34,7 +35,6 @@ import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentNotesBinding
 import com.example.fundoonotes.features.addnote.AddNoteFragment
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
-import androidx.core.view.isNotEmpty
 
 class DashboardFragment : Fragment(),
     ViewToggleListener,

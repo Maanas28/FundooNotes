@@ -8,6 +8,7 @@ import com.example.fundoonotes.common.util.managers.NetworkUtils.isOnline
 import com.google.firebase.auth.AuthCredential
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -16,23 +17,18 @@ class DataBridgeAuthRepository(
     context: Context
 ) : DataBridge<User>(context), AccountRepository {
 
+    init {
+        // Ensure local user is loaded when offline
+        if (!isOnline(context)) {
+            Log.d("DataBridgeAuthRepository", "Offline detected, loading user from SQLite")
+            sqliteAccount.fetchAccountDetails()
+        }
+    }
 
     override fun fetchAccountDetails() = if (isOnline(context)) {
         firebaseAuth.fetchAccountDetails()
     } else {
         sqliteAccount.fetchAccountDetails()
-    }
-
-    fun saveUserLocally(user: User) {
-        sqliteAccount.insertUser(user)
-    }
-
-    fun getLoggedInUser(
-        onSuccess: (User) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        Log.d("DataBridge", "Fetching logged in user from Firestore")
-        firebaseAuth.fetchUserDetailsOnce(onSuccess, onFailure)
     }
     override val accountDetails: StateFlow<User?> get() = if (isOnline(context)) firebaseAuth.accountDetails else sqliteAccount.accountDetails
 
@@ -86,6 +82,30 @@ class DataBridgeAuthRepository(
             sqliteAccount.clearDatabase()
             signOut()
             withContext(Dispatchers.Main) { onComplete() }
+        }
+    }
+
+    fun saveUserLocally(user: User) {
+        sqliteAccount.insertUser(user)
+    }
+
+    fun getLoggedInUser(
+        onSuccess: (User) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (isOnline(context)) {
+            Log.d("DataBridge", "Fetching user from Firestore")
+            firebaseAuth.fetchUserDetailsOnce(onSuccess, onFailure)
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                sqliteAccount.accountDetails.collect { user ->
+                    if (user != null) {
+                        Log.d("DataBridge", "Using local user from SQLite (collected)")
+                        withContext(Dispatchers.Main) { onSuccess(user) }
+                        cancel() // stop collecting after success
+                    }
+                }
+            }
         }
     }
 

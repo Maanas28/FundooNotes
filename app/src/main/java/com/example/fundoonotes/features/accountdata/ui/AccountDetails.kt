@@ -16,7 +16,6 @@ import com.example.fundoonotes.R
 import com.example.fundoonotes.features.accountdata.viewmodel.AccountViewModel
 import com.example.fundoonotes.features.auth.ui.LoginActivity
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

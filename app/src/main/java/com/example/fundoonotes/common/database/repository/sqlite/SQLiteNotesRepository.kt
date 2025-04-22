@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -62,20 +63,12 @@ class SQLiteNotesRepository(
             onComplete()
         }
     }
-
-
-    fun fetchLabelsForNote(noteId: String) {
-        scope.launch {
-            val note = noteDao.getNoteById(noteId)
-            val labels = parseLabels(note?.labels ?: "")
-            _labelsForNote.emit(labels)
-        }
-    }
-
     override fun fetchNotes() {
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            noteDao.observeNotes(userId).collect {
+            noteDao.observeNotes(userId)
+                .distinctUntilChanged()
+                .collect {
                 _notes.emit(it.map { entity -> entity.toDomain() })
             }
         }
@@ -84,7 +77,9 @@ class SQLiteNotesRepository(
     override fun fetchArchivedNotes() {
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            noteDao.observeArchivedNotes(userId).collect {
+            noteDao.observeArchivedNotes(userId)
+                .distinctUntilChanged()
+                .collect {
                 _archivedNotes.emit(it.map { entity -> entity.toDomain() })
             }
         }
@@ -93,7 +88,9 @@ class SQLiteNotesRepository(
     override fun fetchBinNotes() {
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            noteDao.observeBinNotes(userId).collect {
+            noteDao.observeBinNotes(userId)
+                .distinctUntilChanged()
+                .collect {
                 _binNotes.emit(it.map { entity -> entity.toDomain() })
             }
         }
@@ -102,7 +99,9 @@ class SQLiteNotesRepository(
     override fun fetchReminderNotes() {
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            noteDao.observeReminderNotes(userId).collect {
+            noteDao.observeReminderNotes(userId)
+                .distinctUntilChanged()
+                .collect {
                 _reminderNotes.emit(it.map { entity -> entity.toDomain() })
             }
         }

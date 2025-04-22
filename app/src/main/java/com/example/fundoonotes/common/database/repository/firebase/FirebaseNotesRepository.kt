@@ -7,7 +7,6 @@ import com.example.fundoonotes.common.data.model.FirestoreNoteFields
 import com.example.fundoonotes.common.data.model.FirestoreNoteRequest
 import com.example.fundoonotes.common.data.model.FirestoreValue
 import com.example.fundoonotes.common.data.model.Note
-import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.NotesRepository
 import com.example.fundoonotes.common.util.RetrofitClient
 import com.google.firebase.auth.FirebaseAuth

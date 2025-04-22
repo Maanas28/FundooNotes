@@ -1,7 +1,6 @@
 package com.example.fundoonotes.features.labels.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +20,6 @@ import com.example.fundoonotes.features.labels.util.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ApplyLabelToNoteFragment : Fragment() {

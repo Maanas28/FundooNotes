@@ -1,19 +1,21 @@
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fundoonotes.FundooNotesApplication
 import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.databridge.DataBridgeAuthRepository
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = DataBridgeAuthRepository(application.applicationContext)
+    // Expose repository
+    val repository = DataBridgeAuthRepository(application.applicationContext)
+
     val authResult = MutableLiveData<Pair<Boolean, String?>>()
 
+    // Expose this for flow-based login check in MainActivity
+    val accountDetails: StateFlow<User?> = repository.accountDetails
     fun registerWithGoogle(idToken: String, userInfo: User) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         repository.registerWithGoogleCredential(credential, userInfo) { success, message ->

@@ -1,9 +1,7 @@
 package com.example.fundoonotes.features.labels.viewmodel
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.common.database.repository.databridge.DataBridgeLabelRepository
 import kotlinx.coroutines.flow.StateFlow

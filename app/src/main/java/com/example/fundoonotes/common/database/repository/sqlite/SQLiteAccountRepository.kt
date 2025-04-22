@@ -1,10 +1,10 @@
 package com.example.fundoonotes.common.database.repository.sqlite
 
+import android.util.Log
 import com.example.fundoonotes.common.data.mappers.toDomain
 import com.example.fundoonotes.common.data.mappers.toEntity
 import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.AccountRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +21,12 @@ class SQLiteAccountRepository(context: android.content.Context) :
     override fun fetchAccountDetails() {
         scope.launch {
             try {
+                Log.d("SQLiteAccountRepository", "Fetching account details from Room")
                 val user = withContext(Dispatchers.IO) {
                     userDao.getAllUsers().firstOrNull()?.toDomain()
                 }
                 _accountDetails.emit(user)
+                Log.d("SQLiteAccountRepository", "Emitted user: $user")
             } catch (e: Exception) {
                 // Log or handle
             }

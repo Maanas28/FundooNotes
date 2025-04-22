@@ -27,7 +27,6 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.getValue
 
 class RegisterActivity : AppCompatActivity() {
 

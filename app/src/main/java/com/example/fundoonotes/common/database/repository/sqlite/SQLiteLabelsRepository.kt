@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -26,7 +27,9 @@ class SQLiteLabelsRepository(
     override fun fetchLabels() {
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            labelDao.observeLabels(userId).collect {
+            labelDao.observeLabels(userId)
+                .distinctUntilChanged()
+                .collect {
                 _labels.emit(it.map { entity -> entity.toDomain() })
             }
         }
