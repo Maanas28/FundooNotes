@@ -151,10 +151,6 @@ class NotesViewModel(application: Application) : AndroidViewModel(application) {
 
     fun checkInternetConnection(): Boolean = dataBridgeRepository.isOnline()
 
-    fun getNotesByIds(ids: List<String>): List<Note> {
-        return notesFlow.value.filter { it.id in ids }
-    }
-
     sealed class SyncState {
         object Idle : SyncState()
         object Syncing : SyncState()

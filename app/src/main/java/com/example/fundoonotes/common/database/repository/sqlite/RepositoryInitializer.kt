@@ -8,8 +8,6 @@ import kotlinx.coroutines.launch
 
 class RepositoryInitializer(
     private val accountRepository: SQLiteAccountRepository,
-    private val notesRepository: SQLiteNotesRepository,
-    private val labelsRepository: SQLiteLabelsRepository
 ) {
     fun initialize(onUserAvailable: () -> Unit) {
         accountRepository.fetchAccountDetails()

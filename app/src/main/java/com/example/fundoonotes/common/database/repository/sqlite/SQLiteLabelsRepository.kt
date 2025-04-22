@@ -20,7 +20,6 @@ class SQLiteLabelsRepository(
 ) :
     BaseSQLiteRepository(context), LabelsRepository {
 
-
         private val _labels = MutableStateFlow<List<Label>>(emptyList())
         override val labels: StateFlow<List<Label>> = _labels.asStateFlow()
 

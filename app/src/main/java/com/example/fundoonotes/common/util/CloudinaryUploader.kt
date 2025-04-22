@@ -18,7 +18,6 @@ object CloudinaryUploader {
             "api_secret" to "ZvIwlxGJSdsh64Ec5zTCl9z1MZQ"
         )
     )
-
     suspend fun uploadImage(file: File): String? {
         return withContext(Dispatchers.IO) {
             try {

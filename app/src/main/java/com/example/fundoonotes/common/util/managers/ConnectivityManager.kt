@@ -59,8 +59,6 @@ class ConnectivityManager<T>(
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(context, "Internet connection lost", Toast.LENGTH_SHORT).show()
                 }
-
-
             }
         }
         sysConnectivityManager.registerNetworkCallback(request, networkCallback!!)

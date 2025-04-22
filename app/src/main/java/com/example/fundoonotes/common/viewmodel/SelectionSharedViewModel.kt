@@ -20,10 +20,6 @@ class SelectionSharedViewModel : ViewModel() {
         _selectedNotes.value = current
     }
 
-    fun setSelection(notes: List<Note>) {
-        _selectedNotes.value = notes
-    }
-
     fun clearSelection() {
         _selectedNotes.value = emptyList()
     }

@@ -23,15 +23,23 @@ class AddNoteFragment : Fragment() {
     private var _binding: FragmentAddNoteBinding? = null
     private val binding get() = _binding!!
 
+    // Shared ViewModel to interact with notes
     private val viewModel by activityViewModels<NotesViewModel>()
 
+    // Reminder and permission managers
     private lateinit var reminderManagerUI: ReminderManagerUI
     private lateinit var permissionManager: PermissionManager
 
+    // Existing note (if editing)
     private var existingNote: Note? = null
+
+    // Currently selected reminder timestamp
     private var selectedReminderTime: Long? = null
+
+    // Listener to notify parent fragment of add/edit actions
     private var addNoteListener: AddNoteListener? = null
 
+    // Launcher to request notification permission
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             Log.d("Permission", if (isGranted) "Notification granted" else "Notification denied")
@@ -39,6 +47,7 @@ class AddNoteFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Retrieve the existing note from arguments if present
         existingNote = arguments?.getParcelable(ARG_NOTE)
     }
 
@@ -47,6 +56,7 @@ class AddNoteFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Inflate the layout using ViewBinding
         _binding = FragmentAddNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -54,25 +64,27 @@ class AddNoteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupListeners()
-        setupReminderManager()
-        setupPermissionManager()
-        populateIfEditing()
+        setupListeners()            // Set up UI event listeners
+        setupReminderManager()     // Initialize reminder picker
+        setupPermissionManager()   // Handle notification permissions
+        populateIfEditing()        // Pre-fill UI if editing an existing note
     }
 
     private fun setupListeners() {
-        binding.btnBackFAB.setOnClickListener { saveNoteAndReturn() }
-        binding.btnReminder.setOnClickListener { reminderManagerUI.showPicker() }
-        binding.reminderBadge.setOnClickListener { showReminderOptionsDialog() }
+        binding.btnBackFAB.setOnClickListener { saveNoteAndReturn() }           // Save note on back FAB
+        binding.btnReminder.setOnClickListener { reminderManagerUI.showPicker() } // Open reminder picker
+        binding.reminderBadge.setOnClickListener { showReminderOptionsDialog() } // Show options to modify/remove reminder
     }
 
     private fun setupReminderManager() {
+        // Initialize the reminder UI logic
         reminderManagerUI = ReminderManagerUI(requireContext(), binding.reminderBadge) {
             selectedReminderTime = it
         }
     }
 
     private fun setupPermissionManager() {
+        // Request notification permission if needed
         permissionManager = PermissionManager(requireContext())
         permissionManager.requestNotificationPermissionIfNeeded(
             launcher = requestNotificationPermissionLauncher
@@ -81,9 +93,11 @@ class AddNoteFragment : Fragment() {
 
     private fun populateIfEditing() {
         existingNote?.let { note ->
+            // Populate title and content if editing
             binding.etTitle.setText(note.title)
             binding.etContent.setText(note.content)
 
+            // Display existing reminder if available
             if (note.hasReminder && note.reminderTime != null) {
                 selectedReminderTime = note.reminderTime
                 binding.reminderBadge.apply {
@@ -92,9 +106,11 @@ class AddNoteFragment : Fragment() {
                 }
             }
 
+            // Render assigned labels
             renderLabelPills(note.labels)
         }
 
+        // Initialize listener if parent implements AddNoteListener
         if (parentFragment is AddNoteListener) {
             addNoteListener = parentFragment as AddNoteListener
         }
@@ -112,6 +128,7 @@ class AddNoteFragment : Fragment() {
         container.visibility = View.VISIBLE
         val inflater = LayoutInflater.from(requireContext())
 
+        // Create pill UI for each label
         labels.forEach { label ->
             val pill = inflater.inflate(R.layout.item_note_label, container, false) as TextView
             pill.text = if (label.length > 20) label.take(18) + "…" else label
@@ -119,17 +136,18 @@ class AddNoteFragment : Fragment() {
         }
     }
 
-
     private fun saveNoteAndReturn() {
         val title = binding.etTitle.text.toString().trim()
         val content = binding.etContent.text.toString().trim()
 
+        // If no title/content, treat it as cancel
         if (title.isEmpty() && content.isEmpty()) {
             addNoteListener?.onAddNoteCancelled()
             requireActivity().onBackPressedDispatcher.onBackPressed()
             return
         }
 
+        // Build the final note object
         val noteId = existingNote?.id ?: ""
         val finalNote = Note(
             id = noteId,
@@ -144,6 +162,7 @@ class AddNoteFragment : Fragment() {
             deleted = existingNote?.deleted ?: false
         )
 
+        // Save or update note based on presence of ID
         if (noteId.isEmpty()) {
             viewModel.saveNote(finalNote, requireContext())
         } else {
@@ -162,10 +181,11 @@ class AddNoteFragment : Fragment() {
             }
         }
 
-        requireActivity().onBackPressedDispatcher.onBackPressed()
+        requireActivity().onBackPressedDispatcher.onBackPressed() // Navigate back
     }
 
     private fun showReminderOptionsDialog() {
+        // Show dialog with options to modify or remove reminder
         val options = arrayOf("Change Reminder", "Remove Reminder")
 
         AlertDialog.Builder(requireContext())
@@ -181,17 +201,18 @@ class AddNoteFragment : Fragment() {
     }
 
     fun setAddNoteListener(listener: AddNoteListener) {
-        this.addNoteListener = listener
+        this.addNoteListener = listener // Set listener to communicate with parent
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Clear binding to prevent memory leaks
     }
 
     companion object {
         private const val ARG_NOTE = "arg_note"
 
+        // Factory method to create an instance with optional note argument
         fun newInstance(note: Note? = null): AddNoteFragment {
             return AddNoteFragment().apply {
                 arguments = Bundle().apply {

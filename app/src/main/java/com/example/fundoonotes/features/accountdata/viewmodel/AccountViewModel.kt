@@ -13,7 +13,6 @@ class AccountViewModel(
 ) : ViewModel() {
 
     constructor(context: Context) : this(DataBridgeAuthRepository(context))
-
     val accountDetails: StateFlow<User?> = repository.accountDetails
 
     fun fetchAccountDetails() {

@@ -49,7 +49,7 @@ class SQLiteAccountRepository(context: android.content.Context) :
         return accountDetails.value?.userId
     }
 
-    suspend fun clearDatabase() {
+    fun clearDatabase() {
         clearUserData()
     }
 

@@ -66,9 +66,9 @@ dependencies {
     implementation ("androidx.room:room-ktx:2.7.0")
     implementation(libs.play.services.auth) // or latest
     implementation("com.google.android.gms:play-services-identity:18.1.0")
-    implementation("androidx.credentials:credentials:1.2.0-alpha01")
-    implementation("androidx.credentials:credentials-play-services-auth:1.2.0-alpha01")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1") // Credential Manager with Google
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation ("com.google.code.gson:gson:2.10.1")
     implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")

@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.fundoonotes.common.util.managers.NotificationManagerUtil
+import com.example.fundoonotes.common.util.managers.NotificationManager
 
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -18,7 +18,7 @@ class ReminderReceiver : BroadcastReceiver() {
         Log.d("ReminderReceiver", "Reminder received for note: $noteTitle")
 
         if (action == "REFRESH_UI_AND_NOTIFY") {
-            NotificationManagerUtil.showNotification(context, noteTitle, noteContent)
+            NotificationManager.showNotification(context, noteTitle, noteContent)
 
             // Broadcast to UI with note ID
             val noteId = intent.getStringExtra("noteId")

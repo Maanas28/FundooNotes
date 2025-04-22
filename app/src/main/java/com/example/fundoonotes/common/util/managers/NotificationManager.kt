@@ -7,7 +7,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.fundoonotes.R
 
-object NotificationManagerUtil {
+object NotificationManager {
 
     fun showNotification(context: Context, title: String, content: String) {
         val notificationManager =

@@ -12,10 +12,12 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.fundoonotes.R
@@ -25,6 +27,8 @@ import com.example.fundoonotes.features.auth.util.AuthUtil
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -60,30 +64,53 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private val oneTapLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            Identity.getSignInClient(this)
-                .getSignInCredentialFromIntent(result.data)
-                .googleIdToken?.let { idToken ->
+    private fun signUpWithGoogle() {
+        lifecycleScope.launch {
+            try {
+                val credentialManager = CredentialManager.create(this@RegisterActivity)
+
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(getString(R.string.default_web_client_id))
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val response = credentialManager.getCredential(
+                    context = this@RegisterActivity,
+                    request = request
+                )
+
+                val credential = response.credential
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+
                     val firstName = findViewById<EditText>(R.id.editTextFirstName).text.toString()
                     val lastName = findViewById<EditText>(R.id.editTextLastName).text.toString()
-                    val uploadedUrl = uploadedImageUrl // set from Cloudinary after image upload
-
                     val userInfo = User(
                         firstName = firstName,
                         lastName = lastName,
-                        email = "", // FirebaseAuth will overwrite this
-                        profileImage = uploadedUrl
+                        email = "", // Firebase will set actual email
+                        profileImage = uploadedImageUrl
                     )
 
                     viewModel.registerWithGoogle(idToken, userInfo)
                     findViewById<ProgressBar>(R.id.progressBar).visibility = View.VISIBLE
-                } ?: toast("Google Sign-In failed: ID Token null")
-        } else {
-            Log.d("RegisterActivity", "Google Sign-In failed: ${result} with code ${result.resultCode}")
-            toast("Google Sign-In cancelled")
+                } else {
+                    toast("Unexpected credential type")
+                }
+
+            } catch (e: Exception) {
+                Log.e("RegisterActivity", "Google Sign-In failed", e)
+                toast("Google Sign-In failed: ${e.localizedMessage}")
+            }
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,15 +142,7 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         findViewById<ImageView>(R.id.buttonGoogleRegister)?.setOnClickListener {
-            oneTapClient.beginSignIn(signInRequest)
-                .addOnSuccessListener { result ->
-                    oneTapLauncher.launch(
-                        IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
-                    )
-                }
-                .addOnFailureListener {
-                    toast("Google Sign-In failed: ${it.message}")
-                }
+            signUpWithGoogle()
         }
 
         findViewById<Button>(R.id.buttonRegister)?.setOnClickListener {
