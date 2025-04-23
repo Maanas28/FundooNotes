@@ -53,13 +53,10 @@ class SQLiteNotesRepository(
 
         scope.launch {
             val userId = sqliteAccount.getUserId() ?: return@launch
-            Log.d("SQLiteNotesRepository", "Replacing notes in Room DB for userId: $userId. Count: ${notes.size}")
             noteDao.clearNotesForUser(userId)
             notes.forEach {
-                Log.d("SQLiteNotesRepository", "Inserting note into Room: ${it.id}, title: ${it.title}")
                 noteDao.insertNote(it.toEntity())
             }
-            Log.d("SQLiteNotesRepository", "All notes inserted for userId: $userId")
             onComplete()
         }
     }

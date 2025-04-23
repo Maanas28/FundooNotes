@@ -15,7 +15,6 @@ class ReminderReceiver : BroadcastReceiver() {
         val noteTitle = intent.getStringExtra("noteTitle") ?: "Reminder"
         val noteContent = intent.getStringExtra("noteContent") ?: "You have a note reminder"
 
-        Log.d("ReminderReceiver", "Reminder received for note: $noteTitle")
 
         if (action == "REFRESH_UI_AND_NOTIFY") {
             NotificationManager.showNotification(context, noteTitle, noteContent)

@@ -110,16 +110,16 @@ class SelectionBar : Fragment() {
                     val selectedNotes = selectionSharedViewModel.getSelection()
                     if (selectedNotes.isNotEmpty()) {
                         AlertDialog.Builder(requireContext())
-                            .setTitle("Delete Notes")
-                            .setMessage("Are you sure you want to move selected notes to Bin?")
-                            .setPositiveButton("Move to Bin") { _, _ ->
+                            .setTitle(getString(R.string.delete_notes_title))
+                            .setMessage(getString(R.string.delete_notes_message))
+                            .setPositiveButton(getString(R.string.move_to_bin)) { _, _ ->
                                 selectedNotes.forEach { note ->
                                     val updated = note.copy(inBin = true)
                                     notesViewModel.deleteNote(updated)
                                 }
                                 selectionSharedViewModel.clearSelection()
                             }
-                            .setNegativeButton("Cancel", null)
+                            .setNegativeButton(getString(R.string.cancel), null)
                             .show()
                     }
                 }
@@ -140,15 +140,15 @@ class SelectionBar : Fragment() {
                 binding.btnMoreSelectedSelectionBar.setOnClickListener {
                     val selectedNotes = selectionSharedViewModel.getSelection()
                     AlertDialog.Builder(requireContext())
-                        .setTitle("Delete Forever")
-                        .setMessage("Are you sure you want to permanently delete selected notes?")
-                        .setPositiveButton("Delete") { _, _ ->
+                        .setTitle(getString(R.string.delete_forever_title))
+                        .setMessage(getString(R.string.delete_forever_message))
+                        .setPositiveButton(getString(R.string.delete)) { _, _ ->
                             selectedNotes.forEach { note ->
                                 notesViewModel.permanentlyDeleteNote(note)
                             }
                             selectionSharedViewModel.clearSelection()
                         }
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton(getString(R.string.cancel),null)
                         .show()
                 }
             }

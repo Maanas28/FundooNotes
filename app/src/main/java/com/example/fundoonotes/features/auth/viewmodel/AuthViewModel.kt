@@ -56,5 +56,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         repository.getLoggedInUser(onSuccess, onFailure)
     }
 
+    fun getCurrentFirebaseUser(){
+        repository.getCurrentFirebaseUser()
+    }
 
 }

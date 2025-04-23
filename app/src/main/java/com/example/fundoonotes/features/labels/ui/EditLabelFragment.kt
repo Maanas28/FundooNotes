@@ -14,7 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fundoonotes.databinding.FragmentEditLabelBinding
 import com.example.fundoonotes.features.labels.util.EditLabelAdapter
-import com.example.fundoonotes.features.labels.util.LabelAdapterMode
+import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

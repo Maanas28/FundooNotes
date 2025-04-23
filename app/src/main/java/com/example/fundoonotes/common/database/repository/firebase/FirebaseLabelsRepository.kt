@@ -41,7 +41,6 @@ class FirebaseLabelsRepository : LabelsRepository {
                     doc.toObject(Label::class.java)?.copy(id = doc.id)
                 }
 
-                Log.d("FirebaseDebug", "Fetched labels for $userId: $labelList")
                 _labels.value = labelList
             }
     }
@@ -57,7 +56,6 @@ class FirebaseLabelsRepository : LabelsRepository {
             .document(labelToAdd.id)
             .set(labelToAdd)
             .addOnSuccessListener {
-                Log.d("Firestore Label", "Saved successfully with ID ${labelToAdd.id}")
                 onSuccess()
             }
             .addOnFailureListener { onFailure(it) }

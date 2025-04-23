@@ -1,7 +1,9 @@
 package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
+import android.provider.Settings.Global.getString
 import android.util.Log
+import com.example.fundoonotes.R
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.common.database.repository.interfaces.LabelsRepository
 import com.example.fundoonotes.common.util.managers.NetworkUtils.isOnline
@@ -21,33 +23,25 @@ class DataBridgeLabelRepository (
 
     // Add label operation: Refactored to track offline operations
     override fun addNewLabel(label: Label, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        val userId = firebaseAuth.getCurrentUserId() ?: return onFailure(Exception("User not logged in"))
-        Log.d("DataBridge", "Adding label with name: ${label.name}, userId: $userId")
+        val userId = firebaseAuth.getCurrentUserId() ?: return onFailure(Exception(context.getString(R.string.user_not_found)))
 
         if (isOnline(context)) {
             // Online: Update both Firebase and SQLite
             firebaseLabel.addNewLabel(label, {
-                Log.d("DataBridge", "Firebase success, now retrieving label details")
 
                 // Retrieve the newly created label to get the proper ID
                 firebaseLabel.getLabelByName(label.name, userId, { retrievedLabel ->
-                    Log.d("DataBridge", "Retrieved label: id=${retrievedLabel.id}, userId=${retrievedLabel.userId}")
 
                     // Add to SQLite with the complete information
-                    Log.d("DataBridge", "Adding to SQLite: id=${retrievedLabel.id}, userId=${retrievedLabel.userId}")
                     sqliteLabels.addNewLabel(retrievedLabel, {
-                        Log.d("DataBridge", "SQLite success")
                         onSuccess()
                     }, { e ->
-                        Log.e("DataBridge", "SQLite failure", e)
                         onFailure(e)
                     })
                 }, { e ->
-                    Log.e("DataBridge", "Failed to retrieve label", e)
                     onFailure(e)
                 })
             }, { e ->
-                Log.e("DataBridge", "Firebase failure", e)
                 onFailure(e)
             })
         } else {
@@ -58,13 +52,10 @@ class DataBridgeLabelRepository (
                 userId = userId
             )
 
-            Log.d("DataBridge", "Offline mode: Adding to SQLite only: id=${offlineLabel.id}, userId=${offlineLabel.userId}")
             sqliteLabels.addNewLabel(offlineLabel, {
-                Log.d("DataBridge", "SQLite success (offline mode)")
                 trackOfflineOperation("ADD", "LABEL", offlineLabel.id, offlineLabel)
                 onSuccess()
             }, { e ->
-                Log.e("DataBridge", "SQLite failure (offline mode)", e)
                 onFailure(e)
             })
         }
@@ -79,7 +70,6 @@ class DataBridgeLabelRepository (
                     // Once Firebase succeeds, update SQLite
                     sqliteLabels.updateLabel(oldLabel, newLabel, onSuccess, onFailure)
                 }, { e ->
-                    Log.e("DataBridge", "Firebase update label failed", e)
                     onFailure(e)
                 })
             } else {
@@ -103,7 +93,6 @@ class DataBridgeLabelRepository (
                     // Once Firebase succeeds, update SQLite
                     sqliteLabels.deleteLabel(label, onSuccess, onFailure)
                 }, { e ->
-                    Log.e("DataBridge", "Firebase delete label failed", e)
                     onFailure(e)
                 })
             } else {
@@ -133,7 +122,6 @@ class DataBridgeLabelRepository (
                     // Once Firebase succeeds, update SQLite
                     sqliteLabels.toggleLabelForNotes(label, isChecked, noteIds, onSuccess, onFailure)
                 }, { e ->
-                    Log.e("DataBridge", "Firebase toggle label failed", e)
                     onFailure(e)
                 })
             } else {

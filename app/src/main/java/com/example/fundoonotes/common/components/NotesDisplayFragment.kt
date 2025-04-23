@@ -168,7 +168,6 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 selectionSharedViewModel.selectedNotes.collectLatest { selected ->
-                    val allNotes = adapter.getCurrentNotes()
                     val selectedSet = selected.toSet()
                     adapter.updateSelectedNotes(selectedSet)
 
@@ -229,16 +228,16 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
             binding.swipeRefreshLayout.isRefreshing = false
 
             AlertDialog.Builder(requireContext())
-                .setTitle("No Internet Connection")
-                .setMessage("Please connect to the internet to sync your notes")
-                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .setTitle(getString(R.string.no_internet_title))
+                .setMessage(getString(R.string.no_internet_message))
+                .setPositiveButton(getString(R.string.ok))  { dialog, _ -> dialog.dismiss() }
                 .show()
         }
     }
 
     private fun handleNoteClick(note: Note) {
         when (notesContext) {
-            is NotesGridContext.Bin -> Toast.makeText(requireContext(), "Note cannot be edited from Bin", Toast.LENGTH_SHORT).show()
+            is NotesGridContext.Bin -> Toast.makeText(requireContext(), getString(R.string.cannot_edit_from_bin), Toast.LENGTH_SHORT).show()
             else -> editNoteHandler?.onNoteEdit(note)
         }
     }

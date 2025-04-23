@@ -42,9 +42,9 @@ class LoginActivity : AppCompatActivity() {
 
             credential.googleIdToken?.let { idToken ->
                 viewModel.loginWithGoogle(idToken)
-            } ?: showToast("Google Sign-In failed: ID Token is null")
+            } ?: showToast(getString(R.string.google_id_token_null))
         } else {
-            showToast("Google Sign-In cancelled")
+            showToast(getString(R.string.google_signin_cancelled))
         }
     }
 
@@ -53,7 +53,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater) // Initialize ViewBinding
         setContentView(binding.root)
 
-        signInWithGoogle()  // Configure Google One Tap sign-in
         setupObservers()     // Observe login result and user info
         setupListeners()     // Hook up button click actions
     }
@@ -86,12 +85,11 @@ class LoginActivity : AppCompatActivity() {
 
                     viewModel.loginWithGoogle(idToken)
                 } else {
-                    showToast("Unexpected credential type")
+                    showToast(getString(R.string.unexpected_credential_type))
                 }
 
             } catch (e: Exception) {
-                Log.e("LoginActivity", "Google Sign-In failed", e)
-                showToast("Google Sign-In failed: ${e.localizedMessage}")
+                showToast(getString(R.string.google_signin_failed, e.localizedMessage))
             }
         }
     }
@@ -105,9 +103,9 @@ class LoginActivity : AppCompatActivity() {
 
             // Basic validation
             if (!AuthUtil.isValidEmail(email)) {
-                showToast("Invalid Email")
+                showToast(getString(R.string.invalid_email))
             } else if (!AuthUtil.isValidPassword(password)) {
-                showToast("Weak Password")
+                showToast(getString(R.string.wrong_password))
             } else {
                 viewModel.login(email, password)
             }
@@ -126,7 +124,7 @@ class LoginActivity : AppCompatActivity() {
     private fun setupObservers() {
         viewModel.authResult.observe(this) { (success, message) ->
             if (success) {
-                showToast("Login Successful")
+                showToast(getString(R.string.login_success))
 
                 // Fetch user details from Firebase and save locally
                 viewModel.getLoggedInUser(
@@ -141,11 +139,10 @@ class LoginActivity : AppCompatActivity() {
                     },
                     onFailure = {
                         Log.e("LoginActivity", "Failed to fetch user from Firestore", it)
-                        showToast("Failed to fetch user details")
                     }
                 )
             } else {
-                showToast("Login Failed: $message")
+                showToast(getString(R.string.login_failed, message))
                 Log.e("LoginActivity", "Login error: $message")
             }
         }

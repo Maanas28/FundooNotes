@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -39,10 +40,15 @@ class AddNoteFragment : Fragment() {
     // Listener to notify parent fragment of add/edit actions
     private var addNoteListener: AddNoteListener? = null
 
+
+    private var isArchivedInitially = false
+    private var isArchiveToggled = false
+
+
+
     // Launcher to request notification permission
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            Log.d("Permission", if (isGranted) "Notification granted" else "Notification denied")
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,9 +77,41 @@ class AddNoteFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.btnBackFAB.setOnClickListener { saveNoteAndReturn() }           // Save note on back FAB
-        binding.btnReminder.setOnClickListener { reminderManagerUI.showPicker() } // Open reminder picker
-        binding.reminderBadge.setOnClickListener { showReminderOptionsDialog() } // Show options to modify/remove reminder
+        binding.btnBackFAB.setOnClickListener { saveNoteAndReturn() }
+        binding.btnReminder.setOnClickListener { reminderManagerUI.showPicker() }
+        binding.reminderBadge.setOnClickListener { showReminderOptionsDialog() }
+
+        // Modify the archive button behavior
+        binding.btnArchive.setOnClickListener {
+            // If we're editing, toggle the archive state immediately
+            if (existingNote != null) {
+                // Toggle the archive state of the existing note
+                existingNote = existingNote?.copy(
+                    archived = !existingNote!!.archived
+                )
+
+                viewModel.archiveNote(existingNote!!, onSuccess = {}, onFailure = {})
+
+                // Show toast to indicate the change
+                val message = if (existingNote!!.archived)
+                    "Note archived"
+                else
+                    "Note unarchived"
+
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+                // Mark that archive was toggled for change detection
+                isArchiveToggled = true
+            } else {
+                // For new notes
+                isArchivedInitially = !isArchivedInitially
+
+                val msg = if (isArchivedInitially) "Note will be archived on save"
+                else "Note will not be archived"
+
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupReminderManager() {
@@ -157,7 +195,8 @@ class AddNoteFragment : Fragment() {
             hasReminder = selectedReminderTime != null,
             userId = existingNote?.userId ?: "",
             labels = existingNote?.labels ?: emptyList(),
-            archived = existingNote?.archived ?: false,
+            // Use the archive state directly from existingNote if editing
+            archived = existingNote?.archived ?: isArchivedInitially,
             inBin = existingNote?.inBin ?: false,
             deleted = existingNote?.deleted ?: false
         )
@@ -166,9 +205,11 @@ class AddNoteFragment : Fragment() {
         if (noteId.isEmpty()) {
             viewModel.saveNote(finalNote, requireContext())
         } else {
-            val changed = existingNote?.title != title ||
-                    existingNote?.content != content ||
-                    existingNote?.reminderTime != selectedReminderTime
+            // Check if any changes were made (including archive changes)
+            val changed = existingNote?.title != finalNote.title ||
+                    existingNote?.content != finalNote.content ||
+                    existingNote?.reminderTime != finalNote.reminderTime ||
+                    isArchiveToggled // Include archive toggle as a change
 
             if (changed) {
                 viewModel.updateNote(

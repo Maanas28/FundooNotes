@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fundoonotes.common.data.model.Label
+import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 
 class EditLabelAdapter(
     private val mode: LabelAdapterMode,

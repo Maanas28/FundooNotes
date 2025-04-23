@@ -180,9 +180,7 @@ class DashboardFragment : Fragment(),
         notesViewModel.fetchNotes()
     }
 
-    override fun onAddNoteCancelled() {
-        Log.d("DashboardFragment", "Note addition cancelled")
-    }
+    override fun onAddNoteCancelled() {}
 
     /** Opens AddNoteFragment for adding or editing a note */
     private fun openAddOrEditNote(note: Note?) {

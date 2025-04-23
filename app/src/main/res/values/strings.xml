@@ -50,4 +50,41 @@
     <string name="label_name">Label Name</string>
     <string name="edit_label_name">Edit label name</string>
     <string name="keep">Keep</string>
+    <string name="uploading_image">Uploading Image...</string>
+    <string name="unexpected_credential_type">Unexpected credential type</string>
+    <string name="google_signin_failed">Google Sign-In failed: %1$s</string>
+    <string name="fill_all_fields">Please fill all fields</string>
+    <string name="password_mismatch">Passwords do not match</string>
+    <string name="weak_password">Weak Password</string>
+    <string name="registration_success">Registration Successful</string>
+    <string name="registration_failed">Registration Failed: %1$s</string>
+    <string name="google_id_token_null">Google Sign-In failed: ID Token is null</string>
+    <string name="google_signin_cancelled">Google Sign-In cancelled</string>
+    <string name="invalid_email">Invalid Email</string>
+    <string name="wrong_password">Wrong Password</string>
+    <string name="login_success">Login Successful</string>
+    <string name="failed_to_fetch_user_details">Failed to fetch user details</string>
+    <string name="login_failed">Login Failed: %1$s</string>
+    <!-- NotesDisplayFragment Strings -->
+    <string name="no_internet_title">No Internet Connection</string>
+    <string name="no_internet_message">Please connect to the internet to sync your notes</string>
+    <string name="ok">OK</string>
+    <string name="cannot_edit_from_bin">Note cannot be edited from Bin</string>
+
+    <!-- SelectionBar Strings -->
+    <string name="label_host_missing">Host does not implement LabelFragmentHost</string>
+
+    <string name="delete_notes_title">Delete Notes</string>
+    <string name="delete_notes_message">Are you sure you want to move selected notes to Bin?</string>
+    <string name="move_to_bin">Move to Bin</string>
+
+    <string name="delete_forever_title">Delete Forever</string>
+    <string name="delete_forever_message">Are you sure you want to permanently delete selected notes?</string>
+    <string name="delete">Delete</string>
+
+    <string name="cancel">Cancel</string>
+
+    <string name="no_internet_connection">No internet connection</string>
+
+    <string name="user_not_found">User Not Fount</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.fundoonotes
 
 import AuthViewModel
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
@@ -15,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.features.archive.ArchiveFragment
+import com.example.fundoonotes.features.auth.ui.LoginActivity
 import com.example.fundoonotes.features.bin.BinFragment
 import com.example.fundoonotes.features.feeedback.FeedbackFragment
 import com.example.fundoonotes.features.help.HelpFragment
@@ -39,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Check authentication state first - this is good as is
-        observeAuthenticationAndContinue()
+        checkFirebaseAuthentication()
 
         // Only proceed with UI setup if user is authenticated
         setContentView(R.layout.activity_main)
@@ -61,21 +63,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeAuthenticationAndContinue() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                authViewModel.accountDetails.collect { user ->
-                    if (user != null) {
-                        Log.d("MainActivity", "Authenticated as ${user.email}")
-                        // Proceed normally
-                    } else {
-                        Log.d("MainActivity", "User not found, redirecting to login")
-                        redirectToLogin()
-                    }
-                }
-            }
+    private fun checkFirebaseAuthentication() {
+//        val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        val user = authViewModel.getCurrentFirebaseUser()
+        if (user == null && authViewModel.authResult.value?.first != true) {
+            redirectToLogin()
         }
     }
+
 
     private fun initializeUIComponents() {
         drawerLayout = findViewById(R.id.drawerLayout)
@@ -181,7 +176,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun redirectToLogin() {
-
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
     }
-
 }

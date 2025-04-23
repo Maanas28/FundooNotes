@@ -2,6 +2,7 @@ package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
 import android.util.Log
+import com.example.fundoonotes.R
 import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.AccountRepository
 import com.example.fundoonotes.common.util.managers.NetworkUtils.isOnline
@@ -20,7 +21,6 @@ class DataBridgeAuthRepository(
     init {
         // Ensure local user is loaded when offline
         if (!isOnline(context)) {
-            Log.d("DataBridgeAuthRepository", "Offline detected, loading user from SQLite")
             sqliteAccount.fetchAccountDetails()
         }
     }
@@ -34,7 +34,7 @@ class DataBridgeAuthRepository(
 
     // Auth operations require online connectivity
     fun register(user: User, password: String, onComplete: (Boolean, String?) -> Unit) {
-        if (!isOnline(context)) return onComplete(false, "No internet connection")
+        if (!isOnline(context)) return return onComplete(false, context.getString(R.string.no_internet_connection))
 
         firebaseAuth.registerWithEmail(user, password) { success, message ->
             onComplete(success, message)
@@ -42,7 +42,8 @@ class DataBridgeAuthRepository(
     }
 
     fun login(email: String, password: String, onComplete: (Boolean, String?) -> Unit) {
-        if (!isOnline(context)) return onComplete(false, "No internet connection")
+        if (!isOnline(context)) return onComplete(false, context.getString(R.string.no_internet_connection))
+
 
         firebaseAuth.loginWithEmail(email, password) { success, message ->
             onComplete(success, message)
@@ -54,7 +55,7 @@ class DataBridgeAuthRepository(
         userInfo: User,
         onComplete: (Boolean, String?) -> Unit
     ) {
-        if (!isOnline(context)) return onComplete(false, "No internet connection")
+        if (!isOnline(context)) return onComplete(false, context.getString(R.string.no_internet_connection))
         firebaseAuth.loginWithGoogleCredential(credential, userInfo) { success, message ->
             if (success && userInfo.userId != null) {
                 CoroutineScope(Dispatchers.IO).launch {
@@ -71,7 +72,7 @@ class DataBridgeAuthRepository(
         userInfo: User? = null,
         onComplete: (Boolean, String?) -> Unit
     ) {
-        if (!isOnline(context)) return onComplete(false, "No internet connection")
+        if (!isOnline(context)) return onComplete(false, context.getString(R.string.no_internet_connection))
         firebaseAuth.loginWithGoogleCredential(credential, userInfo) { success, message ->
             onComplete(success, message)
         }
@@ -86,7 +87,7 @@ class DataBridgeAuthRepository(
     }
 
     fun saveUserLocally(user: User) {
-        sqliteAccount.insertUser(user)
+        sqliteAccount.saveUserLocally(user)
     }
 
     fun getLoggedInUser(
@@ -94,19 +95,21 @@ class DataBridgeAuthRepository(
         onFailure: (Exception) -> Unit
     ) {
         if (isOnline(context)) {
-            Log.d("DataBridge", "Fetching user from Firestore")
             firebaseAuth.fetchUserDetailsOnce(onSuccess, onFailure)
         } else {
             CoroutineScope(Dispatchers.IO).launch {
                 sqliteAccount.accountDetails.collect { user ->
                     if (user != null) {
-                        Log.d("DataBridge", "Using local user from SQLite (collected)")
                         withContext(Dispatchers.Main) { onSuccess(user) }
                         cancel() // stop collecting after success
                     }
                 }
             }
         }
+    }
+
+    fun getCurrentFirebaseUser(){
+        firebaseAuth.getCurrentFirebaseUser()
     }
 
 

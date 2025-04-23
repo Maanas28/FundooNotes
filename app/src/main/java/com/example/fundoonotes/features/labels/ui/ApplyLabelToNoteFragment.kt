@@ -16,7 +16,7 @@ import com.example.fundoonotes.common.util.interfaces.LabelSelectionListener
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentApplyLabelToNoteBinding
 import com.example.fundoonotes.features.labels.util.EditLabelAdapter
-import com.example.fundoonotes.features.labels.util.LabelAdapterMode
+import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine

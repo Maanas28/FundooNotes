@@ -81,7 +81,6 @@ abstract class DataBridge<T>(
         )
         // Save the offline operation and trigger observer updates
         sqliteOffline.saveOfflineOperation(offlineOp) {
-            Log.d("DataBridge", "Tracked offline operation: $type for $entityType with id $entityId")
 
             // Re-fetch to refresh observers (e.g., UI updates)
             when (entityType) {

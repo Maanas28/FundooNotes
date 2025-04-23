@@ -5,6 +5,7 @@ import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.AccountRepository
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
@@ -49,6 +50,9 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
     ) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    fetchAccountDetails()
+                }
                 onComplete(task.isSuccessful, task.exception?.message)
             }
     }
@@ -58,7 +62,6 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
         password: String,
         onComplete: (Boolean, String?) -> Unit
     ) {
-        Log.d("AuthRepo", "Starting registration for email: ${user.email}")
 
         auth.createUserWithEmailAndPassword(user.email, password)
             .addOnCompleteListener { task ->
@@ -79,7 +82,6 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                         }
 
                 } else {
-                    Log.e("AuthRepo", "Registration failed: ${task.exception?.message}")
                     onComplete(false, task.exception?.message)
                 }
             }
@@ -136,23 +138,12 @@ class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getIn
                 onFailure(exception)
             }
     }
-
-    suspend fun getCurrentUserBlocking(): String? = suspendCancellableCoroutine { cont ->
-        fetchUserDetailsOnce(
-            onSuccess = { user ->
-                Log.d("FirebaseAuthRepository", "Fetched userId: ${user.userId}")
-                cont.resume(user.userId, null)
-            },
-            onFailure = {
-                Log.e("FirebaseAuthRepository", "Failed to fetch user", it)
-                cont.resume(null, null)
-            }
-        )
-    }
-
-
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    fun getCurrentFirebaseUser() : FirebaseUser? {
+        return auth.currentUser
     }
 
 }

@@ -21,12 +21,10 @@ class SQLiteAccountRepository(context: android.content.Context) :
     override fun fetchAccountDetails() {
         scope.launch {
             try {
-                Log.d("SQLiteAccountRepository", "Fetching account details from Room")
                 val user = withContext(Dispatchers.IO) {
                     userDao.getAllUsers().firstOrNull()?.toDomain()
                 }
                 _accountDetails.emit(user)
-                Log.d("SQLiteAccountRepository", "Emitted user: $user")
             } catch (e: Exception) {
                 // Log or handle
             }
@@ -36,12 +34,7 @@ class SQLiteAccountRepository(context: android.content.Context) :
     fun saveUserLocally(user: User) {
         scope.launch {
             userDao.insertUser(user.toEntity())
-        }
-    }
-
-    fun insertUser(user: User) {
-        scope.launch {
-            userDao.insertUser(user.toEntity())
+            fetchAccountDetails() // ensures StateFlow is updated
         }
     }
 

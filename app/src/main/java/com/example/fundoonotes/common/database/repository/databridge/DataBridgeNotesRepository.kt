@@ -1,6 +1,7 @@
 package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
+import com.example.fundoonotes.R
 import com.example.fundoonotes.common.data.model.Note
 import com.example.fundoonotes.common.database.repository.interfaces.NotesRepository
 import com.example.fundoonotes.common.util.managers.NetworkUtils.isOnline
@@ -37,7 +38,7 @@ class DataBridgeNotesRepository(
         if (isOnline(context)) {
             val firebaseUser = FirebaseAuth.getInstance().currentUser
             if (firebaseUser == null) {
-                onFailure(Exception("User not logged in"))
+                onFailure(Exception(context.getString(R.string.user_not_found)))
                 return
             }
 
