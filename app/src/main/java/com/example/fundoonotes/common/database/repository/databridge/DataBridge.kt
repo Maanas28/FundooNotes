@@ -1,7 +1,6 @@
 package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
-import android.util.Log
 import com.example.fundoonotes.common.data.entity.OfflineOperation
 import com.example.fundoonotes.common.database.repository.firebase.FirebaseAuthRepository
 import com.example.fundoonotes.common.database.repository.firebase.FirebaseLabelsRepository
@@ -43,6 +42,8 @@ abstract class DataBridge<T>(
             sqlite.setUpObservers()
             sqliteLabels.fetchLabels()
         }
+        sqlite.setUpObservers()
+        sqliteLabels.fetchLabels()
 
         syncOfflineChanges()
     }

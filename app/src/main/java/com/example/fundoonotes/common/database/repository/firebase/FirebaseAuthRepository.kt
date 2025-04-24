@@ -1,6 +1,5 @@
 package com.example.fundoonotes.common.database.repository.firebase
 
-import android.util.Log
 import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.AccountRepository
 import com.google.firebase.auth.AuthCredential
@@ -11,7 +10,6 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.MemoryCacheSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 class FirebaseAuthRepository(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) :
     AccountRepository {

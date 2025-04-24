@@ -1,6 +1,5 @@
 package com.example.fundoonotes.common.database.repository.sqlite
 
-import android.util.Log
 import com.example.fundoonotes.common.data.mappers.toDomain
 import com.example.fundoonotes.common.data.mappers.toEntity
 import com.example.fundoonotes.common.data.model.User

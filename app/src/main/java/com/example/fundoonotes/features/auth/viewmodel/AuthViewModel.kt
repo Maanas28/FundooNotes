@@ -1,3 +1,5 @@
+package com.example.fundoonotes.features.auth.viewmodel
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -14,8 +16,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     val authResult = MutableLiveData<Pair<Boolean, String?>>()
 
-    // Expose this for flow-based login check in MainActivity
     val accountDetails: StateFlow<User?> = repository.accountDetails
+
+
     fun registerWithGoogle(idToken: String, userInfo: User) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         repository.registerWithGoogleCredential(credential, userInfo) { success, message ->
@@ -56,8 +59,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         repository.getLoggedInUser(onSuccess, onFailure)
     }
 
-    fun getCurrentFirebaseUser(){
-        repository.getCurrentFirebaseUser()
+    fun isUserAuthenticated(onResult: (Boolean) -> Unit) {
+        // First check if we have a cached user locally
+        if (accountDetails.value != null) {
+            onResult(true)
+            return
+        }
+
+        // If no cached user, check Firebase (if online)
+        repository.isAuthenticated { isAuthenticated ->
+            onResult(isAuthenticated)
+        }
     }
 
 }

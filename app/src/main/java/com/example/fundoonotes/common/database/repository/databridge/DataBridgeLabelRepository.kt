@@ -1,8 +1,6 @@
 package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
-import android.provider.Settings.Global.getString
-import android.util.Log
 import com.example.fundoonotes.R
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.common.database.repository.interfaces.LabelsRepository

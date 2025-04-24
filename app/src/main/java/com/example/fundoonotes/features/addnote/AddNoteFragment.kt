@@ -195,7 +195,6 @@ class AddNoteFragment : Fragment() {
             hasReminder = selectedReminderTime != null,
             userId = existingNote?.userId ?: "",
             labels = existingNote?.labels ?: emptyList(),
-            // Use the archive state directly from existingNote if editing
             archived = existingNote?.archived ?: isArchivedInitially,
             inBin = existingNote?.inBin ?: false,
             deleted = existingNote?.deleted ?: false

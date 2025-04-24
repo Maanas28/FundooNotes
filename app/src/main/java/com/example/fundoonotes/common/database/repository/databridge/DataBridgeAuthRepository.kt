@@ -1,7 +1,6 @@
 package com.example.fundoonotes.common.database.repository.databridge
 
 import android.content.Context
-import android.util.Log
 import com.example.fundoonotes.R
 import com.example.fundoonotes.common.data.model.User
 import com.example.fundoonotes.common.database.repository.interfaces.AccountRepository
@@ -108,8 +107,29 @@ class DataBridgeAuthRepository(
         }
     }
 
-    fun getCurrentFirebaseUser(){
-        firebaseAuth.getCurrentFirebaseUser()
+    fun isAuthenticated(onResult: (Boolean) -> Unit) {
+        // First check SQLite repository for cached user
+        CoroutineScope(Dispatchers.Main).launch {
+            val localUser = sqliteAccount.accountDetails.value
+
+            if (localUser != null) {
+                // We have a cached authenticated user
+                withContext(Dispatchers.Main) { onResult(true) }
+                return@launch
+            }
+
+            // If no local user and we're offline, we're definitely not authenticated
+            if (!isOnline(context)) {
+                withContext(Dispatchers.Main) { onResult(false) }
+                return@launch
+            }
+
+            // If we're online, check Firebase
+            withContext(Dispatchers.Main) {
+                val firebaseUser = firebaseAuth.getCurrentFirebaseUser()
+                onResult(firebaseUser != null)
+            }
+        }
     }
 
 

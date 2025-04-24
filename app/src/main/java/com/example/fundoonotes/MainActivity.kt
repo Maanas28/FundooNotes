@@ -1,9 +1,6 @@
 package com.example.fundoonotes
 
-import AuthViewModel
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -16,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.features.archive.ArchiveFragment
-import com.example.fundoonotes.features.auth.ui.LoginActivity
 import com.example.fundoonotes.features.bin.BinFragment
 import com.example.fundoonotes.features.feeedback.FeedbackFragment
 import com.example.fundoonotes.features.help.HelpFragment
@@ -35,39 +31,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navView: NavigationView
     private lateinit var toggle: ActionBarDrawerToggle
     private val labelsViewModel by viewModels<LabelsViewModel>()
-    private val authViewModel by viewModels<AuthViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Check authentication state first - this is good as is
-        checkFirebaseAuthentication()
-
-        // Only proceed with UI setup if user is authenticated
         setContentView(R.layout.activity_main)
 
         labelsViewModel.fetchLabels()
-
-        // Initialize UI components
         initializeUIComponents()
-
-        // Set up the navigation drawer
         setupNavigationDrawer()
-
-        // Start observing data
         setupObservers()
 
-        // Load initial fragment if this is a fresh start
         if (savedInstanceState == null) {
             loadDefaultFragment()
-        }
-    }
-
-    private fun checkFirebaseAuthentication() {
-//        val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-        val user = authViewModel.getCurrentFirebaseUser()
-        if (user == null && authViewModel.authResult.value?.first != true) {
-            redirectToLogin()
         }
     }
 
@@ -173,10 +148,5 @@ class MainActivity : AppCompatActivity() {
         }
 
         navView.invalidate()
-    }
-
-    private fun redirectToLogin() {
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
     }
 }

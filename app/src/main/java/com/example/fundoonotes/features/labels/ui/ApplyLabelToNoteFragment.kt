@@ -11,12 +11,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fundoonotes.common.data.model.Label
+import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 import com.example.fundoonotes.common.util.interfaces.LabelActionHandler
 import com.example.fundoonotes.common.util.interfaces.LabelSelectionListener
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentApplyLabelToNoteBinding
 import com.example.fundoonotes.features.labels.util.EditLabelAdapter
-import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine

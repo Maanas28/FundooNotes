@@ -3,9 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".FundooNotesApplication"
@@ -18,18 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FundooNotes"
         android:windowSoftInputMode="adjustNothing"
-        tools:targetApi="31">
+        tools:targetApi="34">
 
-
         <activity
-            android:name=".features.auth.ui.RegisterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.auth.ui.LoginActivity"
-            android:exported="true">
-        </activity>
-        <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,9 +28,19 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".features.auth.ui.RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".features.auth.ui.LoginActivity"
+            android:exported="true" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
         <receiver
             android:name=".features.reminders.util.ReminderReceiver"
-            android:exported="false"/>
+            android:exported="false" />
 
         <service
             android:name=".common.util.MyFirebaseMessagingService"
@@ -49,5 +50,6 @@
             </intent-filter>
         </service>
     </application>
+
 
 </manifest>

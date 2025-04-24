@@ -3,7 +3,6 @@ package com.example.fundoonotes.features.reminders.util
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.example.fundoonotes.common.util.managers.NotificationManager
 
 class ReminderReceiver : BroadcastReceiver() {
