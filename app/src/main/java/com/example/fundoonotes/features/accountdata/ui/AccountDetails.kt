@@ -23,42 +23,49 @@ class AccountDetails : DialogFragment() {
     private var _binding: FragmentAccountDetailsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var accountViewModel: AccountViewModel
+    private val accountViewModel: AccountViewModel by lazy {
+        AccountViewModel(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate layout using ViewBinding
         _binding = FragmentAccountDetailsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupListeners()
+        observeAccountDetails()
+        accountViewModel.fetchAccountDetails()
+    }
 
-        // Set up close button
-        binding.btnClose.setOnClickListener {
-            dismiss()
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.apply {
+            setLayout(
+                (resources.displayMetrics.widthPixels * 0.95).toInt(),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setGravity(Gravity.CENTER)
         }
+    }
 
-        // Set up logout button
-        binding.btnLogout.setOnClickListener {
-            handleLogout()
-        }
+    private fun setupListeners() {
+        binding.btnClose.setOnClickListener { dismiss() }
+        binding.btnLogout.setOnClickListener { handleLogout() }
+    }
 
-        // Initialize ViewModel
-        accountViewModel = AccountViewModel(requireContext())
-
-        // Observe user details from ViewModel and populate UI
+    private fun observeAccountDetails() {
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 accountViewModel.accountDetails.collectLatest { user ->
-                    binding.tvName.text = "${user?.firstName} ${user?.lastName}"
-                    binding.tvEmail.text = user?.email
+                    binding.tvName.text = "${user?.firstName.orEmpty()} ${user?.lastName.orEmpty()}"
+                    binding.tvEmail.text = user?.email.orEmpty()
 
-                    // Load profile image using Glide
                     user?.profileImage?.let { imageUrl ->
                         Glide.with(requireContext())
                             .load(imageUrl)
@@ -68,23 +75,9 @@ class AccountDetails : DialogFragment() {
                 }
             }
         }
-
-        // Trigger fetch for account details
-        accountViewModel.fetchAccountDetails()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        // Set custom dialog size and position
-        dialog?.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.95).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        dialog?.window?.setGravity(Gravity.CENTER)
     }
 
     private fun handleLogout() {
-        // Log out and redirect to login screen
         accountViewModel.logout {
             startActivity(Intent(requireContext(), LoginActivity::class.java))
             requireActivity().finish()
@@ -93,6 +86,6 @@ class AccountDetails : DialogFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Avoid memory leaks
+        _binding = null
     }
 }

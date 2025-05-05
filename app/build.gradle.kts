@@ -64,7 +64,7 @@ dependencies {
     implementation ("androidx.room:room-runtime:2.7.0")
     ksp ("androidx.room:room-compiler:2.7.0")
     implementation ("androidx.room:room-ktx:2.7.0")
-    implementation(libs.play.services.auth) // or latest
+    implementation(libs.play.services.auth)
     implementation("com.google.android.gms:play-services-identity:18.1.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
     implementation("androidx.credentials:credentials:1.5.0")
@@ -73,7 +73,6 @@ dependencies {
     implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("androidx.fragment:fragment-ktx:1.6.2")
-
-
+    implementation ("androidx.fragment:fragment-ktx:1.8.6")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
 }

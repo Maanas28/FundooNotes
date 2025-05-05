@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.example.fundoonotes.common.components.NotesDisplayFragment
 import com.example.fundoonotes.common.components.SearchBarFragment
 import com.example.fundoonotes.common.components.SelectionBar
@@ -25,6 +26,7 @@ import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentRemindersBinding
 import com.example.fundoonotes.features.addnote.AddNoteFragment
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
+import kotlin.getValue
 
 class RemindersFragment : Fragment(),
     SelectionBarListener,
@@ -38,8 +40,22 @@ class RemindersFragment : Fragment(),
     private var _binding: FragmentRemindersBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var notesDisplayFragment: NotesDisplayFragment
-    private val viewModel by activityViewModels<NotesViewModel>()
+    private val notesDisplayFragment: NotesDisplayFragment by lazy {
+        NotesDisplayFragment.Companion.newInstance(NotesGridContext.Reminder).apply {
+            selectionBarListener = this@RemindersFragment
+            setNoteInteractionListener(this@RemindersFragment)
+            onSelectionModeEnabled = {
+                binding.searchBarContainerReminder.visibility = View.GONE
+                binding.selectionBarContainerReminder.visibility = View.VISIBLE
+            }
+            onSelectionModeDisabled = {
+                binding.searchBarContainerReminder.visibility = View.VISIBLE
+                binding.selectionBarContainerReminder.visibility = View.GONE
+            }
+        }
+    }
+
+    internal val viewModel: NotesViewModel by viewModels()
     private val labelsViewModel by activityViewModels<LabelsViewModel>()
     private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
 
@@ -59,7 +75,6 @@ class RemindersFragment : Fragment(),
         setupBackStackListener()
     }
 
-    /** Sets up the SearchBarFragment */
     private fun setupSearchBar() {
         val searchBarFragment = SearchBarFragment.Companion.newInstance("Reminder")
         childFragmentManager.beginTransaction()
@@ -67,21 +82,7 @@ class RemindersFragment : Fragment(),
             .commit()
     }
 
-    /** Sets up NotesListFragment and its callbacks */
     private fun setupNotesList() {
-        notesDisplayFragment = NotesDisplayFragment.Companion.newInstance(NotesGridContext.Reminder).apply {
-            selectionBarListener = this@RemindersFragment
-            setNoteInteractionListener(this@RemindersFragment)
-            onSelectionModeEnabled = {
-                binding.searchBarContainerReminder.visibility = View.GONE
-                binding.selectionBarContainerReminder.visibility = View.VISIBLE
-            }
-            onSelectionModeDisabled = {
-                binding.searchBarContainerReminder.visibility = View.VISIBLE
-                binding.selectionBarContainerReminder.visibility = View.GONE
-            }
-        }
-
         childFragmentManager.beginTransaction()
             .replace(binding.reminderNotesGridContainer.id, notesDisplayFragment)
             .commit()
@@ -92,7 +93,6 @@ class RemindersFragment : Fragment(),
             .commit()
     }
 
-    /** Restore main layout when label fragment is popped */
     private fun setupBackStackListener() {
         childFragmentManager.addOnBackStackChangedListener {
             if (childFragmentManager.backStackEntryCount == 0) {
@@ -101,7 +101,6 @@ class RemindersFragment : Fragment(),
         }
     }
 
-    /** Callback from NotesListFragment when editing a note */
     override fun onNoteEdit(note: Note) {
         val addNoteFragment = AddNoteFragment.Companion.newInstance(note)
         binding.fullscreenFragmentContainerReminder.visibility = View.VISIBLE
@@ -111,46 +110,38 @@ class RemindersFragment : Fragment(),
             .commit()
     }
 
-    /** Clears selection and resets layout visibility */
     override fun onSelectionCancelled() {
         selectionSharedViewModel.clearSelection()
         binding.searchBarContainerReminder.visibility = View.VISIBLE
         binding.selectionBarContainerReminder.visibility = View.GONE
     }
 
-    /** Toggles the layout between grid and list */
     override fun toggleView(isGrid: Boolean) {
         notesDisplayFragment.toggleView(isGrid)
     }
 
-    /** Handles search query update */
     override fun onSearchQueryChanged(query: String) {
         viewModel.setSearchQuery(query)
     }
 
-    /** Hides main layout when a full-screen fragment is displayed */
     override fun hideMainLayout() {
         binding.reminderTopBarContainer.visibility = View.GONE
         binding.reminderNotesGridContainer.visibility = View.GONE
         binding.fullscreenFragmentContainerReminder.visibility = View.VISIBLE
     }
 
-    /** Restores main layout after full-screen fragment is popped */
     override fun restoreMainLayout() {
         binding.fullscreenFragmentContainerReminder.visibility = View.GONE
         binding.reminderTopBarContainer.visibility = View.VISIBLE
         binding.reminderNotesGridContainer.visibility = View.VISIBLE
     }
 
-    /** Returns container ID for full-screen fragment transactions */
     override fun getLabelFragmentContainerId(): Int {
         return binding.fullscreenFragmentContainerReminder.id
     }
 
-    /** Returns fragment manager for label operations */
     override fun getLabelFragmentManager() = childFragmentManager
 
-    /** Updates labels for selected notes */
     override fun onLabelToggledForNotes(label: Label, isChecked: Boolean, noteIds: List<String>) {
         labelsViewModel.toggleLabelForNotes(label, isChecked, noteIds)
     }

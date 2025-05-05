@@ -20,9 +20,17 @@ class SearchBarFragment : Fragment() {
     private var _binding: FragmentSearchBarBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var drawerLayout: DrawerLayout
-    private var toggleListener: ViewToggleListener? = null
-    private var searchListener: SearchListener? = null
+    private val drawerLayout: DrawerLayout by lazy {
+        requireActivity().findViewById(R.id.drawerLayout)
+    }
+
+    private val toggleListener: ViewToggleListener? by lazy {
+        parentFragment as? ViewToggleListener
+    }
+
+    private val searchListener: SearchListener? by lazy {
+        parentFragment as? SearchListener
+    }
 
     private var isGrid = true
     private var isSearchMode = false
@@ -36,8 +44,6 @@ class SearchBarFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        drawerLayout = requireActivity().findViewById(R.id.drawerLayout)
-
         val title = arguments?.getString(ARG_TITLE) ?: "Notes"
         binding.tvTitle.text = title
 
@@ -82,12 +88,6 @@ class SearchBarFragment : Fragment() {
             binding.btnSearch.setImageResource(R.drawable.search)
             searchListener?.onSearchQueryChanged("")
         }
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        toggleListener = parentFragment as? ViewToggleListener
-        searchListener = parentFragment as? SearchListener
     }
 
     override fun onDestroyView() {

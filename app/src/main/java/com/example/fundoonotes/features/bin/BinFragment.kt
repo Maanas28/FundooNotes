@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.example.fundoonotes.common.components.NotesDisplayFragment
 import com.example.fundoonotes.common.components.SearchBarFragment
 import com.example.fundoonotes.common.components.SelectionBar
@@ -17,16 +18,29 @@ import com.example.fundoonotes.common.util.interfaces.ViewToggleListener
 import com.example.fundoonotes.common.viewmodel.NotesViewModel
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentBinBinding
+import kotlin.getValue
 
 class BinFragment : Fragment(), SelectionBarListener, ViewToggleListener, SearchListener {
 
     private var _binding: FragmentBinBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var notesDisplayFragment: NotesDisplayFragment
-    private val notesViewModel by activityViewModels<NotesViewModel>()
-    private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
+    private val notesDisplayFragment: NotesDisplayFragment by lazy {
+        NotesDisplayFragment.Companion.newInstance(NotesGridContext.Bin).apply {
+            selectionBarListener = this@BinFragment
+            onSelectionModeEnabled = {
+                binding.searchBarContainerBin.visibility = View.GONE
+                binding.selectionBarContainerBin.visibility = View.VISIBLE
+            }
+            onSelectionModeDisabled = {
+                binding.searchBarContainerBin.visibility = View.VISIBLE
+                binding.selectionBarContainerBin.visibility = View.GONE
+            }
+        }
+    }
 
+    internal val notesViewModel: NotesViewModel by viewModels()
+    private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBinBinding.inflate(inflater, container, false)
@@ -39,18 +53,6 @@ class BinFragment : Fragment(), SelectionBarListener, ViewToggleListener, Search
         childFragmentManager.beginTransaction()
             .replace(binding.searchBarContainerBin.id, searchBarFragment)
             .commit()
-
-        notesDisplayFragment = NotesDisplayFragment.Companion.newInstance(NotesGridContext.Bin).apply {
-            selectionBarListener = this@BinFragment
-            onSelectionModeEnabled = {
-                binding.searchBarContainerBin.visibility = View.GONE
-                binding.selectionBarContainerBin.visibility = View.VISIBLE
-            }
-            onSelectionModeDisabled = {
-                binding.searchBarContainerBin.visibility = View.VISIBLE
-                binding.selectionBarContainerBin.visibility = View.GONE
-            }
-        }
 
         childFragmentManager.beginTransaction()
             .replace(binding.binNotesGridContainer.id, notesDisplayFragment)

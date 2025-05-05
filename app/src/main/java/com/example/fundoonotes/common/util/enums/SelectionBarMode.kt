@@ -1,5 +1,6 @@
 package com.example.fundoonotes.common.util.enums
 
-enum class SelectionBarMode {
-    DEFAULT, BIN
+object SelectionBarMode {
+    const val DEFAULT = "DEFAULT"
+    const val BIN = "BIN"
 }

@@ -35,7 +35,10 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
     private val viewModel by viewModels<AuthViewModel>()
-    private lateinit var credentialManager: CredentialManager
+
+    private val credentialManager: CredentialManager by lazy {
+        CredentialManager.create(this)
+    }
 
     private var imageUri: Uri? = null
     private var uploadedImageUrl: String? = null
@@ -45,9 +48,6 @@ class RegisterActivity : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-
-        // Initialize Credential Manager
-        credentialManager = CredentialManager.create(this)
 
         setupListeners()
         setupObservers()
@@ -87,12 +87,10 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Launch Google Sign-In using Credential Manager
     private suspend fun signUpWithGoogle() {
         try {
             binding.progressBar.visibility = View.VISIBLE
 
-            // Configure Google ID token request
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(getString(R.string.default_web_client_id))
@@ -102,13 +100,10 @@ class RegisterActivity : AppCompatActivity() {
                 .addCredentialOption(googleIdOption)
                 .build()
 
-            // Show sign-in UI and get credential
             val result = credentialManager.getCredential(
-                request = request,
-                context = this,
+                context = this@RegisterActivity,
+                request = request
             )
-
-            // Process the returned credential
             handleCredential(result)
 
         } catch (e: GetCredentialException) {
@@ -127,12 +122,9 @@ class RegisterActivity : AppCompatActivity() {
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
-                        // Parse the credential
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        // Get the token
+                        val googleIdTokenCredential =
+                            GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
-
-                        // Handle the token
                         handleIdToken(idToken)
                     } catch (e: Exception) {
                         binding.progressBar.visibility = View.GONE
@@ -144,6 +136,7 @@ class RegisterActivity : AppCompatActivity() {
                     toast("Unsupported credential type")
                 }
             }
+
             else -> {
                 binding.progressBar.visibility = View.GONE
                 toast("Unsupported credential")
@@ -151,7 +144,6 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Decode JWT, build User, call ViewModel
     private fun handleIdToken(idToken: String) {
         val parts = idToken.split(".")
         if (parts.size != 3) {
@@ -161,20 +153,20 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-        // Pad and decode payload
         val seg = parts[1]
         val padLen = (4 - seg.length % 4) % 4
         val padded = seg + "=".repeat(padLen)
+
         try {
             val decoded = Base64.decode(padded, Base64.URL_SAFE or Base64.NO_WRAP)
             val payloadJson = String(decoded, StandardCharsets.UTF_8)
             val payload = JSONObject(payloadJson)
 
             val user = User(
-                firstName   = payload.optString("given_name", ""),
-                lastName    = payload.optString("family_name", ""),
-                email       = payload.optString("email", ""),
-                profileImage= payload.optString("picture", null)
+                firstName = payload.optString("given_name", ""),
+                lastName = payload.optString("family_name", ""),
+                email = payload.optString("email", ""),
+                profileImage = payload.optString("picture", null)
             )
 
             viewModel.registerWithGoogle(idToken, user)
@@ -186,28 +178,27 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Email/password registration with field-specific toasts
     private fun registerWithEmailPassword() {
         val firstName = binding.editTextFirstName.text.toString().trim()
-        val lastName  = binding.editTextLastName.text.toString().trim()
-        val email     = binding.editTextEmail.text.toString().trim()
-        val password  = binding.editTextPassword.text.toString().trim()
-        val confirm   = binding.editTextConfirmPassword.text.toString().trim()
+        val lastName = binding.editTextLastName.text.toString().trim()
+        val email = binding.editTextEmail.text.toString().trim()
+        val password = binding.editTextPassword.text.toString().trim()
+        val confirm = binding.editTextConfirmPassword.text.toString().trim()
 
         when {
             firstName.isEmpty() -> { toast("Please enter your first name"); return }
-            lastName.isEmpty()  -> { toast("Please enter your last name"); return }
-            email.isEmpty()     -> { toast("Please enter your email address"); return }
-            password.isEmpty()  -> { toast("Please enter a password"); return }
-            confirm.isEmpty()   -> { toast("Please confirm your password"); return }
+            lastName.isEmpty() -> { toast("Please enter your last name"); return }
+            email.isEmpty() -> { toast("Please enter your email address"); return }
+            password.isEmpty() -> { toast("Please enter a password"); return }
+            confirm.isEmpty() -> { toast("Please confirm your password"); return }
             password != confirm -> { toast(getString(R.string.password_mismatch)); return }
-            !AuthUtil.isValidEmail(email)    -> { toast(getString(R.string.invalid_email)); return }
+            !AuthUtil.isValidEmail(email) -> { toast(getString(R.string.invalid_email)); return }
             !AuthUtil.isValidPassword(password) -> { toast(getString(R.string.weak_password)); return }
             else -> {
                 val user = User(
-                    firstName    = firstName,
-                    lastName     = lastName,
-                    email        = email,
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = email,
                     profileImage = uploadedImageUrl
                 )
                 binding.progressBar.visibility = View.VISIBLE
@@ -216,7 +207,6 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Image picker → Cloudinary upload
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             imageUri = uri
@@ -224,7 +214,6 @@ class RegisterActivity : AppCompatActivity() {
             contentResolver.openInputStream(uri)?.use { input ->
                 file.outputStream().use { output -> input.copyTo(output) }
             }
-            // upload
             lifecycleScope.launch(Dispatchers.IO) {
                 runOnUiThread { toast(getString(R.string.uploading_image)) }
                 uploadedImageUrl = CloudinaryUploader.uploadImage(file)

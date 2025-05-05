@@ -9,7 +9,7 @@ import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 
 class EditLabelAdapter(
-    private val mode: LabelAdapterMode,
+    private val mode: String,
     private var preSelectedLabelIds: Set<String> = emptySet(),
     private val onDelete: ((Label) -> Unit)? = null,
     private val onRename: ((Label, String) -> Unit)? = null,
@@ -18,7 +18,8 @@ class EditLabelAdapter(
 
     private var editPosition = -1
 
-    override fun getItemViewType(position: Int): Int = if (mode == LabelAdapterMode.EDIT) 0 else 1
+    override fun getItemViewType(position: Int): Int =
+        if (mode == LabelAdapterMode.EDIT) 0 else 1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)

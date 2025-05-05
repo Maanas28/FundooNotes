@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fundoonotes.common.data.model.Label
-import com.example.fundoonotes.common.util.enums.LabelAdapterMode
+import com.example.fundoonotes.common.util.enums.LabelAdapterMode.SELECT
 import com.example.fundoonotes.common.util.interfaces.LabelActionHandler
 import com.example.fundoonotes.common.util.interfaces.LabelSelectionListener
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
@@ -82,7 +82,7 @@ class ApplyLabelToNoteFragment : Fragment() {
 
                         if (adapter == null) {
                             adapter = EditLabelAdapter(
-                                mode = LabelAdapterMode.SELECT,
+                                mode = SELECT,
                                 preSelectedLabelIds = commonLabelIds,
                                 onSelect = { label, isChecked ->
                                     if (isChecked) selectedLabels.add(label)
@@ -95,6 +95,7 @@ class ApplyLabelToNoteFragment : Fragment() {
                                     )
                                 }
                             )
+
                             binding.labelRecyclerView.adapter = adapter
                             adapter?.submitList(labels.toList())
                         } else {

@@ -7,13 +7,17 @@ import com.example.fundoonotes.common.database.repository.databridge.DataBridgeN
 import com.example.fundoonotes.common.util.managers.ConnectivityManager
 
 class FundooNotesApplication : Application() {
-    private lateinit var connectivityManager: ConnectivityManager<Note>
-    private lateinit var repository: DataBridge<Note>
+
+    private val repository: DataBridge<Note> by lazy {
+        DataBridgeNotesRepository(this)
+    }
+
+    private val connectivityManager: ConnectivityManager<Note> by lazy {
+        ConnectivityManager(this, repository)
+    }
 
     override fun onCreate() {
         super.onCreate()
-        repository = DataBridgeNotesRepository(this)
-        connectivityManager = ConnectivityManager(this, repository)
         connectivityManager.startMonitoring()
     }
 

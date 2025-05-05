@@ -27,9 +27,18 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var navView: NavigationView
-    private lateinit var toggle: ActionBarDrawerToggle
+    private val drawerLayout: DrawerLayout by lazy {
+        findViewById(R.id.drawerLayout)
+    }
+
+    private val navView: NavigationView by lazy {
+        findViewById(R.id.nav_view)
+    }
+
+    private val toggle: ActionBarDrawerToggle by lazy {
+        ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+    }
+
     private val labelsViewModel by viewModels<LabelsViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         labelsViewModel.fetchLabels()
-        initializeUIComponents()
         setupNavigationDrawer()
         setupObservers()
 
@@ -46,32 +54,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun initializeUIComponents() {
-        drawerLayout = findViewById(R.id.drawerLayout)
-        navView = findViewById(R.id.nav_view)
-
-        // Initially hide the labels heading until we know if there are labels
-        navView.menu.findItem(R.id.label_heading)?.isVisible = false
-    }
-
     private fun setupNavigationDrawer() {
-        // Setup Drawer Toggle
-        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+        navView.menu.findItem(R.id.label_heading)?.isVisible = false
+
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
-        // Configure ActionBar
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(false)
             setHomeButtonEnabled(false)
             setDisplayShowHomeEnabled(false)
         }
 
-        // Ensure the hamburger menu is enabled
         toggle.isDrawerIndicatorEnabled = true
 
-        // Handle Navigation Clicks
         navView.setNavigationItemSelectedListener { menuItem ->
             menuItem.isChecked = true
 
@@ -85,10 +81,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.app_feedback -> replaceFragment(FeedbackFragment())
                 R.id.help -> replaceFragment(HelpFragment())
                 else -> {
-                    // Handle dynamic labels
                     val labelName = menuItem.title.toString()
-                    val fragment = LabelFragment.Companion.newInstance(labelName)
-                    replaceFragment(fragment)
+                    replaceFragment(LabelFragment.newInstance(labelName))
                 }
             }
 
@@ -98,7 +92,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        // Observe labels for the drawer menu
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 labelsViewModel.labelList.collect { labels ->
@@ -113,7 +106,6 @@ class MainActivity : AppCompatActivity() {
         navView.setCheckedItem(R.id.nav_notes)
     }
 
-    // Function to Replace Fragments
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
@@ -125,24 +117,22 @@ class MainActivity : AppCompatActivity() {
         val menu = navView.menu
         val groupId = R.id.group_labels_dynamic
 
-        // Clear old dynamic items in the group
         for (i in menu.size - 1 downTo 0) {
             val item = menu[i]
             if (item.groupId == groupId) {
                 menu.removeItem(item.itemId)
             }
         }
-        if( labels.size != 0) {
-            // Re-add the heading explicitly
+
+        if (labels.isNotEmpty()) {
             menu.add(groupId, R.id.label_heading, 100, "Labels")
                 .setEnabled(false)
                 .setCheckable(false)
         }
-        // Add new labels
-        val startOrder = 101
+
         labels.forEachIndexed { index, label ->
             val id = label.name.hashCode()
-            menu.add(groupId, id, startOrder + index, label.name)
+            menu.add(groupId, id, 101 + index, label.name)
                 .setIcon(R.drawable.label)
                 .setCheckable(true)
         }

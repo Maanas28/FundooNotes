@@ -29,7 +29,10 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private val viewModel by viewModels<AuthViewModel>()
-    private lateinit var credentialManager: CredentialManager
+
+    private val credentialManager: CredentialManager by lazy {
+        CredentialManager.create(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,15 +40,11 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         supportActionBar?.hide()
 
-        // Initialize Credential Manager
-        credentialManager = CredentialManager.create(this)
-
         setupListeners()
         setupObservers()
     }
 
     private fun setupListeners() {
-        // Email/password login
         binding.buttonLogin.setOnClickListener {
             val email = binding.editTextEmail.text.toString().trim()
             val password = binding.editTextPassword.text.toString().trim()
@@ -61,14 +60,12 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Google login with Credential Manager
         binding.buttonGoogleLogin.setOnClickListener {
             lifecycleScope.launch {
                 signInWithGoogle()
             }
         }
 
-        // Navigate to register
         binding.buttonRegisterLogin.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
@@ -97,14 +94,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Sign in using Google credentials with Credential Manager
     private suspend fun signInWithGoogle() {
         try {
             binding.progressBar.visibility = View.VISIBLE
 
-            // Configure Google ID token request
             val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)  // Try to use accounts user has already signed in with
+                .setFilterByAuthorizedAccounts(true)
                 .setServerClientId(getString(R.string.default_web_client_id))
                 .build()
 
@@ -112,13 +107,11 @@ class LoginActivity : AppCompatActivity() {
                 .addCredentialOption(googleIdOption)
                 .build()
 
-            // Show sign-in UI and get credential
             val result = credentialManager.getCredential(
                 request = request,
-                context = this,
+                context = this
             )
 
-            // Process the returned credential
             handleCredential(result)
 
         } catch (e: GetCredentialException) {
@@ -137,12 +130,9 @@ class LoginActivity : AppCompatActivity() {
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
-                        // Parse the credential
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        // Get the token
+                        val googleIdTokenCredential =
+                            GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
-
-                        // Handle the token
                         handleGoogleIdToken(idToken)
                     } catch (e: Exception) {
                         binding.progressBar.visibility = View.GONE
@@ -154,6 +144,7 @@ class LoginActivity : AppCompatActivity() {
                     showToast("Unsupported credential type")
                 }
             }
+
             else -> {
                 binding.progressBar.visibility = View.GONE
                 showToast("Unsupported credential")
@@ -161,7 +152,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Decode and handle the ID token payload
     private fun handleGoogleIdToken(idToken: String) {
         val parts = idToken.split(".")
         if (parts.size != 3) {
@@ -170,7 +160,6 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        // Pad and Base64-decode the payload
         val seg = parts[1]
         val padLen = (4 - seg.length % 4) % 4
         val padded = seg + "=".repeat(padLen)
@@ -179,15 +168,13 @@ class LoginActivity : AppCompatActivity() {
             val payloadJson = String(decoded, StandardCharsets.UTF_8)
             val payload = JSONObject(payloadJson)
 
-            // Build user from token
             val user = com.example.fundoonotes.common.data.model.User(
-                firstName   = payload.optString("given_name", ""),
-                lastName    = payload.optString("family_name", ""),
-                email       = payload.optString("email", ""),
-                profileImage= payload.optString("picture", null)
+                firstName = payload.optString("given_name", ""),
+                lastName = payload.optString("family_name", ""),
+                email = payload.optString("email", ""),
+                profileImage = payload.optString("picture", null)
             )
 
-            // Fire your loginWithGoogle
             viewModel.loginWithGoogle(idToken)
 
         } catch (e: Exception) {

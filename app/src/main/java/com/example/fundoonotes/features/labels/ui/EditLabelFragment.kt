@@ -25,7 +25,17 @@ class EditLabelFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val labelsViewModel by activityViewModels<LabelsViewModel>()
-    private lateinit var adapter: EditLabelAdapter
+
+    private val adapter by lazy {
+        EditLabelAdapter(
+            mode = LabelAdapterMode.EDIT,
+            onDelete = { label -> labelsViewModel.deleteLabel(label) },
+            onRename = { oldLabel, newName ->
+                val newLabel = oldLabel.copy(name = newName)
+                labelsViewModel.updateLabel(oldLabel, newLabel)
+            }
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,36 +48,31 @@ class EditLabelFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize adapter early so it's ready when click listeners are set
-        adapter = EditLabelAdapter(
-            mode = LabelAdapterMode.EDIT,
-            onDelete = { label -> labelsViewModel.deleteLabel(label) },
-            onRename = { oldLabel, newName ->
-                val newLabel = oldLabel.copy(name = newName)
-                labelsViewModel.updateLabel(oldLabel, newLabel)
-            }
-        )
-
-        binding.recyclerLabels.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerLabels.adapter = adapter
+        setupRecyclerView()
+        setupListeners()
+        observeLabels()
 
         labelsViewModel.fetchLabels()
+    }
 
-        // Show input row when "Create new label" is clicked
+    private fun setupRecyclerView() {
+        binding.recyclerLabels.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerLabels.adapter = adapter
+    }
+
+    private fun setupListeners() {
         binding.createNewLabelEt.setOnClickListener {
             binding.staticAddRow.visibility = View.GONE
             binding.editableAddRow.visibility = View.VISIBLE
             binding.labelInputField.requestFocus()
         }
 
-        // Cancel input
         binding.btnCancelLabel.setOnClickListener {
             binding.labelInputField.setText("")
             binding.editableAddRow.visibility = View.GONE
             binding.staticAddRow.visibility = View.VISIBLE
         }
 
-        // Confirm and save label
         binding.btnConfirmLabel.setOnClickListener {
             val labelName = binding.labelInputField.text.toString().trim()
             if (labelName.isNotEmpty()) {
@@ -86,13 +91,18 @@ class EditLabelFragment : Fragment() {
                             Toast.makeText(requireContext(), exception.message ?: "Error adding label", Toast.LENGTH_SHORT).show()
                         }
                     }
-
                 )
             } else {
                 Toast.makeText(requireContext(), "Label name cannot be empty", Toast.LENGTH_SHORT).show()
             }
         }
 
+        binding.btnBack.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
+    }
+
+    private fun observeLabels() {
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 labelsViewModel.labelList.collect { labels ->
@@ -100,10 +110,6 @@ class EditLabelFragment : Fragment() {
                     adapter.submitList(labels)
                 }
             }
-        }
-
-        binding.btnBack.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
         }
     }
 

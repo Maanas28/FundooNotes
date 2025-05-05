@@ -1,6 +1,7 @@
 package com.example.fundoonotes.common.components
 
 import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,10 +10,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.fundoonotes.R
 import com.example.fundoonotes.common.util.enums.SelectionBarMode
+import com.example.fundoonotes.common.util.enums.SelectionBarMode.BIN
+import com.example.fundoonotes.common.util.enums.SelectionBarMode.DEFAULT
 import com.example.fundoonotes.common.util.interfaces.LabelFragmentHost
 import com.example.fundoonotes.common.util.interfaces.MainLayoutToggler
 import com.example.fundoonotes.common.viewmodel.NotesViewModel
@@ -28,13 +32,21 @@ class SelectionBar : Fragment() {
     private val binding get() = _binding!!
 
     private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
-    private val notesViewModel by activityViewModels<NotesViewModel>()
 
-    private var mode: SelectionBarMode = SelectionBarMode.DEFAULT
+    private val notesViewModel: NotesViewModel by lazy {
+        val parent = parentFragment
+        if (parent != null) {
+            ViewModelProvider(parent)[NotesViewModel::class.java]
+        } else {
+            ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        }
+    }
+
+    private var mode: String = SelectionBarMode.DEFAULT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mode = arguments?.getString(ARG_MODE)?.let { SelectionBarMode.valueOf(it) } ?: SelectionBarMode.DEFAULT
+        mode = arguments?.getString(ARG_MODE) ?: SelectionBarMode.DEFAULT
     }
 
     override fun onCreateView(
@@ -58,7 +70,7 @@ class SelectionBar : Fragment() {
 
     private fun setupUIForMode() {
         when (mode) {
-            SelectionBarMode.DEFAULT -> {
+            DEFAULT -> {
                 binding.btnLabelSelectionBar.visibility = View.VISIBLE
                 binding.btnArchiveSelectionBar.visibility = View.VISIBLE
                 binding.btnMoreSelectedSelectionBar.visibility = View.VISIBLE
@@ -67,7 +79,6 @@ class SelectionBar : Fragment() {
                     val selectedNotes = selectionSharedViewModel.getSelection()
                     if (selectedNotes.isNotEmpty()) {
                         val labelFragment = ApplyLabelToNoteFragment.Companion.newInstance()
-
 
                         val host = parentFragment as? LabelFragmentHost
                             ?: activity as? LabelFragmentHost
@@ -124,7 +135,8 @@ class SelectionBar : Fragment() {
                     }
                 }
             }
-            SelectionBarMode.BIN -> {
+
+            BIN -> {
                 binding.btnRestoreSelected.visibility = View.VISIBLE
                 binding.btnMoreSelectedSelectionBar.visibility = View.VISIBLE
 
@@ -148,7 +160,7 @@ class SelectionBar : Fragment() {
                             }
                             selectionSharedViewModel.clearSelection()
                         }
-                        .setNegativeButton(getString(R.string.cancel),null)
+                        .setNegativeButton(getString(R.string.cancel), null)
                         .show()
                 }
             }
@@ -173,10 +185,10 @@ class SelectionBar : Fragment() {
     companion object {
         private const val ARG_MODE = "mode"
 
-        fun newInstance(mode: SelectionBarMode): SelectionBar {
+        fun newInstance(mode: String): SelectionBar {
             return SelectionBar().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_MODE, mode.name)
+                    putString(ARG_MODE, mode)
                 }
             }
         }

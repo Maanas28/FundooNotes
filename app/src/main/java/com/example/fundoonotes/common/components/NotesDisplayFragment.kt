@@ -15,6 +15,7 @@ import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,6 +31,7 @@ import com.example.fundoonotes.common.viewmodel.NotesViewModel
 import com.example.fundoonotes.common.viewmodel.NotesViewModel.SyncState
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentNotesListBinding
+import com.example.fundoonotes.features.notes.ui.DashboardFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -38,11 +40,49 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
     private var _binding: FragmentNotesListBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel by activityViewModels<NotesViewModel>()
-    private lateinit var permissionManager: PermissionManager
-    private lateinit var adapter: NotesAdapter
-    private lateinit var refreshReceiver: BroadcastReceiver
     private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
+
+    private val viewModel: NotesViewModel by lazy {
+        val parent = parentFragment
+        if (parent != null) {
+            ViewModelProvider(parent)[NotesViewModel::class.java]
+        } else {
+            ViewModelProvider(requireActivity())[NotesViewModel::class.java]
+        }
+    }
+
+    private val permissionManager: PermissionManager by lazy {
+        PermissionManager(requireContext())
+    }
+
+    private val adapter: NotesAdapter by lazy {
+        NotesAdapter(
+            notes = emptyList(),
+            onNoteClick = { note ->
+                val isSelectionActive = selectionSharedViewModel.getSelection().isNotEmpty()
+                if (isSelectionActive) {
+                    selectionSharedViewModel.toggleSelection(note)
+                } else {
+                    handleNoteClick(note)
+                }
+            },
+            onNoteLongClick = { note ->
+                if (selectionSharedViewModel.getSelection().isEmpty()) {
+                    onSelectionModeEnabled?.invoke()
+                }
+                selectionSharedViewModel.toggleSelection(note)
+            }
+        )
+    }
+
+    private val refreshReceiver: BroadcastReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val noteId = intent?.getStringExtra("noteId") ?: return
+                adapter.refreshSingleExpiredReminder(noteId)
+            }
+        }
+    }
 
     private var notesContext: NotesGridContext? = null
     private var animateOnLoad: Boolean = false
@@ -71,7 +111,6 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
         super.onCreate(savedInstanceState)
         notesContext = BundleCompat.getParcelable(arguments, ARG_CONTEXT, NotesGridContext::class.java)
         animateOnLoad = arguments?.getBoolean(ARG_ANIMATE_ON_LOAD) ?: false
-        permissionManager = PermissionManager(requireContext())
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -106,24 +145,6 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
         ).apply {
             gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
         }
-
-        adapter = NotesAdapter(
-            notes = emptyList(),
-            onNoteClick = { note ->
-                val isSelectionActive = selectionSharedViewModel.getSelection().isNotEmpty()
-                if (isSelectionActive) {
-                    selectionSharedViewModel.toggleSelection(note)
-                } else {
-                    handleNoteClick(note)
-                }
-            },
-            onNoteLongClick = { note ->
-                if (selectionSharedViewModel.getSelection().isEmpty()) {
-                    onSelectionModeEnabled?.invoke()
-                }
-                selectionSharedViewModel.toggleSelection(note)
-            }
-        )
 
         binding.notesRecyclerView.adapter = adapter
         binding.notesRecyclerView.layoutAnimation =
@@ -210,13 +231,6 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
     }
 
     private fun registerRefreshReceiver() {
-        refreshReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val noteId = intent?.getStringExtra("noteId") ?: return
-                adapter.refreshSingleExpiredReminder(noteId)
-            }
-        }
-
         val filter = IntentFilter("com.example.fundoonotes.REFRESH_UI")
         permissionManager.registerReceiver(refreshReceiver, filter)
     }
@@ -226,11 +240,10 @@ class NotesDisplayFragment : Fragment(), SelectionBarListener {
             viewModel.reverseSyncNotes()
         } else {
             binding.swipeRefreshLayout.isRefreshing = false
-
             AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.no_internet_title))
                 .setMessage(getString(R.string.no_internet_message))
-                .setPositiveButton(getString(R.string.ok))  { dialog, _ -> dialog.dismiss() }
+                .setPositiveButton(getString(R.string.ok)) { dialog, _ -> dialog.dismiss() }
                 .show()
         }
     }

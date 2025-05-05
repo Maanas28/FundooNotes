@@ -13,6 +13,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.example.fundoonotes.R
 import com.example.fundoonotes.common.components.NotesDisplayFragment
 import com.example.fundoonotes.common.components.SelectionBar
@@ -20,16 +21,7 @@ import com.example.fundoonotes.common.data.model.Label
 import com.example.fundoonotes.common.data.model.Note
 import com.example.fundoonotes.common.util.NotesGridContext
 import com.example.fundoonotes.common.util.enums.SelectionBarMode
-import com.example.fundoonotes.common.util.interfaces.AddNoteListener
-import com.example.fundoonotes.common.util.interfaces.DrawerToggleListener
-import com.example.fundoonotes.common.util.interfaces.EditNoteHandler
-import com.example.fundoonotes.common.util.interfaces.LabelActionHandler
-import com.example.fundoonotes.common.util.interfaces.LabelFragmentHost
-import com.example.fundoonotes.common.util.interfaces.LabelSelectionListener
-import com.example.fundoonotes.common.util.interfaces.MainLayoutToggler
-import com.example.fundoonotes.common.util.interfaces.SearchListener
-import com.example.fundoonotes.common.util.interfaces.SelectionBarListener
-import com.example.fundoonotes.common.util.interfaces.ViewToggleListener
+import com.example.fundoonotes.common.util.interfaces.*
 import com.example.fundoonotes.common.viewmodel.NotesViewModel
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentNotesBinding
@@ -51,48 +43,20 @@ class DashboardFragment : Fragment(),
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
 
-    private val notesViewModel by activityViewModels<NotesViewModel>()
+    internal val notesViewModel: NotesViewModel by viewModels()
     private val labelsViewModel by activityViewModels<LabelsViewModel>()
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var notesDisplayFragment: NotesDisplayFragment
     private val selectionSharedViewModel by activityViewModels<SelectionSharedViewModel>()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentNotesBinding.inflate(inflater, container, false)
-        setupDrawerLayout()
-        setupSelectionBar()
-        return binding.root
+    private val drawerLayout: DrawerLayout by lazy {
+        requireActivity().findViewById(R.id.drawerLayout)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val searchBarFragment = DashboardScreenSearchBar()
-        childFragmentManager.beginTransaction()
-            .replace(binding.searchBar.id, searchBarFragment)
-            .commit()
-
-        setupNotesGrid()
-        setupBackPressHandling()
-        setupFab()
-        setupBackStackListener()
+    private val searchBarFragment: DashboardScreenSearchBar by lazy {
+        DashboardScreenSearchBar()
     }
 
-
-    /** Accesses the drawer layout from the activity */
-    private fun setupDrawerLayout() {
-        drawerLayout = requireActivity().findViewById(R.id.drawerLayout)
-    }
-
-    /** Adds the reusable SelectionBar in DEFAULT mode */
-    private fun setupSelectionBar() {
-        val selectionBar = SelectionBar.Companion.newInstance(SelectionBarMode.DEFAULT)
-        childFragmentManager.beginTransaction()
-            .replace(binding.selectionBarContainer.id, selectionBar)
-            .commit()
-    }
-
-    /** Initializes the notes grid and listeners */
-    private fun setupNotesGrid() {
-        notesDisplayFragment = NotesDisplayFragment.newInstance(
+    private val notesDisplayFragment: NotesDisplayFragment by lazy {
+        NotesDisplayFragment.newInstance(
             NotesGridContext.Notes,
             animateOnLoad = true
         ).apply {
@@ -107,13 +71,41 @@ class DashboardFragment : Fragment(),
                 binding.selectionBarContainer.visibility = View.GONE
             }
         }
+    }
 
+    private val selectionBar: SelectionBar by lazy {
+        SelectionBar.newInstance(SelectionBarMode.DEFAULT)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentNotesBinding.inflate(inflater, container, false)
+        setupSelectionBar()
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        childFragmentManager.beginTransaction()
+            .replace(binding.searchBar.id, searchBarFragment)
+            .commit()
+
+        setupNotesGrid()
+        setupBackPressHandling()
+        setupFab()
+        setupBackStackListener()
+    }
+
+    private fun setupSelectionBar() {
+        childFragmentManager.beginTransaction()
+            .replace(binding.selectionBarContainer.id, selectionBar)
+            .commit()
+    }
+
+    private fun setupNotesGrid() {
         childFragmentManager.beginTransaction()
             .replace(binding.container.id, notesDisplayFragment)
             .commit()
     }
 
-    /** Restores layout when full-screen fragment is popped */
     private fun setupBackStackListener() {
         childFragmentManager.addOnBackStackChangedListener {
             if (childFragmentManager.backStackEntryCount == 0) {
@@ -122,7 +114,6 @@ class DashboardFragment : Fragment(),
         }
     }
 
-    /** Handles system back press (especially for full screen views) */
     private fun setupBackPressHandling() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             if (binding.fullScreenContainer.isVisible) {
@@ -135,7 +126,6 @@ class DashboardFragment : Fragment(),
         }
     }
 
-    /** FloatingActionButton to launch AddNoteFragment */
     private fun setupFab() {
         binding.fab.setOnClickListener {
             openAddOrEditNote(null)
@@ -182,10 +172,9 @@ class DashboardFragment : Fragment(),
 
     override fun onAddNoteCancelled() {}
 
-    /** Opens AddNoteFragment for adding or editing a note */
     private fun openAddOrEditNote(note: Note?) {
         hideMainLayout()
-        val addNoteFragment = AddNoteFragment.Companion.newInstance(note).apply {
+        val addNoteFragment = AddNoteFragment.newInstance(note).apply {
             setAddNoteListener(this@DashboardFragment)
         }
         parentFragmentManager.beginTransaction()
@@ -205,14 +194,12 @@ class DashboardFragment : Fragment(),
         binding.contentLayout.visibility = View.VISIBLE
         binding.fab.visibility = View.VISIBLE
 
-        // Clear previous views to avoid memory leaks
         if (binding.fullScreenContainer.isNotEmpty()) {
             binding.fullScreenContainer.removeAllViews()
         }
     }
 
     override fun onSearchQueryChanged(query: String) {
-        // Forward the search query to the ViewModel
         notesViewModel.setSearchQuery(query)
     }
 

@@ -1,5 +1,6 @@
 package com.example.fundoonotes.common.util.enums
 
-enum class LabelAdapterMode {
-    EDIT, SELECT
+object LabelAdapterMode {
+    const val EDIT = "EDIT"
+    const val SELECT = "SELECT"
 }
