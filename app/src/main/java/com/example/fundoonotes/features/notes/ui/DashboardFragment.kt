@@ -207,4 +207,11 @@ class DashboardFragment : Fragment(),
         super.onDestroyView()
         _binding = null
     }
+
+    companion object {
+        fun newInstance(): DashboardFragment {
+            return DashboardFragment()
+        }
+    }
+
 }

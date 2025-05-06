@@ -72,14 +72,14 @@ class MainActivity : AppCompatActivity() {
             menuItem.isChecked = true
 
             when (menuItem.itemId) {
-                R.id.nav_notes -> replaceFragment(DashboardFragment())
-                R.id.nav_reminders -> replaceFragment(RemindersFragment())
-                R.id.nav_create_labels -> replaceFragment(EditLabelFragment())
-                R.id.nav_archive -> replaceFragment(ArchiveFragment())
-                R.id.nav_trash -> replaceFragment(BinFragment())
-                R.id.nav_settings -> replaceFragment(SettingsFragment())
-                R.id.app_feedback -> replaceFragment(FeedbackFragment())
-                R.id.help -> replaceFragment(HelpFragment())
+                R.id.nav_notes -> replaceFragment(DashboardFragment.newInstance())
+                R.id.nav_reminders -> replaceFragment(RemindersFragment.newInstance())
+                R.id.nav_create_labels -> replaceFragment(EditLabelFragment.newInstance())
+                R.id.nav_archive -> replaceFragment(ArchiveFragment.newInstance())
+                R.id.nav_trash -> replaceFragment(BinFragment.newInstance())
+                R.id.nav_settings -> replaceFragment(SettingsFragment.newInstance())
+                R.id.app_feedback -> replaceFragment(FeedbackFragment.newInstance())
+                R.id.help -> replaceFragment(HelpFragment.newInstance())
                 else -> {
                     val labelName = menuItem.title.toString()
                     replaceFragment(LabelFragment.newInstance(labelName))

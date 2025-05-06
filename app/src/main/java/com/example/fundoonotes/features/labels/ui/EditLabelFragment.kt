@@ -16,6 +16,7 @@ import com.example.fundoonotes.common.util.enums.LabelAdapterMode
 import com.example.fundoonotes.databinding.FragmentEditLabelBinding
 import com.example.fundoonotes.features.labels.util.EditLabelAdapter
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
+import com.example.fundoonotes.features.reminders.ui.RemindersFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -116,5 +117,11 @@ class EditLabelFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        fun newInstance(): EditLabelFragment {
+            return EditLabelFragment()
+        }
     }
 }

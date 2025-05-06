@@ -25,6 +25,7 @@ import com.example.fundoonotes.common.viewmodel.NotesViewModel
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentArchiveBinding
 import com.example.fundoonotes.features.addnote.AddNoteFragment
+import com.example.fundoonotes.features.labels.ui.EditLabelFragment
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
 import kotlin.getValue
 
@@ -147,5 +148,11 @@ class ArchiveFragment : Fragment(),
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        fun newInstance(): ArchiveFragment {
+            return ArchiveFragment()
+        }
     }
 }

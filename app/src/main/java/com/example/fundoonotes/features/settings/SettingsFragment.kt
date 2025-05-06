@@ -8,10 +8,9 @@ import androidx.fragment.app.Fragment
 import com.example.fundoonotes.R
 import com.example.fundoonotes.common.components.SearchBarFragment
 import com.example.fundoonotes.common.util.interfaces.SearchListener
+import com.example.fundoonotes.features.labels.ui.EditLabelFragment
 
 class SettingsFragment : Fragment(), SearchListener {
-
-    private lateinit var searchBar: View
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -22,14 +21,22 @@ class SettingsFragment : Fragment(), SearchListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        searchBar = view.findViewById(R.id.searchBarContainerSettings)
 
-        val searchBarFragment = SearchBarFragment.Companion.newInstance("Settings")
+        val searchBarContainer = view.findViewById<View>(R.id.searchBarContainerSettings)
+
+        val searchBarFragment = SearchBarFragment.newInstance("Settings")
         childFragmentManager.beginTransaction()
-            .replace(R.id.searchBarContainerSettings, searchBarFragment)
+            .replace(searchBarContainer.id, searchBarFragment)
             .commit()
     }
 
     override fun onSearchQueryChanged(query: String) {
+        // Handle search query if needed
+    }
+
+    companion object {
+        fun newInstance(): SettingsFragment {
+            return SettingsFragment()
+        }
     }
 }

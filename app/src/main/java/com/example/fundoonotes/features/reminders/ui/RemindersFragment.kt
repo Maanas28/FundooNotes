@@ -26,6 +26,7 @@ import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentRemindersBinding
 import com.example.fundoonotes.features.addnote.AddNoteFragment
 import com.example.fundoonotes.features.labels.viewmodel.LabelsViewModel
+import com.example.fundoonotes.features.notes.ui.DashboardFragment
 import kotlin.getValue
 
 class RemindersFragment : Fragment(),
@@ -149,5 +150,11 @@ class RemindersFragment : Fragment(),
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        fun newInstance(): RemindersFragment {
+            return RemindersFragment()
+        }
     }
 }

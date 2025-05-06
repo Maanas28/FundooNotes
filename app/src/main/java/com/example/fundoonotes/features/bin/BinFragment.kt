@@ -18,6 +18,7 @@ import com.example.fundoonotes.common.util.interfaces.ViewToggleListener
 import com.example.fundoonotes.common.viewmodel.NotesViewModel
 import com.example.fundoonotes.common.viewmodel.SelectionSharedViewModel
 import com.example.fundoonotes.databinding.FragmentBinBinding
+import com.example.fundoonotes.features.labels.ui.EditLabelFragment
 import kotlin.getValue
 
 class BinFragment : Fragment(), SelectionBarListener, ViewToggleListener, SearchListener {
@@ -81,5 +82,11 @@ class BinFragment : Fragment(), SelectionBarListener, ViewToggleListener, Search
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        fun newInstance(): BinFragment {
+            return BinFragment()
+        }
     }
 }
